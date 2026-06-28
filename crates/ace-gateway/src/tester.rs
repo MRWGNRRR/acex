@@ -165,6 +165,7 @@ pub enum DoipConnectionPhase {
 ///
 /// Each target has its own UdsClient tracking P2/P2* independently. P2/P2* are updated when a
 /// DiagnosticSessionControlResponse arrives from this target.
+#[derive(Debug)]
 pub struct TargetState {
     /// ECU logical address.
     pub address: u16,
@@ -227,6 +228,7 @@ impl TargetState {
 /// on one TCP connection.
 ///
 /// `MAX_TARGETS` - max concurrent ECU targets on this connection.
+#[derive(Debug)]
 pub struct DoipConnection<const MAX_TARGETS: usize = 8> {
     config: DoipConnectionConfig,
     phase: DoipConnectionPhase,
@@ -241,7 +243,7 @@ pub struct DoipConnection<const MAX_TARGETS: usize = 8> {
 }
 
 impl<const MAX_TARGETS: usize> DoipConnection<MAX_TARGETS> {
-    fn new(tester_address: u16, config: DoipConnectionConfig) -> Self {
+    pub fn new(tester_address: u16, config: DoipConnectionConfig) -> Self {
         Self {
             config,
             phase: DoipConnectionPhase::Disconnected,

@@ -2,7 +2,7 @@
 
 use crate::{
     common::{AsImmutableFrame, RawFrame, RawFrameMut},
-    doip::constants::DOIP_HEADER_LEN,
+    doip::constants::{DOIP_HEADER_LEN, DOIP_LENGTH_LEN, DOIP_LENGTH_OFFSET},
 };
 
 // endregion: Imports
@@ -48,6 +48,21 @@ impl<'a> DoipFrame<'a> {
             &self.payload[DOIP_HEADER_LEN..]
         } else {
             &[]
+        }
+    }
+
+    /// Returns the payload length - between bytes 4-7 of the DoIP header (big-endian u32)
+    #[must_use]
+    pub fn payload_length(&self) -> u32 {
+        if self.payload.len() >= DOIP_HEADER_LEN {
+            let pay_len: [u8; DOIP_LENGTH_LEN] = self.payload
+                [DOIP_LENGTH_OFFSET..DOIP_LENGTH_OFFSET + DOIP_LENGTH_LEN]
+                .try_into()
+                .unwrap_or([0u8; DOIP_LENGTH_LEN]);
+
+            u32::from_be_bytes(pay_len)
+        } else {
+            0
         }
     }
 

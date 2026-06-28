@@ -72,23 +72,3 @@ pub enum ActivationCode {
     #[frame(id_pat = "0xE0..=0xFE")]
     ReservedForOem(u8),
 }
-
-impl From<ActivationCode> for u8 {
-    fn from(value: ActivationCode) -> Self {
-        match value {
-            ActivationCode::DeniedUnknownSourceAddress => 0x00,
-            ActivationCode::DeniedTcpSocketsFull => 0x01,
-            ActivationCode::DeniedTcpSocketAlreadyConnected => 0x02,
-            ActivationCode::DeniedSourceIsAlreadyActive => 0x03,
-            ActivationCode::DeniedMissingAuthentication => 0x04,
-            ActivationCode::DeniedRejectedConfirmation => 0x05,
-            ActivationCode::DeniedUnsupportedRoutingActivationType => 0x06,
-            ActivationCode::DeniedRequestEncryptedTlsConnection => 0x07,
-            ActivationCode::DeniedVehicleInCriticalState => 0x08,
-            ActivationCode::Reserved(b) => b,
-            ActivationCode::SuccessfullyActivated => 0x10,
-            ActivationCode::ActivatedConfirmationRequired => 0x11,
-            ActivationCode::ReservedForOem(b) => b,
-        }
-    }
-}

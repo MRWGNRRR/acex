@@ -27,6 +27,7 @@ const MAX_DATA: usize = 256;
 ///
 /// `N` - maximum number of concurrent pending requests. Defaults to 1. UDS is strictly sequential
 /// in most implementations - use `UdsClient<1>` unless you have a specific need for pipelining.
+#[derive(Debug)]
 pub struct UdsClient<const N: usize = 1> {
     config: ClientConfig,
     address: NodeAddress,

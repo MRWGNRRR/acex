@@ -1,10 +1,11 @@
 mod attrs;
 mod read;
+mod repr;
 mod util;
 mod write;
 
 use proc_macro::TokenStream;
-use syn::{parse_macro_input, DeriveInput};
+use syn::{parse_macro_input, Data, DeriveInput};
 
 /// Derives `ace_uds::codec::FrameRead` for a struct or enum.
 ///
@@ -130,8 +131,12 @@ pub fn frame_write(input: TokenStream) -> TokenStream {
 pub fn frame_codec(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let read = read::derive(input.clone());
-    let write = write::derive(input);
-    quote::quote! { #read #write }.into()
+    let write = write::derive(input.clone());
+    let repr_conversions = match &input.data {
+        Data::Enum(_) => repr::derive(input),
+        _ => quote::quote! {},
+    };
+    quote::quote! { #read #write #repr_conversions }.into()
 }
 
 #[test]
