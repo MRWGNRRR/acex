@@ -39,22 +39,6 @@ pub enum ProtocolVersion {
     DefaultValue,
 }
 
-impl TryFrom<u8> for ProtocolVersion {
-    type Error = ();
-
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
-        match value {
-            RESERVED_VER => Ok(Self::ReservedVer),
-            ISO13400_2010 => Ok(Self::Iso13400_2010),
-            ISO13400_2012 => Ok(Self::Iso13400_2012),
-            ISO13400_2019 => Ok(Self::Iso13400_2019),
-            ISO13400_2019_AMD1 => Ok(Self::Iso13400_2019Amd1),
-            DEFAULT_VALUE => Ok(Self::DefaultValue),
-            _ => Err(()),
-        }
-    }
-}
-
 #[repr(u16)]
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = DoipError)]
@@ -91,30 +75,4 @@ pub enum PayloadType {
     DiagnosticMessageAck,
     #[frame(id =  DOIP_DIAGNOSTIC_MESSAGE_NACK)]
     DiagnosticMessageNack,
-}
-
-impl TryFrom<u16> for PayloadType {
-    type Error = ();
-
-    fn try_from(value: u16) -> Result<Self, Self::Error> {
-        match value {
-            DOIP_GENERIC_NACK => Ok(Self::GenericNack),
-            DOIP_VEHICLE_IDENTIFICATION_REQ => Ok(Self::VehicleIdentificationRequest),
-            DOIP_VEHICLE_IDENTIFICATION_REQ_EID => Ok(Self::VehicleIdentificationRequestEid),
-            DOIP_VEHICLE_IDENTIFICATION_REQ_VIN => Ok(Self::VehicleIdentificationRequestVin),
-            DOIP_VEHICLE_ANNOUNCEMENT_MESSAGE => Ok(Self::VehicleAnnouncementMessage),
-            DOIP_ROUTING_ACTIVATION_REQUEST => Ok(Self::RoutingActivationRequest),
-            DOIP_ROUTING_ACTIVATION_RESPONSE => Ok(Self::RoutingActivationResponse),
-            DOIP_ALIVE_CHECK_REQUEST => Ok(Self::AliveCheckRequest),
-            DOIP_ALIVE_CHECK_RESPONSE => Ok(Self::AliveCheckResponse),
-            DOIP_ENTITY_STATUS_REQUEST => Ok(Self::EntityStatusRequest),
-            DOIP_ENTITY_STATUS_RESPONSE => Ok(Self::EntityStatusResponse),
-            DOIP_POWER_INFORMATION_REQUEST => Ok(Self::PowerInformationRequest),
-            DOIP_POWER_INFORMATION_RESPONSE => Ok(Self::PowerInformationResponse),
-            DOIP_DIAGNOSTIC_MESSAGE => Ok(Self::DiagnosticMessage),
-            DOIP_DIAGNOSTIC_MESSAGE_ACK => Ok(Self::DiagnosticMessageAck),
-            DOIP_DIAGNOSTIC_MESSAGE_NACK => Ok(Self::DiagnosticMessageNack),
-            _ => Err(()),
-        }
-    }
 }

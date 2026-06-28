@@ -76,11 +76,14 @@ pub fn decode_message<'a>(bytes: &'a [u8]) -> Result<UdsMessage<'a>, UdsError> {
         }
         .into());
     }
+
     let mut sid_buf = &bytes[..1];
     let sid = ServiceIdentifier::decode(&mut sid_buf)
         .map_err(|_| ValidationError::UnsupportedService(bytes[0]))?;
+
     let mut payload_buf = &bytes[MIN_FRAME_LEN..];
     let payload = UdsPayload::decode(Some(sid), &mut payload_buf)?;
+
     Ok(UdsMessage {
         sid: Some(sid),
         payload,

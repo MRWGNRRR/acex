@@ -2,6 +2,7 @@ use crate::UdsError;
 use ace_macros::FrameCodec;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[frame(error = "UdsError")]
 #[repr(u8)]
 pub enum ServiceIdentifier {
@@ -39,6 +40,7 @@ pub enum ServiceIdentifier {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[frame(error = "UdsError")]
 #[repr(u8)]
 pub enum UdsService {

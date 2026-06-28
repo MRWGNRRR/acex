@@ -10,6 +10,7 @@ pub struct NegativeResponse {
 
 #[repr(u8)]
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[frame(error = UdsError)]
 pub enum NegativeResponseCode {
     #[frame(id = 0x00)]

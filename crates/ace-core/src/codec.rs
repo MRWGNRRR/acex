@@ -269,4 +269,12 @@ pub fn take_n<'a>(buf: &mut &'a [u8], n: usize) -> Result<&'a [u8], DiagError> {
     Ok(slice)
 }
 
+/// Takes a mutable slice input and decodes it.
+pub fn decode_from_slice<'a, T>(mut input: &'a [u8]) -> Result<T, T::Error>
+where
+    T: FrameRead<'a>,
+{
+    T::decode(&mut input)
+}
+
 // endregion: Free functions

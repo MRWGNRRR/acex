@@ -12,6 +12,7 @@ categories = ["development-tools", "network-programming", "automotive"]
 
 [features]
 default = []
+serde = ["dep:serde"]
 alloc = ["ace-core/alloc", "ace-proto/alloc"]
 std = ["alloc", "ace-core/std", "ace-proto/std"]
 
@@ -23,6 +24,7 @@ ace-uds = { workspace = true }
 ace-sim = { workspace = true }
 bytes = { workspace = true }
 heapless = { workspace = true }
+serde = { workspace = true, optional = true, features = ["derive"] }
 
 [dev-dependencies]
 proptest = { workspace = true }

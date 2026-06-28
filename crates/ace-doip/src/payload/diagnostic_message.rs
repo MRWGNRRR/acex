@@ -10,7 +10,8 @@ pub struct DiagnosticMessage<'a> {
     pub message: UdsMessage<'a>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec, Copy, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[frame(error = DoipError)]
 #[repr(u16)]
 pub enum LogicalAddress {

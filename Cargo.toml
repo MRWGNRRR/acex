@@ -12,6 +12,7 @@ quote = { version = "1.0.45" }
 syn = { version = "2.0.117" }
 trybuild = { version = "1.0.116" }
 proptest = { version = "1.10.0" }
+serde = { version = "1.0.228" }
 
 ace-core = { path = "crates/ace-core", version = "0.2.1" }
 ace-macros = { path = "crates/ace-macros", version = "0.2.1" }
