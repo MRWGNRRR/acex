@@ -1,6 +1,7 @@
 mod attrs;
 mod read;
 mod repr;
+mod storage;
 mod util;
 mod write;
 
@@ -132,11 +133,12 @@ pub fn frame_codec(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let read = read::derive(input.clone());
     let write = write::derive(input.clone());
-    let repr_conversions = match &input.data {
+    let extras = match &input.data {
         Data::Enum(_) => repr::derive(input),
+        Data::Struct(_) => storage::derive_if_needed(input),
         _ => quote::quote! {},
     };
-    quote::quote! { #read #write #repr_conversions }.into()
+    quote::quote! { #read #write #extras }.into()
 }
 
 #[test]

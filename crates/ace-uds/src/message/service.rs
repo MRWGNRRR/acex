@@ -15,13 +15,13 @@ pub enum ServiceIdentifier {
     EmissionsSpecificServiceRequest(u8),
 
     #[frame(id_pat = "0x10..=0x3E", decode_inner)]
-    UdsServiceRequest(UdsService),
+    UdsServiceRequest(UdsServiceRequest),
 
     #[frame(id_pat = "0x41..=0x4F")]
     EmissionsSpecificServicePositiveResponse(u8),
 
-    #[frame(id_pat = "0x50..=0x7E")]
-    UdsServicePositiveResponse(u8),
+    #[frame(id_pat = "0x50..=0x7E", decode_inner)]
+    UdsServiceResponse(UdsServiceResponse),
 
     #[frame(id = "0x7F")]
     NegativeResponse,
@@ -43,124 +43,129 @@ pub enum ServiceIdentifier {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[frame(error = "UdsError")]
 #[repr(u8)]
-pub enum UdsService {
-    #[frame(id = 0x10)]
-    DiagnosticSessionControlRequest = 0x10,
+pub enum UdsServiceResponse {
     #[frame(id = 0x50)]
-    DiagnosticSessionControlResponse = 0x50,
-    #[frame(id = 0x11)]
-    ECUResetRequest = 0x11,
+    DiagnosticSessionControl = 0x50,
     #[frame(id = 0x51)]
-    ECUResetResponse = 0x51,
-    #[frame(id = 0x27)]
-    SecurityAccessRequest = 0x27,
+    EcuReset = 0x51,
     #[frame(id = 0x67)]
-    SecurityAccessResponse = 0x67,
-    #[frame(id = 0x28)]
-    CommunicationControlRequest = 0x28,
+    SecurityAccess = 0x67,
     #[frame(id = 0x68)]
-    CommunicationControlResponse = 0x68,
-    #[frame(id = 0x29)]
-    AuthenticationRequest = 0x29,
+    CommunicationControl = 0x68,
     #[frame(id = 0x69)]
-    AuthenticationResponse = 0x69,
-    #[frame(id = 0x3e)]
-    TesterPresentRequest = 0x3e,
+    Authentication = 0x69,
     #[frame(id = 0x7e)]
-    TesterPresentResponse = 0x7e,
-    #[frame(id = 0x85)]
-    ControlDTCSettingRequest = 0x85,
+    TesterPresent = 0x7e,
     #[frame(id = 0xc5)]
-    ControlDTCSettingResponse = 0xc5,
-    #[frame(id = 0x86)]
-    ResponseOnEventRequest = 0x86,
+    ControlDtcSetting = 0xc5,
     #[frame(id = 0xc6)]
-    ResponseOnEventResponse = 0xc6,
-    #[frame(id = 0x87)]
-    LinkControlRequest = 0x87,
+    ResponseOnEvent = 0xc6,
     #[frame(id = 0xc7)]
-    LinkControlResponse = 0xc7,
-    #[frame(id = 0x22)]
-    ReadDataByIdentifierRequest = 0x22,
+    LinkControl = 0xc7,
     #[frame(id = 0x62)]
-    ReadDataByIdentifierResponse = 0x62,
-    #[frame(id = 0x23)]
-    ReadMemoryByAddressRequest = 0x23,
+    ReadDataByIdentifier = 0x62,
     #[frame(id = 0x63)]
-    ReadMemoryByAddressResponse = 0x63,
-    #[frame(id = 0x24)]
-    ReadScalingDataByIdentifierRequest = 0x24,
+    ReadMemoryByAddress = 0x63,
     #[frame(id = 0x64)]
-    ReadScalingDataByIdentifierResponse = 0x64,
-    #[frame(id = 0x2a)]
-    ReadDataByPeriodicIdentifierRequest = 0x2a,
+    ReadScalingDataByIdentifier = 0x64,
     #[frame(id = 0x6a)]
-    ReadDataByPeriodicIdentifierResponse = 0x6a,
-    #[frame(id = 0x2c)]
-    DynamicallyDefineDataIdentifierRequest = 0x2c,
+    ReadDataByPeriodicIdentifier = 0x6a,
     #[frame(id = 0x6c)]
-    DynamicallyDefineDataIdentifierResponse = 0x6c,
-    #[frame(id = 0x2e)]
-    WriteDataByIdentifierRequest = 0x2e,
+    DynamicallyDefineDataIdentifier = 0x6c,
     #[frame(id = 0x6e)]
-    WriteDataByIdentifierResponse = 0x6e,
-    #[frame(id = 0x3d)]
-    WriteMemoryByAddressRequest = 0x3d,
+    WriteDataByIdentifier = 0x6e,
     #[frame(id = 0x7d)]
-    WriteMemoryByAddressResponse = 0x7d,
-    #[frame(id = 0x14)]
-    ClearDiagnosticInformationRequest = 0x14,
+    WriteMemoryByAddress = 0x7d,
     #[frame(id = 0x54)]
-    ClearDiagnosticInformationResponse = 0x54,
-    #[frame(id = 0x19)]
-    ReadDTCInformationRequest = 0x19,
+    ClearDiagnosticInformation = 0x54,
     #[frame(id = 0x59)]
-    ReadDTCInformationResponse = 0x59,
-    #[frame(id = 0x2f)]
-    InputOutputControlByIdentifierRequest = 0x2f,
+    ReadDtcInformation = 0x59,
     #[frame(id = 0x6f)]
-    InputOutputControlByIdentifierResponse = 0x6f,
-    #[frame(id = 0x31)]
-    RoutineControlRequest = 0x31,
+    InputOutputControlByIdentifier = 0x6f,
     #[frame(id = 0x71)]
-    RoutineControlResponse = 0x71,
-    #[frame(id = 0x34)]
-    RequestDownloadRequest = 0x34,
+    RoutineControl = 0x71,
     #[frame(id = 0x74)]
-    RequestDownloadResponse = 0x74,
-    #[frame(id = 0x35)]
-    RequestUploadRequest = 0x35,
+    RequestDownload = 0x74,
     #[frame(id = 0x75)]
-    RequestUploadResponse = 0x75,
-    #[frame(id = 0x36)]
-    TransferDataRequest = 0x36,
+    RequestUpload = 0x75,
     #[frame(id = 0x76)]
-    TransferDataResponse = 0x76,
-    #[frame(id = 0x37)]
-    RequestTransferExitRequest = 0x37,
+    TransferData = 0x76,
     #[frame(id = 0x77)]
-    RequestTransferExitResponse = 0x77,
-    #[frame(id = 0x38)]
-    RequestFileTransferRequest = 0x38,
+    RequestTransferExit = 0x77,
     #[frame(id = 0x78)]
-    RequestFileTransferResponse = 0x78,
-    #[frame(id = 0x84)]
-    SecuredDataTransmissionRequest = 0x84,
+    RequestFileTransfer = 0x78,
     #[frame(id = 0xc4)]
-    SecuredDataTransmissionResponse = 0xc4,
-    #[frame(id = 0x7f)]
-    NegativeResponse = 0x7f,
+    SecuredDataTransmission = 0xc4,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[frame(error = "UdsError")]
+#[repr(u8)]
+pub enum UdsServiceRequest {
+    #[frame(id = 0x10)]
+    DiagnosticSessionControl = 0x10,
+    #[frame(id = 0x11)]
+    EcuReset = 0x11,
+    #[frame(id = 0x27)]
+    SecurityAccess = 0x27,
+    #[frame(id = 0x28)]
+    CommunicationControl = 0x28,
+    #[frame(id = 0x29)]
+    Authentication = 0x29,
+    #[frame(id = 0x3e)]
+    TesterPresent = 0x3e,
+    #[frame(id = 0x85)]
+    ControlDtcSetting = 0x85,
+    #[frame(id = 0x86)]
+    ResponseOnEvent = 0x86,
+    #[frame(id = 0x87)]
+    LinkControl = 0x87,
+    #[frame(id = 0x22)]
+    ReadDataByIdentifier = 0x22,
+    #[frame(id = 0x23)]
+    ReadMemoryByAddress = 0x23,
+    #[frame(id = 0x24)]
+    ReadScalingDataByIdentifier = 0x24,
+    #[frame(id = 0x2a)]
+    ReadDataByPeriodicIdentifier = 0x2a,
+    #[frame(id = 0x2c)]
+    DynamicallyDefineDataIdentifier = 0x2c,
+    #[frame(id = 0x2e)]
+    WriteDataByIdentifier = 0x2e,
+    #[frame(id = 0x3d)]
+    WriteMemoryByAddress = 0x3d,
+    #[frame(id = 0x14)]
+    ClearDiagnosticInformation = 0x14,
+    #[frame(id = 0x19)]
+    ReadDTCInformation = 0x19,
+    #[frame(id = 0x2f)]
+    InputOutputControlByIdentifier = 0x2f,
+    #[frame(id = 0x31)]
+    RoutineControl = 0x31,
+    #[frame(id = 0x34)]
+    RequestDownload = 0x34,
+    #[frame(id = 0x35)]
+    RequestUpload = 0x35,
+    #[frame(id = 0x36)]
+    TransferData = 0x36,
+    #[frame(id = 0x37)]
+    RequestTransferExit = 0x37,
+    #[frame(id = 0x38)]
+    RequestFileTransfer = 0x38,
+    #[frame(id = 0x84)]
+    SecuredDataTransmission = 0x84,
 }
 
 impl ServiceIdentifier {
     pub fn discriminant(&self) -> u8 {
         match self {
             ServiceIdentifier::UdsServiceRequest(s) => *s as u8,
+            ServiceIdentifier::UdsServiceResponse(s) => *s as u8,
             ServiceIdentifier::NegativeResponse => 0x7F,
             ServiceIdentifier::NotApplicable(v)
             | ServiceIdentifier::EmissionsSpecificServiceRequest(v)
             | ServiceIdentifier::EmissionsSpecificServicePositiveResponse(v)
-            | ServiceIdentifier::UdsServicePositiveResponse(v)
             | ServiceIdentifier::ServiceRequests(v)
             | ServiceIdentifier::SystemSupplierServiceRequests(v)
             | ServiceIdentifier::ServiceRequestsPositiveResponse(v)
@@ -177,30 +182,30 @@ impl ServiceIdentifier {
     pub fn has_sub_function(&self) -> bool {
         matches!(
             self,
-            ServiceIdentifier::UdsServiceRequest(UdsService::DiagnosticSessionControlRequest)
-                | ServiceIdentifier::UdsServiceRequest(
-                    UdsService::DiagnosticSessionControlResponse
+            ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::DiagnosticSessionControl)
+                | ServiceIdentifier::UdsServiceResponse(
+                    UdsServiceResponse::DiagnosticSessionControl
                 )
-                | ServiceIdentifier::UdsServiceRequest(UdsService::ECUResetRequest)
-                | ServiceIdentifier::UdsServiceRequest(UdsService::ECUResetResponse)
-                | ServiceIdentifier::UdsServiceRequest(UdsService::SecurityAccessRequest)
-                | ServiceIdentifier::UdsServiceRequest(UdsService::SecurityAccessResponse)
-                | ServiceIdentifier::UdsServiceRequest(UdsService::CommunicationControlRequest)
-                | ServiceIdentifier::UdsServiceRequest(UdsService::CommunicationControlResponse)
-                | ServiceIdentifier::UdsServiceRequest(UdsService::AuthenticationRequest)
-                | ServiceIdentifier::UdsServiceRequest(UdsService::AuthenticationResponse)
-                | ServiceIdentifier::UdsServiceRequest(UdsService::TesterPresentRequest)
-                | ServiceIdentifier::UdsServiceRequest(UdsService::TesterPresentResponse)
-                | ServiceIdentifier::UdsServiceRequest(UdsService::ControlDTCSettingRequest)
-                | ServiceIdentifier::UdsServiceRequest(UdsService::ControlDTCSettingResponse)
-                | ServiceIdentifier::UdsServiceRequest(UdsService::ResponseOnEventRequest)
-                | ServiceIdentifier::UdsServiceRequest(UdsService::ResponseOnEventResponse)
-                | ServiceIdentifier::UdsServiceRequest(UdsService::LinkControlRequest)
-                | ServiceIdentifier::UdsServiceRequest(UdsService::LinkControlResponse)
-                | ServiceIdentifier::UdsServiceRequest(UdsService::ReadDTCInformationRequest)
-                | ServiceIdentifier::UdsServiceRequest(UdsService::ReadDTCInformationResponse)
-                | ServiceIdentifier::UdsServiceRequest(UdsService::RoutineControlRequest)
-                | ServiceIdentifier::UdsServiceRequest(UdsService::RoutineControlResponse)
+                | ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::EcuReset)
+                | ServiceIdentifier::UdsServiceResponse(UdsServiceResponse::EcuReset)
+                | ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::SecurityAccess)
+                | ServiceIdentifier::UdsServiceResponse(UdsServiceResponse::SecurityAccess)
+                | ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::CommunicationControl)
+                | ServiceIdentifier::UdsServiceResponse(UdsServiceResponse::CommunicationControl)
+                | ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::Authentication)
+                | ServiceIdentifier::UdsServiceResponse(UdsServiceResponse::Authentication)
+                | ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::TesterPresent)
+                | ServiceIdentifier::UdsServiceResponse(UdsServiceResponse::TesterPresent)
+                | ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::ControlDtcSetting)
+                | ServiceIdentifier::UdsServiceResponse(UdsServiceResponse::ControlDtcSetting)
+                | ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::ResponseOnEvent)
+                | ServiceIdentifier::UdsServiceResponse(UdsServiceResponse::ResponseOnEvent)
+                | ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::LinkControl)
+                | ServiceIdentifier::UdsServiceResponse(UdsServiceResponse::LinkControl)
+                | ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::ReadDTCInformation)
+                | ServiceIdentifier::UdsServiceResponse(UdsServiceResponse::ReadDtcInformation)
+                | ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::RoutineControl)
+                | ServiceIdentifier::UdsServiceResponse(UdsServiceResponse::RoutineControl)
         )
     }
 }

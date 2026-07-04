@@ -1,64 +1,148 @@
 use crate::UdsError;
-use ace_core::{take_n, FrameRead};
-use ace_macros::FrameWrite;
+use ace_macros::FrameCodec;
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameWrite)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
 pub struct WriteMemoryByAddressRequest<'a> {
     pub address_and_length_format_identifier: u8,
+    #[frame(
+        length = "(address_and_length_format_identifier & 0x0F) as usize",
+        bytes
+    )]
     pub memory_address: &'a [u8],
+    #[frame(length = "(address_and_length_format_identifier >> 4) as usize", bytes)]
     pub memory_size: &'a [u8],
+    #[frame(read_all, bytes)]
     pub data_record: &'a [u8],
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameWrite)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
 pub struct WriteMemoryByAddressResponse<'a> {
     pub address_and_length_format_identifier: u8,
+    #[frame(
+        length = "(address_and_length_format_identifier & 0x0F) as usize",
+        bytes
+    )]
     pub memory_address: &'a [u8],
+    #[frame(length = "(address_and_length_format_identifier >> 4) as usize", bytes)]
     pub memory_size: &'a [u8],
 }
 
-impl<'a> FrameRead<'a> for WriteMemoryByAddressRequest<'a> {
-    type Error = UdsError;
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ace_core::codec::{decode_from_slice, FrameWrite};
 
-    fn decode(buf: &mut &'a [u8]) -> Result<Self, Self::Error> {
-        let address_and_length_format_identifier = u8::decode(buf)?;
+    #[cfg(feature = "alloc")]
+    use alloc::borrow::ToOwned;
+    #[cfg(feature = "alloc")]
+    use alloc::vec;
 
-        let memory_address_length = (address_and_length_format_identifier & 0x0F) as usize;
-        let memory_size_length = (address_and_length_format_identifier >> 4) as usize;
+    // address_and_length_format_identifier = 0x12:
+    //   low nibble  = 2 → memory_address is 2 bytes
+    //   high nibble = 1 → memory_size    is 1 byte
+    //   remainder        → data_record
+    const REQUEST_FRAME: &[u8] = &[0x12, 0xAA, 0xBB, 0x04, 0xDE, 0xAD, 0xBE, 0xEF];
 
-        let memory_address = take_n(buf, memory_address_length)?;
-        let memory_size = take_n(buf, memory_size_length)?;
+    // address_and_length_format_identifier = 0x12:
+    //   low nibble  = 2 → memory_address is 2 bytes
+    //   high nibble = 1 → memory_size    is 1 byte
+    const RESPONSE_FRAME: &[u8] = &[0x12, 0xAA, 0xBB, 0x04];
 
-        let data_record = *buf;
-        *buf = &buf[buf.len()..];
-
-        Ok(Self {
-            address_and_length_format_identifier,
-            memory_address,
-            memory_size,
-            data_record,
-        })
+    #[test]
+    fn request_decode() {
+        let req: WriteMemoryByAddressRequest = decode_from_slice(REQUEST_FRAME).unwrap();
+        assert_eq!(req.address_and_length_format_identifier, 0x12);
+        assert_eq!(req.memory_address, &[0xAA, 0xBB]);
+        assert_eq!(req.memory_size, &[0x04]);
+        assert_eq!(req.data_record, &[0xDE, 0xAD, 0xBE, 0xEF]);
     }
-}
 
-impl<'a> FrameRead<'a> for WriteMemoryByAddressResponse<'a> {
-    type Error = UdsError;
+    #[test]
+    fn request_encode_roundtrip() {
+        let req: WriteMemoryByAddressRequest = decode_from_slice(REQUEST_FRAME).unwrap();
+        let mut buf = [0u8; 64];
+        req.encode(&mut buf.as_mut()).unwrap();
+        assert_eq!(&buf[..REQUEST_FRAME.len()], REQUEST_FRAME);
+    }
 
-    fn decode(buf: &mut &'a [u8]) -> Result<Self, Self::Error> {
-        let address_and_length_format_identifier = u8::decode(buf)?;
+    #[test]
+    fn response_decode() {
+        let resp: WriteMemoryByAddressResponse = decode_from_slice(RESPONSE_FRAME).unwrap();
+        assert_eq!(resp.address_and_length_format_identifier, 0x12);
+        assert_eq!(resp.memory_address, &[0xAA, 0xBB]);
+        assert_eq!(resp.memory_size, &[0x04]);
+    }
 
-        let memory_address_length = (address_and_length_format_identifier & 0x0F) as usize;
-        let memory_size_length = (address_and_length_format_identifier >> 4) as usize;
+    #[test]
+    fn response_encode_roundtrip() {
+        let resp: WriteMemoryByAddressResponse = decode_from_slice(RESPONSE_FRAME).unwrap();
+        let mut buf = [0u8; 64];
+        resp.encode(&mut buf.as_mut()).unwrap();
+        assert_eq!(&buf[..RESPONSE_FRAME.len()], RESPONSE_FRAME);
+    }
 
-        let memory_address = take_n(buf, memory_address_length)?;
-        let memory_size = take_n(buf, memory_size_length)?;
+    #[test]
+    fn request_truncated_address() {
+        // claims 3 address bytes but only 2 present
+        let bad: &[u8] = &[0x13, 0xAA, 0xBB];
+        let result = decode_from_slice::<WriteMemoryByAddressRequest>(bad);
+        assert!(result.is_err());
+    }
 
-        Ok(Self {
-            address_and_length_format_identifier,
-            memory_address,
-            memory_size,
-        })
+    #[test]
+    fn request_truncated_size() {
+        // claims 2 size bytes but only 1 present after address
+        let bad: &[u8] = &[0x22, 0xAA, 0xBB, 0x04];
+        let result = decode_from_slice::<WriteMemoryByAddressRequest>(bad);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn response_truncated() {
+        // claims 2 address bytes but only 1 present
+        let bad: &[u8] = &[0x12, 0xAA];
+        let result = decode_from_slice::<WriteMemoryByAddressResponse>(bad);
+        assert!(result.is_err());
+    }
+
+    #[cfg(feature = "alloc")]
+    #[test]
+    fn request_to_owned() {
+        let req: WriteMemoryByAddressRequest = decode_from_slice(REQUEST_FRAME).unwrap();
+        let owned = req.to_owned();
+        assert_eq!(owned.address_and_length_format_identifier, 0x12);
+        assert_eq!(owned.memory_address, vec![0xAA, 0xBB]);
+        assert_eq!(owned.memory_size, vec![0x04]);
+        assert_eq!(owned.data_record, vec![0xDE, 0xAD, 0xBE, 0xEF]);
+    }
+
+    #[cfg(feature = "alloc")]
+    #[test]
+    fn response_to_owned() {
+        let resp: WriteMemoryByAddressResponse = decode_from_slice(RESPONSE_FRAME).unwrap();
+        let owned = resp.to_owned();
+        assert_eq!(owned.address_and_length_format_identifier, 0x12);
+        assert_eq!(owned.memory_address, vec![0xAA, 0xBB]);
+        assert_eq!(owned.memory_size, vec![0x04]);
+    }
+
+    #[cfg(feature = "alloc")]
+    #[test]
+    fn owned_request_encode_roundtrip() {
+        let owned: WriteMemoryByAddressRequestOwned = decode_from_slice(REQUEST_FRAME).unwrap();
+        let mut buf = [0u8; 64];
+        owned.encode(&mut buf.as_mut()).unwrap();
+        assert_eq!(&buf[..REQUEST_FRAME.len()], REQUEST_FRAME);
+    }
+
+    #[cfg(feature = "alloc")]
+    #[test]
+    fn owned_response_encode_roundtrip() {
+        let owned: WriteMemoryByAddressResponseOwned = decode_from_slice(RESPONSE_FRAME).unwrap();
+        let mut buf = [0u8; 64];
+        owned.encode(&mut buf.as_mut()).unwrap();
+        assert_eq!(&buf[..RESPONSE_FRAME.len()], RESPONSE_FRAME);
     }
 }

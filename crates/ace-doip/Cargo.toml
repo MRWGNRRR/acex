@@ -13,7 +13,12 @@ categories = ["development-tools", "network-programming", "automotive"]
 [features]
 default = []
 serde = ["dep:serde"]
-alloc = ["ace-core/alloc", "ace-proto/alloc"]
+alloc = [
+	"ace-core/alloc",
+	"ace-proto/alloc",
+	"ace-uds/alloc",
+	"ace-macros/alloc",
+]
 std = ["alloc", "ace-core/std", "ace-proto/std"]
 
 [dependencies]
