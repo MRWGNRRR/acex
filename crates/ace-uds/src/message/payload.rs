@@ -1,4 +1,7 @@
-use crate::message::{service::UdsService, *};
+use crate::message::{
+    service::{UdsServiceRequest, UdsServiceResponse},
+    *,
+};
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum UdsPayload<'a> {
@@ -69,220 +72,220 @@ impl<'a> UdsPayload<'a> {
 
             Some(sid) => match sid {
                 ServiceIdentifier::UdsServiceRequest(
-                    UdsService::DiagnosticSessionControlRequest,
+                    UdsServiceRequest::DiagnosticSessionControl,
                 ) => Ok(UdsPayload::DiagnosticSessionControlRequest(
                     DiagnosticSessionControlRequest::decode(buf)?,
                 )),
-                ServiceIdentifier::UdsServiceRequest(
-                    UdsService::DiagnosticSessionControlResponse,
+                ServiceIdentifier::UdsServiceResponse(
+                    UdsServiceResponse::DiagnosticSessionControl,
                 ) => Ok(UdsPayload::DiagnosticSessionControlResponse(
                     DiagnosticSessionControlResponse::decode(buf)?,
                 )),
-                ServiceIdentifier::UdsServiceRequest(UdsService::ECUResetRequest) => {
+                ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::EcuReset) => {
                     Ok(UdsPayload::EcuResetRequest(EcuResetRequest::decode(buf)?))
                 }
-                ServiceIdentifier::UdsServiceRequest(UdsService::ECUResetResponse) => {
+                ServiceIdentifier::UdsServiceResponse(UdsServiceResponse::EcuReset) => {
                     Ok(UdsPayload::EcuResetResponse(EcuResetResponse::decode(buf)?))
                 }
-                ServiceIdentifier::UdsServiceRequest(UdsService::SecurityAccessRequest) => Ok(
+                ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::SecurityAccess) => Ok(
                     UdsPayload::SecurityAccessRequest(SecurityAccessRequest::decode(buf)?),
                 ),
-                ServiceIdentifier::UdsServiceRequest(UdsService::SecurityAccessResponse) => Ok(
+                ServiceIdentifier::UdsServiceResponse(UdsServiceResponse::SecurityAccess) => Ok(
                     UdsPayload::SecurityAccessResponse(SecurityAccessResponse::decode(buf)?),
                 ),
-                ServiceIdentifier::UdsServiceRequest(UdsService::CommunicationControlRequest) => {
+                ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::CommunicationControl) => {
                     Ok(UdsPayload::CommunicationControlRequest(
                         CommunicationControlRequest::decode(buf)?,
                     ))
                 }
-                ServiceIdentifier::UdsServiceRequest(UdsService::CommunicationControlResponse) => {
+                ServiceIdentifier::UdsServiceResponse(UdsServiceResponse::CommunicationControl) => {
                     Ok(UdsPayload::CommunicationControlResponse(
                         CommunicationControlResponse::decode(buf)?,
                     ))
                 }
-                ServiceIdentifier::UdsServiceRequest(UdsService::AuthenticationRequest) => Ok(
+                ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::Authentication) => Ok(
                     UdsPayload::AuthenticationRequest(AuthenticationRequest::decode(buf)?),
                 ),
-                ServiceIdentifier::UdsServiceRequest(UdsService::AuthenticationResponse) => Ok(
+                ServiceIdentifier::UdsServiceResponse(UdsServiceResponse::Authentication) => Ok(
                     UdsPayload::AuthenticationResponse(AuthenticationResponse::decode(buf)?),
                 ),
-                ServiceIdentifier::UdsServiceRequest(UdsService::TesterPresentRequest) => Ok(
+                ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::TesterPresent) => Ok(
                     UdsPayload::TesterPresentRequest(TesterPresentRequest::decode(buf)?),
                 ),
-                ServiceIdentifier::UdsServiceRequest(UdsService::TesterPresentResponse) => Ok(
+                ServiceIdentifier::UdsServiceResponse(UdsServiceResponse::TesterPresent) => Ok(
                     UdsPayload::TesterPresentResponse(TesterPresentResponse::decode(buf)?),
                 ),
-                ServiceIdentifier::UdsServiceRequest(UdsService::ControlDTCSettingRequest) => Ok(
+                ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::ControlDtcSetting) => Ok(
                     UdsPayload::ControlDTCSettingRequest(ControlDTCSettingRequest::decode(buf)?),
                 ),
-                ServiceIdentifier::UdsServiceRequest(UdsService::ControlDTCSettingResponse) => Ok(
+                ServiceIdentifier::UdsServiceResponse(UdsServiceResponse::ControlDtcSetting) => Ok(
                     UdsPayload::ControlDTCSettingResponse(ControlDTCSettingResponse::decode(buf)?),
                 ),
-                ServiceIdentifier::UdsServiceRequest(UdsService::ResponseOnEventRequest) => Ok(
+                ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::ResponseOnEvent) => Ok(
                     UdsPayload::ResponseOnEventRequest(ResponseOnEventRequest::decode(buf)?),
                 ),
-                ServiceIdentifier::UdsServiceRequest(UdsService::ResponseOnEventResponse) => Ok(
+                ServiceIdentifier::UdsServiceResponse(UdsServiceResponse::ResponseOnEvent) => Ok(
                     UdsPayload::ResponseOnEventResponse(ResponseOnEventResponse::decode(buf)?),
                 ),
-                ServiceIdentifier::UdsServiceRequest(UdsService::LinkControlRequest) => Ok(
+                ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::LinkControl) => Ok(
                     UdsPayload::LinkControlRequest(LinkControlRequest::decode(buf)?),
                 ),
-                ServiceIdentifier::UdsServiceRequest(UdsService::LinkControlResponse) => Ok(
+                ServiceIdentifier::UdsServiceResponse(UdsServiceResponse::LinkControl) => Ok(
                     UdsPayload::LinkControlResponse(LinkControlResponse::decode(buf)?),
                 ),
                 ServiceIdentifier::UdsServiceRequest(
-                    UdsService::SecuredDataTransmissionRequest,
+                    UdsServiceRequest::SecuredDataTransmission,
                 ) => Ok(UdsPayload::SecuredDataTransmissionRequest(
                     SecuredDataTransmissionRequest::decode(buf)?,
                 )),
-                ServiceIdentifier::UdsServiceRequest(
-                    UdsService::SecuredDataTransmissionResponse,
+                ServiceIdentifier::UdsServiceResponse(
+                    UdsServiceResponse::SecuredDataTransmission,
                 ) => Ok(UdsPayload::SecuredDataTransmissionResponse(
                     SecuredDataTransmissionResponse::decode(buf)?,
                 )),
-                ServiceIdentifier::UdsServiceRequest(UdsService::RoutineControlRequest) => Ok(
+                ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::RoutineControl) => Ok(
                     UdsPayload::RoutineControlRequest(RoutineControlRequest::decode(buf)?),
                 ),
-                ServiceIdentifier::UdsServiceRequest(UdsService::RoutineControlResponse) => Ok(
+                ServiceIdentifier::UdsServiceResponse(UdsServiceResponse::RoutineControl) => Ok(
                     UdsPayload::RoutineControlResponse(RoutineControlResponse::decode(buf)?),
                 ),
                 ServiceIdentifier::UdsServiceRequest(
-                    UdsService::InputOutputControlByIdentifierRequest,
+                    UdsServiceRequest::InputOutputControlByIdentifier,
                 ) => Ok(UdsPayload::InputOutputControlByIdentifierRequest(
                     InputOutputControlByIdentifierRequest::decode(buf)?,
                 )),
-                ServiceIdentifier::UdsServiceRequest(
-                    UdsService::InputOutputControlByIdentifierResponse,
+                ServiceIdentifier::UdsServiceResponse(
+                    UdsServiceResponse::InputOutputControlByIdentifier,
                 ) => Ok(UdsPayload::InputOutputControlByIdentifierResponse(
                     InputOutputControlByIdentifierResponse::decode(buf)?,
                 )),
-                ServiceIdentifier::UdsServiceRequest(UdsService::ReadDataByIdentifierRequest) => {
+                ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::ReadDataByIdentifier) => {
                     Ok(UdsPayload::ReadDataByIdentifierRequest(
                         ReadDataByIdentifierRequest::decode(buf)?,
                     ))
                 }
-                ServiceIdentifier::UdsServiceRequest(UdsService::ReadDataByIdentifierResponse) => {
+                ServiceIdentifier::UdsServiceResponse(UdsServiceResponse::ReadDataByIdentifier) => {
                     Ok(UdsPayload::ReadDataByIdentifierResponse(
                         ReadDataByIdentifierResponse::decode(buf)?,
                     ))
                 }
-                ServiceIdentifier::UdsServiceRequest(UdsService::ReadMemoryByAddressRequest) => {
+                ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::ReadMemoryByAddress) => {
                     Ok(UdsPayload::ReadMemoryByAddressRequest(
                         ReadMemoryByAddressRequest::decode(buf)?,
                     ))
                 }
-                ServiceIdentifier::UdsServiceRequest(UdsService::ReadMemoryByAddressResponse) => {
+                ServiceIdentifier::UdsServiceResponse(UdsServiceResponse::ReadMemoryByAddress) => {
                     Ok(UdsPayload::ReadMemoryByAddressResponse(
                         ReadMemoryByAddressResponse::decode(buf)?,
                     ))
                 }
                 ServiceIdentifier::UdsServiceRequest(
-                    UdsService::ReadScalingDataByIdentifierRequest,
+                    UdsServiceRequest::ReadScalingDataByIdentifier,
                 ) => Ok(UdsPayload::ReadScalingDataByIdentifierRequest(
                     ReadScalingDataByIdentifierRequest::decode(buf)?,
                 )),
-                ServiceIdentifier::UdsServiceRequest(
-                    UdsService::ReadScalingDataByIdentifierResponse,
+                ServiceIdentifier::UdsServiceResponse(
+                    UdsServiceResponse::ReadScalingDataByIdentifier,
                 ) => Ok(UdsPayload::ReadScalingDataByIdentifierResponse(
                     ReadScalingDataByIdentifierResponse::decode(buf)?,
                 )),
                 ServiceIdentifier::UdsServiceRequest(
-                    UdsService::ReadDataByPeriodicIdentifierRequest,
+                    UdsServiceRequest::ReadDataByPeriodicIdentifier,
                 ) => Ok(UdsPayload::ReadDataByPeriodicIdentifierRequest(
                     ReadDataByPeriodicIdentifierRequest::decode(buf)?,
                 )),
-                ServiceIdentifier::UdsServiceRequest(
-                    UdsService::ReadDataByPeriodicIdentifierResponse,
+                ServiceIdentifier::UdsServiceResponse(
+                    UdsServiceResponse::ReadDataByPeriodicIdentifier,
                 ) => Ok(UdsPayload::ReadDataByPeriodicIdentifierResponse(
                     ReadDataByPeriodicIdentifierResponse::decode(buf)?,
                 )),
                 ServiceIdentifier::UdsServiceRequest(
-                    UdsService::DynamicallyDefineDataIdentifierRequest,
+                    UdsServiceRequest::DynamicallyDefineDataIdentifier,
                 ) => Ok(UdsPayload::DynamicallyDefineDataIdentifierRequest(
                     DynamicallyDefineDataIdentifierRequest::decode(buf)?,
                 )),
-                ServiceIdentifier::UdsServiceRequest(
-                    UdsService::DynamicallyDefineDataIdentifierResponse,
+                ServiceIdentifier::UdsServiceResponse(
+                    UdsServiceResponse::DynamicallyDefineDataIdentifier,
                 ) => Ok(UdsPayload::DynamicallyDefineDataIdentifierResponse(
                     DynamicallyDefineDataIdentifierResponse::decode(buf)?,
                 )),
-                ServiceIdentifier::UdsServiceRequest(UdsService::WriteDataByIdentifierRequest) => {
+                ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::WriteDataByIdentifier) => {
                     Ok(UdsPayload::WriteDataByIdentifierRequest(
                         WriteDataByIdentifierRequest::decode(buf)?,
                     ))
                 }
-                ServiceIdentifier::UdsServiceRequest(UdsService::WriteDataByIdentifierResponse) => {
-                    Ok(UdsPayload::WriteDataByIdentifierResponse(
-                        WriteDataByIdentifierResponse::decode(buf)?,
-                    ))
-                }
-                ServiceIdentifier::UdsServiceRequest(UdsService::WriteMemoryByAddressRequest) => {
+                ServiceIdentifier::UdsServiceResponse(
+                    UdsServiceResponse::WriteDataByIdentifier,
+                ) => Ok(UdsPayload::WriteDataByIdentifierResponse(
+                    WriteDataByIdentifierResponse::decode(buf)?,
+                )),
+                ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::WriteMemoryByAddress) => {
                     Ok(UdsPayload::WriteMemoryByAddressRequest(
                         WriteMemoryByAddressRequest::decode(buf)?,
                     ))
                 }
-                ServiceIdentifier::UdsServiceRequest(UdsService::WriteMemoryByAddressResponse) => {
+                ServiceIdentifier::UdsServiceResponse(UdsServiceResponse::WriteMemoryByAddress) => {
                     Ok(UdsPayload::WriteMemoryByAddressResponse(
                         WriteMemoryByAddressResponse::decode(buf)?,
                     ))
                 }
                 ServiceIdentifier::UdsServiceRequest(
-                    UdsService::ClearDiagnosticInformationRequest,
+                    UdsServiceRequest::ClearDiagnosticInformation,
                 ) => Ok(UdsPayload::ClearDiagnosticInformationRequest(
                     ClearDiagnosticInformationRequest::decode(buf)?,
                 )),
-                ServiceIdentifier::UdsServiceRequest(
-                    UdsService::ClearDiagnosticInformationResponse,
+                ServiceIdentifier::UdsServiceResponse(
+                    UdsServiceResponse::ClearDiagnosticInformation,
                 ) => Ok(UdsPayload::ClearDiagnosticInformationResponse(
                     ClearDiagnosticInformationResponse::decode(buf)?,
                 )),
-                ServiceIdentifier::UdsServiceRequest(UdsService::ReadDTCInformationRequest) => Ok(
+                ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::ReadDTCInformation) => Ok(
                     UdsPayload::ReadDTCInformationRequest(ReadDtcInformationRequest::decode(buf)?),
                 ),
-                ServiceIdentifier::UdsServiceRequest(UdsService::ReadDTCInformationResponse) => {
+                ServiceIdentifier::UdsServiceResponse(UdsServiceResponse::ReadDtcInformation) => {
                     Ok(UdsPayload::ReadDTCInformationResponse(
                         ReadDTCInformationResponse::decode(buf)?,
                     ))
                 }
-                ServiceIdentifier::UdsServiceRequest(UdsService::RequestDownloadRequest) => Ok(
+                ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::RequestDownload) => Ok(
                     UdsPayload::RequestDownloadRequest(RequestDownloadRequest::decode(buf)?),
                 ),
-                ServiceIdentifier::UdsServiceRequest(UdsService::RequestDownloadResponse) => Ok(
+                ServiceIdentifier::UdsServiceResponse(UdsServiceResponse::RequestDownload) => Ok(
                     UdsPayload::RequestDownloadResponse(RequestDownloadResponse::decode(buf)?),
                 ),
-                ServiceIdentifier::UdsServiceRequest(UdsService::RequestUploadRequest) => Ok(
+                ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::RequestUpload) => Ok(
                     UdsPayload::RequestUploadRequest(RequestUploadRequest::decode(buf)?),
                 ),
-                ServiceIdentifier::UdsServiceRequest(UdsService::RequestUploadResponse) => Ok(
+                ServiceIdentifier::UdsServiceResponse(UdsServiceResponse::RequestUpload) => Ok(
                     UdsPayload::RequestUploadResponse(RequestUploadResponse::decode(buf)?),
                 ),
-                ServiceIdentifier::UdsServiceRequest(UdsService::TransferDataRequest) => Ok(
+                ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::TransferData) => Ok(
                     UdsPayload::TransferDataRequest(TransferDataRequest::decode(buf)?),
                 ),
-                ServiceIdentifier::UdsServiceRequest(UdsService::TransferDataResponse) => Ok(
+                ServiceIdentifier::UdsServiceResponse(UdsServiceResponse::TransferData) => Ok(
                     UdsPayload::TransferDataResponse(TransferDataResponse::decode(buf)?),
                 ),
-                ServiceIdentifier::UdsServiceRequest(UdsService::RequestTransferExitRequest) => {
+                ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::RequestTransferExit) => {
                     Ok(UdsPayload::RequestTransferExitRequest(
                         RequestTransferExitRequest::decode(buf)?,
                     ))
                 }
-                ServiceIdentifier::UdsServiceRequest(UdsService::RequestTransferExitResponse) => {
+                ServiceIdentifier::UdsServiceResponse(UdsServiceResponse::RequestTransferExit) => {
                     Ok(UdsPayload::RequestTransferExitResponse(
                         RequestTransferExitResponse::decode(buf)?,
                     ))
                 }
-                ServiceIdentifier::UdsServiceRequest(UdsService::RequestFileTransferRequest) => {
+                ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::RequestFileTransfer) => {
                     Ok(UdsPayload::RequestFileTransferRequest(
                         RequestFileTransferRequest::decode(buf)?,
                     ))
                 }
-                ServiceIdentifier::UdsServiceRequest(UdsService::RequestFileTransferResponse) => {
+                ServiceIdentifier::UdsServiceResponse(UdsServiceResponse::RequestFileTransfer) => {
                     Ok(UdsPayload::RequestFileTransferResponse(
                         RequestFileTransferResponse::decode(buf)?,
                     ))
                 }
-                ServiceIdentifier::UdsServiceRequest(UdsService::NegativeResponse) => {
+                ServiceIdentifier::NegativeResponse => {
                     Ok(UdsPayload::NegativeResponse(NegativeResponse::decode(buf)?))
                 }
                 _ => Err(UdsError::Validation(ValidationError::UnsupportedService(

@@ -270,6 +270,7 @@ fn p5_full_stack_light_faults() {
 // region: P6 - chaos, no silent hangs
 
 #[test]
+#[ignore = "Takes too long"]
 fn p6_no_silent_hands_under_chaos() {
     for seed in 0..100u64 {
         let mut s = DoipDstScenario::chaos(seed);

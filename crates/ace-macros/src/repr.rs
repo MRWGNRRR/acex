@@ -14,22 +14,15 @@ pub fn derive(input: DeriveInput) -> TokenStream {
         return quote! {};
     }
 
+    let has_repr = input.attrs.iter().any(|a| a.path().is_ident("repr"));
+    if !has_repr {
+        return quote! {};
+    }
+
     let data = match &input.data {
         Data::Enum(d) => d,
         _ => unreachable!("guarded in frame_codec"),
     };
-
-    // Skip repr conversions if any variant uses decode_inner - the inner
-    // type is decoded from the remaining buffer so there's no raw discriminant to recover.
-    let has_decode_inner = data.variants.iter().any(|v| {
-        darling::FromVariant::from_variant(v)
-            .map(|a: VariantAttrs| a.decode_inner)
-            .unwrap_or(false)
-    });
-
-    if has_decode_inner {
-        return quote! {};
-    }
 
     let name = &input.ident;
     let disc_ty = get_repr(&input);
@@ -37,12 +30,14 @@ pub fn derive(input: DeriveInput) -> TokenStream {
         Ok(c) => c,
         Err(e) => return e.write_errors(),
     };
+
     let error = &container.error;
 
     let mut into_arms: Vec<TokenStream> = Vec::new();
 
     for variant in &data.variants {
         let vname = &variant.ident;
+
         let attrs: VariantAttrs = match darling::FromVariant::from_variant(variant) {
             Ok(a) => a,
             Err(e) => return e.write_errors(),
@@ -54,16 +49,13 @@ pub fn derive(input: DeriveInput) -> TokenStream {
                 quote! { #name::#vname => (#id_expr) as #disc_ty, }
             }
             Fields::Unnamed(f) if f.unnamed.len() == 1 => {
+                let inner_ty = &f.unnamed.first().unwrap().ty;
+
                 if let Some(id_expr) = &attrs.id {
                     // id newtype - inner is decoded payload, discriminant is the literal
                     quote! { #name::#vname(_) => (#id_expr) as #disc_ty, }
                 } else if attrs.decode_inner {
-                    // decode_inner - same as id but no fixed discriminant to recover,
-                    // inner value doesn't represent the discriminant directly
-                    return compile_error(
-                        proc_macro2::Span::call_site(),
-                        "FrameCodec: decode_inner variants cannot be converted to repr type",
-                    );
+                    quote! { #name::#vname(inner) => <#disc_ty as From<#inner_ty>>::from(inner), }
                 } else {
                     // id_pat - inner IS the raw discriminant value
                     quote! { #name::#vname(inner) => inner as #disc_ty, }
@@ -91,6 +83,7 @@ pub fn derive(input: DeriveInput) -> TokenStream {
 
         impl TryFrom<#disc_ty> for #name {
             type Error = #error;
+
             fn try_from(value: #disc_ty) -> Result<Self, Self::Error> {
                 use ace_core::codec::FrameRead;
                 let bytes = value.to_be_bytes();

@@ -23,6 +23,7 @@ pub struct WithoutEnhancedAddressInformation {
     pub control_type: ControlType,
     pub communication_type: u8,
 }
+
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
 pub struct WithEnhancedAddressInformation {

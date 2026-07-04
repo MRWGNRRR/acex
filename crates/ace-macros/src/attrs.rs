@@ -1,5 +1,8 @@
 use darling::{FromDeriveInput, FromField, FromVariant};
-use syn::{DeriveInput, Expr};
+use syn::{
+    parse::{Parse, ParseStream},
+    DeriveInput, Expr, Token,
+};
 
 // region: Container
 
@@ -13,6 +16,16 @@ pub struct ContainerAttrs {
     /// #[frame(error = "UdsError")]
     /// ```
     pub error: syn::Path,
+}
+
+impl Parse for ContainerAttrs {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        // expects: `error = SomePath`
+        let _: syn::Ident = input.parse()?; // `error`
+        let _: Token![=] = input.parse()?;
+        let error: syn::Path = input.parse()?;
+        Ok(Self { error })
+    }
 }
 
 pub fn get_repr(input: &DeriveInput) -> syn::Path {
@@ -63,6 +76,16 @@ pub struct FieldAttrs {
     /// Field type must implement `Default`.
     /// Cannot be combined with `read_all` or `length`.
     pub skip: bool,
+
+    /// The bytes storage
+    ///
+    /// Either &'a [u8] or Vec<u8> is in use.
+    pub bytes: bool,
+
+    /// An iterable field
+    ///
+    /// Indicated a FrameIter<'a, T> or Vec<T>.
+    pub iter: bool,
 }
 
 impl FieldAttrs {

@@ -4,7 +4,7 @@ use ace_proto::uds::UdsFrame;
 use ace_sim::clock::{Duration, Instant};
 use ace_sim::io::NodeAddress;
 use ace_uds::ext::UdsFrameExt;
-use ace_uds::message::service::UdsService;
+use ace_uds::message::service::UdsServiceRequest;
 use ace_uds::message::ServiceIdentifier;
 use heapless::Vec;
 
@@ -289,59 +289,59 @@ where
         let suppressed = frame.is_suppressed();
 
         match sid {
-            ServiceIdentifier::UdsServiceRequest(UdsService::TesterPresentRequest) => {
+            ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::TesterPresent) => {
                 self.on_tester_present(src, &frame, suppressed, now)
             }
 
-            ServiceIdentifier::UdsServiceRequest(UdsService::DiagnosticSessionControlRequest) => {
+            ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::DiagnosticSessionControl) => {
                 self.on_session_control(src, &frame, suppressed, now)
             }
 
-            ServiceIdentifier::UdsServiceRequest(UdsService::ECUResetRequest) => {
+            ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::EcuReset) => {
                 self.on_ecu_reset(src, &frame, suppressed, now)
             }
 
-            ServiceIdentifier::UdsServiceRequest(UdsService::SecurityAccessRequest) => {
+            ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::SecurityAccess) => {
                 self.on_security_access(src, &frame, suppressed, now)
             }
 
-            ServiceIdentifier::UdsServiceRequest(UdsService::ReadDataByIdentifierRequest) => {
+            ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::ReadDataByIdentifier) => {
                 self.on_read_did(src, &frame, suppressed, now)
             }
 
-            ServiceIdentifier::UdsServiceRequest(UdsService::WriteDataByIdentifierRequest) => {
+            ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::WriteDataByIdentifier) => {
                 self.on_write_did(src, &frame, suppressed, now)
             }
 
             ServiceIdentifier::UdsServiceRequest(
-                UdsService::ReadDataByPeriodicIdentifierRequest,
+                UdsServiceRequest::ReadDataByPeriodicIdentifier,
             ) => self.on_periodic_did(src, &frame, suppressed, now),
 
-            ServiceIdentifier::UdsServiceRequest(UdsService::RoutineControlRequest) => {
+            ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::RoutineControl) => {
                 self.on_routine_control(src, &frame, suppressed, now)
             }
 
-            ServiceIdentifier::UdsServiceRequest(UdsService::CommunicationControlRequest) => {
+            ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::CommunicationControl) => {
                 self.on_communication_control(src, &frame, suppressed, now)
             }
 
             ServiceIdentifier::UdsServiceRequest(
-                UdsService::InputOutputControlByIdentifierRequest,
+                UdsServiceRequest::InputOutputControlByIdentifier,
             ) => self.on_io_control(src, &frame, suppressed, now),
 
-            ServiceIdentifier::UdsServiceRequest(UdsService::RequestDownloadRequest) => {
+            ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::RequestDownload) => {
                 self.on_request_download(src, &frame, suppressed, now)
             }
 
-            ServiceIdentifier::UdsServiceRequest(UdsService::TransferDataRequest) => {
+            ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::TransferData) => {
                 self.on_transfer_data(src, &frame, suppressed, now)
             }
 
-            ServiceIdentifier::UdsServiceRequest(UdsService::RequestTransferExitRequest) => {
+            ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::RequestTransferExit) => {
                 self.on_transfer_exit(src, &frame, suppressed, now)
             }
 
-            ServiceIdentifier::UdsServiceRequest(UdsService::RequestFileTransferRequest) => {
+            ServiceIdentifier::UdsServiceRequest(UdsServiceRequest::RequestFileTransfer) => {
                 self.on_file_transfer(src, &frame, suppressed, now)
             }
 

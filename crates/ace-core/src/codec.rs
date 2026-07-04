@@ -106,7 +106,29 @@ where
 
 // endregion: FrameCodec
 
+// region: IntoOwned
+
+#[cfg(feature = "alloc")]
+pub trait IntoOwned {
+    type Owned;
+
+    fn into_owned(self) -> Self::Owned;
+}
+
+// endregion: IntoOwned
+
 // region: Primitive FrameRead impls
+
+#[cfg(feature = "alloc")]
+impl<'a> FrameRead<'a> for alloc::vec::Vec<u8> {
+    type Error = DiagError;
+
+    fn decode(buf: &mut &'a [u8]) -> Result<Self, Self::Error> {
+        let v = buf.to_vec();
+        *buf = &buf[buf.len()..];
+        Ok(v)
+    }
+}
 
 impl<'a> FrameRead<'a> for u8 {
     type Error = DiagError;
@@ -201,6 +223,15 @@ where
 
 // region: Primitive FrameWrite impls
 
+#[cfg(feature = "alloc")]
+impl FrameWrite for alloc::vec::Vec<u8> {
+    type Error = DiagError;
+
+    fn encode<W: Writer>(&self, buf: &mut W) -> Result<(), Self::Error> {
+        buf.write_bytes(self.as_ref())
+    }
+}
+
 impl FrameWrite for u8 {
     type Error = DiagError;
 
@@ -267,6 +298,11 @@ pub fn take_n<'a>(buf: &mut &'a [u8], n: usize) -> Result<&'a [u8], DiagError> {
     let slice = &buf[..n];
     *buf = &buf[n..];
     Ok(slice)
+}
+
+#[cfg(feature = "alloc")]
+pub fn take_n_owned(buf: &mut &[u8], n: usize) -> Result<alloc::vec::Vec<u8>, DiagError> {
+    take_n(buf, n).map(|s| s.to_vec())
 }
 
 /// Takes a mutable slice input and decodes it.
