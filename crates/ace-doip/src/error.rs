@@ -17,18 +17,30 @@ pub enum DoipValidationError {
     },
     /// Payload type is not defined in ISO 13400-2
     UnknownPayloadType(u16),
+
     /// Payload length field does not match the actual number of bytes following the header
     PayloadLengthMismatch { declared: u32, actual: usize },
+
     /// Frame is shorter than the minimum DoIP header length (8 bytes)
     FrameTooShort { actual: usize },
+
+    /// Frame is larger than the maximum allowed length
+    FrameTooLarge { actual: usize, limit: usize },
+
     /// Source address is not valid in this context (e.g. zero on a response)
     InvalidSourceAddress(u16),
+
     /// Target address is not valid in this context
     InvalidTargetAddress(u16),
+
     /// Activation type is not recognised
     UnknownActivationType(u8),
+
     /// NACK code is not recognised
     UnknownNackCode(u8),
+
+    /// A wrapper for any casts from u8/16/32/64 -> usize
+    ConversionFailure,
 }
 
 #[derive(Debug)]
