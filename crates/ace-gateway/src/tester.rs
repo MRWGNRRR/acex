@@ -511,6 +511,25 @@ impl<const MAX_TARGETS: usize> DoipConnection<MAX_TARGETS> {
             let _ = target
                 .client
                 .handle(&NodeAddress(source as u32), uds_data, now);
+
+            let conn_id = self.connection_id();
+            let target_id = TargetId(u16::from(source));
+
+            let mut client_events = heapless::Vec::<ClientEvent, 16>::new();
+
+            if let Some(target) = self.find_target_mut(source) {
+                let _ = target
+                    .client
+                    .handle(&NodeAddress(source as u32), uds_data, now);
+
+                client_events.extend(target.client.drain_events());
+            }
+
+            for client_event in client_events {
+                let _ = self
+                    .events
+                    .push((conn_id, target_id, DoipTesterEvent::Uds(client_event)));
+            }
         }
 
         Ok(())
