@@ -192,16 +192,20 @@ impl ActivationLineState {
 /// `RoutingActivationRequest` frames and produces `RoutingActivationResponse` frames. It enforces
 /// the activation line state - only `Active` connections may carry `DiagnosticMessage` frames.
 #[derive(Debug)]
-pub struct ActivationStateMachine<A: ActivationAuthProvider> {
+pub struct ActivationStateMachine<
+    const MAX_TESTERS: usize,
+    const MAX_ACTIVATION_TYPES: usize,
+    A: ActivationAuthProvider,
+> {
     /// Logical address of this gateway entity.
     gateway_address: u16,
 
     /// Set of registered tester source addresses this gateway recognises. In a real gateway this
     /// is provisioned at build time.
-    registered_addresses: heapless::Vec<u16, 16>,
+    registered_addresses: heapless::Vec<u16, MAX_TESTERS>,
 
     /// Supported activation types for this gateway configuration.
-    supported_types: heapless::Vec<ActivationType, 4>,
+    supported_types: heapless::Vec<ActivationType, MAX_ACTIVATION_TYPES>,
 
     /// OEM authentication provider - called for CentralSecurity activations.
     auth: A,
@@ -210,11 +214,13 @@ pub struct ActivationStateMachine<A: ActivationAuthProvider> {
     pub state: ActivationLineState,
 }
 
-impl<A: ActivationAuthProvider> ActivationStateMachine<A> {
+impl<const MAX_TESTERS: usize, const MAX_ACTIVATION_TYPES: usize, A: ActivationAuthProvider>
+    ActivationStateMachine<MAX_TESTERS, MAX_ACTIVATION_TYPES, A>
+{
     pub fn new(
         gateway_address: u16,
-        registered_addresses: heapless::Vec<u16, 16>,
-        supported_types: heapless::Vec<ActivationType, 4>,
+        registered_addresses: heapless::Vec<u16, MAX_TESTERS>,
+        supported_types: heapless::Vec<ActivationType, MAX_ACTIVATION_TYPES>,
         auth: A,
     ) -> Self {
         Self {

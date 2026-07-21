@@ -1,6 +1,6 @@
 // region: Imports
 
-use crate::{SIM_MAX_FRAME, SIM_MAX_OUTBOX};
+// use crate::{SIM_MAX_FRAME, SIM_MAX_OUTBOX};
 use ace_proto::{common::RawFrame, UdsFrame};
 use ace_sim::{clock::Instant, io::NodeAddress};
 use ace_uds::ext::UdsFrameExt;
@@ -12,8 +12,8 @@ use crate::{config::ClientConfig, event::ClientEvent, pending::PendingRequest, C
 
 // region: Capacity Constants
 
-const MAX_EVENTS: usize = 32;
-const MAX_DATA: usize = 256;
+// const MAX_EVENTS: usize = 32;
+// const MAX_DATA: usize = 256;
 
 // endregion: Capacity Constants
 
@@ -28,17 +28,32 @@ const MAX_DATA: usize = 256;
 /// `N` - maximum number of concurrent pending requests. Defaults to 1. UDS is strictly sequential
 /// in most implementations - use `UdsClient<1>` unless you have a specific need for pipelining.
 #[derive(Debug)]
-pub struct UdsClient<const N: usize = 1> {
+pub struct UdsClient<
+    const PENDING: usize,
+    const SIM_MAX_FRAME: usize,
+    const SIM_MAX_OUTBOX: usize,
+    const MAX_TARGET_EVENTS: usize,
+    const PERIODIC_DIDS: usize,
+    const MAX_DATA: usize,
+> {
     config: ClientConfig,
     address: NodeAddress,
     server: NodeAddress,
-    pending: Vec<PendingRequest, N>,
+    pending: Vec<PendingRequest, PENDING>,
     outbox: Vec<(NodeAddress, Vec<u8, SIM_MAX_FRAME>), SIM_MAX_OUTBOX>,
-    events: Vec<ClientEvent, MAX_EVENTS>,
-    periodic_dids: Vec<u8, 16>,
+    events: Vec<ClientEvent<MAX_DATA>, MAX_TARGET_EVENTS>,
+    periodic_dids: Vec<u8, PERIODIC_DIDS>,
 }
 
-impl<const N: usize> UdsClient<N> {
+impl<
+        const PENDING: usize,
+        const SIM_MAX_FRAME: usize,
+        const SIM_MAX_OUTBOX: usize,
+        const MAX_EVENTS: usize,
+        const PERIODIC_DIDS: usize,
+        const MAX_DATA: usize,
+    > UdsClient<PENDING, SIM_MAX_FRAME, SIM_MAX_OUTBOX, MAX_EVENTS, PERIODIC_DIDS, MAX_DATA>
+{
     pub fn new(config: ClientConfig, address: NodeAddress) -> Self {
         let server = NodeAddress(config.target_address as u32);
         Self {
@@ -181,7 +196,7 @@ impl<const N: usize> UdsClient<N> {
 
     /// Advances internal timers - expires timed-out pending requests.
     pub fn tick(&mut self, now: Instant) -> Result<(), ClientError> {
-        let mut expired: Vec<u8, N> = Vec::new();
+        let mut expired: Vec<u8, PENDING> = Vec::new();
 
         for p in self.pending.iter() {
             if p.is_expired(now) {
@@ -285,7 +300,7 @@ impl<const N: usize> UdsClient<N> {
     ///
     /// Events are consumed - calling `drain_events` twice returns events on the first call and
     /// nothing on the second.
-    pub fn drain_events(&mut self) -> impl Iterator<Item = ClientEvent> + '_ {
+    pub fn drain_events(&mut self) -> impl Iterator<Item = ClientEvent<MAX_DATA>> + '_ {
         self.events.drain(..)
     }
 

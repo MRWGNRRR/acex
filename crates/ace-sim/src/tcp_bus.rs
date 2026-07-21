@@ -143,9 +143,9 @@ pub enum TcpEvent {
 /// `N` - max message payload bytes
 /// `Q` - max messages in-flight simultaneously
 #[derive(Debug)]
-pub struct TcpSimBus<const N: usize, const Q: usize> {
+pub struct TcpSimBus<const MAX_DATA: usize, const MAX_QUEUED: usize, const TCP_MAX_EVENTS: usize> {
     /// Underlying message bus - handles delivery, delays, and message faults.
-    inner: SimBus<N, Q>,
+    inner: SimBus<MAX_DATA, MAX_QUEUED>,
 
     /// TCP fault configuration.
     tcp_faults: TcpFaultConfig,
@@ -160,14 +160,16 @@ pub struct TcpSimBus<const N: usize, const Q: usize> {
     connect_timeout: Duration,
 
     /// Accumulated TCP events for nodes to drain.
-    events: Vec<TcpEvent, 16>,
+    events: Vec<TcpEvent, TCP_MAX_EVENTS>,
 
     /// Dedicated RNG for TCP-level fault decisions, seeded independently from the message-level
     /// RNG so fault regimes can be composed freely.
     rng: Xorshift64,
 }
 
-impl<const N: usize, const Q: usize> TcpSimBus<N, Q> {
+impl<const MAX_DATA: usize, const MAX_QUEUED: usize, const TCP_MAX_EVENTS: usize>
+    TcpSimBus<MAX_DATA, MAX_QUEUED, TCP_MAX_EVENTS>
+{
     /// Creates a new `TcpSimBus`.
     ///
     /// `seed` - seeds both the message bus RNG and the TCP fault RNG. The TCP RNG uses
@@ -268,7 +270,7 @@ impl<const N: usize, const Q: usize> TcpSimBus<N, Q> {
 
     /// Advances simulation time, delivers due messages, and checks connection-level fault
     /// injection.
-    pub fn tick(&mut self, duration: Duration) -> Vec<Envelope<N>, Q> {
+    pub fn tick(&mut self, duration: Duration) -> Vec<Envelope<MAX_DATA>, MAX_QUEUED> {
         let now = self.inner.now();
 
         // Check connecting timeout
@@ -340,7 +342,7 @@ impl<const N: usize, const Q: usize> TcpSimBus<N, Q> {
         self.tcp_faults = faults;
     }
 
-    pub fn inner_mut(&mut self) -> &mut SimBus<N, Q> {
+    pub fn inner_mut(&mut self) -> &mut SimBus<MAX_DATA, MAX_QUEUED> {
         &mut self.inner
     }
 

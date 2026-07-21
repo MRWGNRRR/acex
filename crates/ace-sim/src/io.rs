@@ -22,10 +22,10 @@ pub struct NodeAddress(pub u32);
 ///
 /// Used by low-level runtime implementers working diectly with frames.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct RawMessage<const N: usize> {
+pub struct RawMessage<const MAX_DATA: usize> {
     pub src: NodeAddress,
     pub dst: NodeAddress,
-    pub data: heapless::Vec<u8, N>,
+    pub data: heapless::Vec<u8, MAX_DATA>,
     pub timestamp: Instant,
 }
 

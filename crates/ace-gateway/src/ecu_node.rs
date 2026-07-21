@@ -19,7 +19,6 @@ use ace_can::{
     IsoTpAddressingMode, ReassembleResult, Reassembler, ReassemblerConfig, SegmentResult,
     Segmenter, SegmenterConfig,
 };
-use ace_client::{SIM_MAX_FRAME, SIM_MAX_OUTBOX};
 use ace_server::{
     handler::ServerHandler,
     security_provider::SecurityProvider,
@@ -28,17 +27,6 @@ use ace_server::{
 };
 use ace_sim::{clock::Instant, io::NodeAddress};
 use heapless::Vec;
-
-// region: Capacity constants
-
-/// Max ISO-TP CAN frame payload - 8 bytes classic CAN, 64 bytes CAN FD.
-pub const ECU_CAN_FRAME: usize = 8;
-/// Max CAN outbox depth - multi-frame responses produce many frames.
-pub const ECU_CAN_OUT: usize = 128;
-/// Max UDS payload size.
-pub const ECU_UDS_FRAME: usize = 4096;
-
-// endregion: Capacity constants
 
 // region: EcuNodeError
 
@@ -59,8 +47,25 @@ pub enum EcuNodeError<SE: NrcError> {
 /// gateway, reassembles them into UDS requests, processes them with
 /// `UdsServer`, then segments the responses back into ISO-TP CAN frames
 /// for the gateway to pick up and wrap in DoIP.
-pub struct EcuNode<H, S>
-where
+pub struct EcuNode<
+    const MAX_UDS_FRAME: usize,
+    const MAX_UDS_OUTBOX: usize,
+    const MAX_CAN_FRAME: usize,
+    const MAX_CAN_OUTBOX: usize,
+    const MAX_SESSIONS: usize,
+    const MAX_SERVICES: usize,
+    const MAX_DIDS: usize,
+    const MAX_SECURITY_LEVELS: usize,
+    const DEFAULT_S3: u64,
+    const DEFAULT_P2: u64,
+    const DEFAULT_P2_EXT: u64,
+    const DEFAULT_LOCKOUT: u64,
+    const DEFAULT_MAX_SECURITY_ATTEMPTS: u8,
+    const MAX_SEED: usize,
+    const MAX_PERIODIC: usize,
+    H,
+    S,
+> where
     H: ServerHandler,
     S: SecurityProvider,
 {
@@ -74,19 +79,72 @@ where
     pub response_can_id: u32,
 
     /// Reassembles incoming ISO-TP CAN request frames → UDS bytes.
-    req_reassembler: Reassembler<ECU_UDS_FRAME>,
+    req_reassembler: Reassembler<MAX_CAN_FRAME>,
 
     /// Segments outgoing UDS response bytes → ISO-TP CAN frames.
-    resp_segmenter: Segmenter<ECU_UDS_FRAME>,
-    pub server: UdsServer<H, S>,
+    resp_segmenter: Segmenter<MAX_CAN_FRAME>,
+    pub server: UdsServer<
+        MAX_UDS_FRAME,
+        MAX_UDS_OUTBOX,
+        MAX_SESSIONS,
+        MAX_SERVICES,
+        MAX_DIDS,
+        MAX_SECURITY_LEVELS,
+        DEFAULT_S3,
+        DEFAULT_P2,
+        DEFAULT_P2_EXT,
+        DEFAULT_LOCKOUT,
+        DEFAULT_MAX_SECURITY_ATTEMPTS,
+        MAX_SEED,
+        MAX_PERIODIC,
+        H,
+        S,
+    >,
 
     /// Outbound ISO-TP CAN frames for the CAN bus.
     /// Contains both FC frames (responding to gateway segmenter) and
     /// segmented response frames.
-    can_outbox: Vec<(NodeAddress, Vec<u8, ECU_CAN_FRAME>), ECU_CAN_OUT>,
+    can_outbox: Vec<(NodeAddress, Vec<u8, MAX_CAN_FRAME>), MAX_CAN_OUTBOX>,
 }
 
-impl<H, S> EcuNode<H, S>
+impl<
+        const MAX_UDS_FRAME: usize,
+        const MAX_UDS_OUTBOX: usize,
+        const MAX_CAN_FRAME: usize,
+        const MAX_CAN_OUTBOX: usize,
+        const MAX_SESSIONS: usize,
+        const MAX_SERVICES: usize,
+        const MAX_DIDS: usize,
+        const MAX_SECURITY_LEVELS: usize,
+        const DEFAULT_S3: u64,
+        const DEFAULT_P2: u64,
+        const DEFAULT_P2_EXT: u64,
+        const DEFAULT_LOCKOUT: u64,
+        const DEFAULT_MAX_SECURITY_ATTEMPTS: u8,
+        const MAX_SEED: usize,
+        const MAX_PERIODIC: usize,
+        H,
+        S,
+    >
+    EcuNode<
+        MAX_UDS_FRAME,
+        MAX_UDS_OUTBOX,
+        MAX_CAN_FRAME,
+        MAX_CAN_OUTBOX,
+        MAX_SESSIONS,
+        MAX_SERVICES,
+        MAX_DIDS,
+        MAX_SECURITY_LEVELS,
+        DEFAULT_S3,
+        DEFAULT_P2,
+        DEFAULT_P2_EXT,
+        DEFAULT_LOCKOUT,
+        DEFAULT_MAX_SECURITY_ATTEMPTS,
+        MAX_SEED,
+        MAX_PERIODIC,
+        H,
+        S,
+    >
 where
     H: ServerHandler,
     S: SecurityProvider,
@@ -96,7 +154,23 @@ where
         request_can_id: u32,
         response_can_id: u32,
         mode: IsoTpAddressingMode,
-        server: UdsServer<H, S>,
+        server: UdsServer<
+            MAX_UDS_FRAME,
+            MAX_UDS_OUTBOX,
+            MAX_SESSIONS,
+            MAX_SERVICES,
+            MAX_DIDS,
+            MAX_SECURITY_LEVELS,
+            DEFAULT_S3,
+            DEFAULT_P2,
+            DEFAULT_P2_EXT,
+            DEFAULT_LOCKOUT,
+            DEFAULT_MAX_SECURITY_ATTEMPTS,
+            MAX_SEED,
+            MAX_PERIODIC,
+            H,
+            S,
+        >,
     ) -> Self {
         Self {
             logical_address,
@@ -148,8 +222,8 @@ where
         {
             ReassembleResult::Complete { len } => {
                 if let Some(uds_bytes) = self.req_reassembler.message(len) {
-                    let mut buf: Vec<u8, ECU_UDS_FRAME> = Vec::new();
-                    let _ = buf.extend_from_slice(&uds_bytes[..len.min(ECU_UDS_FRAME)]);
+                    let mut buf: Vec<u8, MAX_CAN_FRAME> = Vec::new();
+                    let _ = buf.extend_from_slice(&uds_bytes[..len.min(MAX_CAN_FRAME)]);
                     self.req_reassembler.reset();
 
                     // Feed UDS request to server
@@ -162,7 +236,7 @@ where
             }
             ReassembleResult::FlowControl { frame, len: fc_len } => {
                 // Send FC back to gateway's request segmenter
-                let mut fc: Vec<u8, ECU_CAN_FRAME> = Vec::new();
+                let mut fc: Vec<u8, MAX_CAN_FRAME> = Vec::new();
                 let _ = fc.extend_from_slice(&frame[..fc_len]);
 
                 self.can_outbox
@@ -174,7 +248,7 @@ where
                 flow_control,
                 fc_len,
             } => {
-                let mut fc: Vec<u8, ECU_CAN_FRAME> = Vec::new();
+                let mut fc: Vec<u8, MAX_CAN_FRAME> = Vec::new();
                 let _ = fc.extend_from_slice(&flow_control[..fc_len]);
                 let _ = self.can_outbox.push((NodeAddress(self.request_can_id), fc));
 
@@ -195,7 +269,7 @@ where
         self.server.tick(now).map_err(EcuNodeError::Server)?;
 
         // Drain server outbox into response segmenter
-        let mut srv_out: Vec<(NodeAddress, Vec<u8, SIM_MAX_FRAME>), SIM_MAX_OUTBOX> = Vec::new();
+        let mut srv_out: Vec<(NodeAddress, Vec<u8, MAX_UDS_FRAME>), MAX_UDS_OUTBOX> = Vec::new();
         self.server.drain_outbox(&mut srv_out);
 
         for (_, uds_data) in &srv_out {
@@ -218,7 +292,7 @@ where
     /// Drains outbound ISO-TP CAN frames.
     pub fn drain_can_outbox(
         &mut self,
-        out: &mut Vec<(NodeAddress, Vec<u8, ECU_CAN_FRAME>), ECU_CAN_OUT>,
+        out: &mut Vec<(NodeAddress, Vec<u8, MAX_CAN_FRAME>), MAX_CAN_OUTBOX>,
     ) -> usize {
         let n = self.can_outbox.len();
 
@@ -236,7 +310,7 @@ where
     /// Drains the response segmenter into `can_outbox` until it either
     /// completes, runs out of frames, or needs a flow control frame.
     fn drain_resp_segmenter(&mut self) -> Result<(), EcuNodeError<H::Error>> {
-        let mut out_buf = [0u8; ECU_CAN_FRAME];
+        let mut out_buf = [0u8; MAX_CAN_FRAME];
 
         loop {
             match self
@@ -249,7 +323,7 @@ where
                 // FC arrives via handle_can_frame next tick.
                 SegmentResult::WaitForFlowControl => break,
                 SegmentResult::Frame { len } => {
-                    let mut frame: Vec<u8, ECU_CAN_FRAME> = Vec::new();
+                    let mut frame: Vec<u8, MAX_CAN_FRAME> = Vec::new();
                     let _ = frame.extend_from_slice(&out_buf[..len]);
 
                     // Frames go to response_can_id - gateway listens there

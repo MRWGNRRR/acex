@@ -28,11 +28,11 @@ pub struct PendingRoute {
 ///
 /// `N` - max concurrent pending routes (matches max tester connections).
 #[derive(Debug)]
-pub struct PendingRouteTable<const N: usize> {
-    entries: heapless::Vec<PendingRoute, N>,
+pub struct PendingRouteTable<const MAX_PENDING: usize> {
+    entries: heapless::Vec<PendingRoute, MAX_PENDING>,
 }
 
-impl<const N: usize> PendingRouteTable<N> {
+impl<const MAX_PENDING: usize> PendingRouteTable<MAX_PENDING> {
     pub fn new() -> Self {
         Self {
             entries: heapless::Vec::new(),

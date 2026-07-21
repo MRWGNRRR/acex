@@ -11,10 +11,10 @@ use crate::rng::{Rng, Xorshift64};
 
 /// A message in-flight on the simulation bus.
 #[derive(Debug, Clone)]
-pub struct Envelope<const N: usize> {
+pub struct Envelope<const MAX_DATA: usize> {
     pub src: NodeAddress,
     pub dst: NodeAddress,
-    pub data: heapless::Vec<u8, N>,
+    pub data: heapless::Vec<u8, MAX_DATA>,
     /// Earliest time this message may be delivered.
     pub deliver_at: Instant,
 }
@@ -31,14 +31,14 @@ pub struct Envelope<const N: usize> {
 /// `N` - max message payload bytes
 /// `Q` - max messages in-flight simultaneously
 #[derive(Debug)]
-pub struct SimBus<const N: usize, const Q: usize> {
+pub struct SimBus<const MAX_DATA: usize, const MAX_QUEUED: usize> {
     clock: SimClock,
     rng: Xorshift64,
     faults: FaultConfig,
-    queue: heapless::Vec<Envelope<N>, Q>,
+    queue: heapless::Vec<Envelope<MAX_DATA>, MAX_QUEUED>,
 }
 
-impl<const N: usize, const Q: usize> SimBus<N, Q> {
+impl<const MAX_DATA: usize, const MAX_QUEUED: usize> SimBus<MAX_DATA, MAX_QUEUED> {
     pub fn new(seed: u64, faults: FaultConfig) -> Self {
         Self {
             clock: SimClock::new(),
@@ -55,7 +55,7 @@ impl<const N: usize, const Q: usize> SimBus<N, Q> {
 
     /// Advances simulation time by `duration` and returns all messages that are due for delivery
     /// at or before the new time.
-    pub fn tick(&mut self, duration: Duration) -> heapless::Vec<Envelope<N>, Q> {
+    pub fn tick(&mut self, duration: Duration) -> heapless::Vec<Envelope<MAX_DATA>, MAX_QUEUED> {
         self.clock.advance(duration);
         let now = self.clock.now();
 

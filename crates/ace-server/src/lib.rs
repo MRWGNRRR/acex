@@ -8,4 +8,3 @@ pub mod server;
 pub mod sim_node;
 
 pub use nrc::{BuiltinNrc, NrcError};
-pub use server::{MAX_FRAME, MAX_OUTBOX};

@@ -66,7 +66,7 @@ pub enum ConnectionPhase {
 /// The gateway collects these after each `handle` or `tick` call and acts on them - sending
 /// frames, routing messages, closing sockets.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum ConnectionEvent<const BUF: usize = 4096> {
+pub enum ConnectionEvent<const UDS_MAX_FRAME: usize> {
     /// Send this `RoutingActivationResponse` frame back to the tester.
     SendActivationResponse(RoutingActivationResponse),
 
@@ -74,7 +74,7 @@ pub enum ConnectionEvent<const BUF: usize = 4096> {
     ForwardToEcu {
         source_address: u16,
         target_address: u16,
-        uds_data: heapless::Vec<u8, BUF>,
+        uds_data: heapless::Vec<u8, UDS_MAX_FRAME>,
     },
 
     /// Send a `DiagnosticMessageAck` back to the tester.
@@ -109,18 +109,36 @@ pub enum ConnectionEvent<const BUF: usize = 4096> {
 /// Owns the `ActivationStateMachine` for this connection and tracks idle/alive-check timing. The
 /// gateway drives this via `handle_frame` and `tick`.
 #[derive(Debug)]
-pub struct ConnectionState<A: ActivationAuthProvider, const BUF: usize = 4096> {
+pub struct ConnectionState<
+    // region: ConnectionState Constants
+    const UDS_MAX_FRAME: usize,
+    const CONNECTION_MAX_EVENTS: usize,
+    // endregion: ConnectionState Constants
+
+    // region: ActivationState Constants
+    const MAX_TESTERS: usize,
+    const MAX_ACTIVATION_TYPES: usize,
+    // endregion: ActivationState Constants
+    A: ActivationAuthProvider,
+> {
     config: ConnectionConfig,
     phase: ConnectionPhase,
-    activation: ActivationStateMachine<A>,
+    activation: ActivationStateMachine<MAX_TESTERS, MAX_ACTIVATION_TYPES, A>,
     last_rx: Instant,
-    events: heapless::Vec<ConnectionEvent<BUF>, 8>,
+    events: heapless::Vec<ConnectionEvent<UDS_MAX_FRAME>, CONNECTION_MAX_EVENTS>,
 }
 
-impl<A: ActivationAuthProvider, const BUF: usize> ConnectionState<A, BUF> {
+impl<
+        const UDS_MAX_FRAME: usize,
+        const CONNECTION_MAX_EVENTS: usize,
+        const MAX_TESTERS: usize,
+        const MAX_ACTIVATION_TYPES: usize,
+        A: ActivationAuthProvider,
+    > ConnectionState<UDS_MAX_FRAME, CONNECTION_MAX_EVENTS, MAX_TESTERS, MAX_ACTIVATION_TYPES, A>
+{
     pub fn new(
         config: ConnectionConfig,
-        activation: ActivationStateMachine<A>,
+        activation: ActivationStateMachine<MAX_TESTERS, MAX_ACTIVATION_TYPES, A>,
         now: Instant,
     ) -> Self {
         Self {
@@ -195,7 +213,7 @@ impl<A: ActivationAuthProvider, const BUF: usize> ConnectionState<A, BUF> {
     }
 
     /// Drains accumulated connection events.
-    pub fn drain_events(&mut self) -> impl Iterator<Item = ConnectionEvent<BUF>> + '_ {
+    pub fn drain_events(&mut self) -> impl Iterator<Item = ConnectionEvent<UDS_MAX_FRAME>> + '_ {
         self.events.drain(..)
     }
 
@@ -268,7 +286,7 @@ impl<A: ActivationAuthProvider, const BUF: usize> ConnectionState<A, BUF> {
             return;
         }
 
-        let mut uds_data: heapless::Vec<u8, BUF> = heapless::Vec::new();
+        let mut uds_data: heapless::Vec<u8, UDS_MAX_FRAME> = heapless::Vec::new();
 
         if uds_data.extend_from_slice(uds_bytes).is_err() {
             let _ = self.events.push(ConnectionEvent::SendDiagnosticNack {

@@ -125,9 +125,9 @@ pub enum CanEvent {
 /// `N` - max frame payload bytes (8 for classic CAN, 64 for CAN FD)
 /// `Q` - max frames in-flight simultaneously
 #[derive(Debug)]
-pub struct CanSimBus<const N: usize, const Q: usize> {
+pub struct CanSimBus<const MAX_DATA: usize, const MAX_QUEUED: usize> {
     /// Underlying message bus.
-    inner: SimBus<N, Q>,
+    inner: SimBus<MAX_DATA, MAX_QUEUED>,
 
     /// CAN fault configuration.
     can_faults: CanFaultConfig,
@@ -142,7 +142,7 @@ pub struct CanSimBus<const N: usize, const Q: usize> {
     rng: Xorshift64,
 }
 
-impl<const N: usize, const Q: usize> CanSimBus<N, Q> {
+impl<const MAX_DATA: usize, const MAX_QUEUED: usize> CanSimBus<MAX_DATA, MAX_QUEUED> {
     /// Creates a new `CanSimBus`.
     ///
     /// `seed` - seeds both the message bus RNG and the CAN fault RNG. The CAN RNG uses
@@ -216,7 +216,7 @@ impl<const N: usize, const Q: usize> CanSimBus<N, Q> {
     // region: Tick
 
     /// Advances simulation time, delivers due frames, and checks bus-off fault injection.
-    pub fn tick(&mut self, duration: Duration) -> heapless::Vec<Envelope<N>, Q> {
+    pub fn tick(&mut self, duration: Duration) -> heapless::Vec<Envelope<MAX_DATA>, MAX_QUEUED> {
         if self.bus_state.is_operational() {
             if self
                 .rng
@@ -256,7 +256,7 @@ impl<const N: usize, const Q: usize> CanSimBus<N, Q> {
         self.can_faults = faults;
     }
 
-    pub fn inner_mut(&mut self) -> &mut SimBus<N, Q> {
+    pub fn inner_mut(&mut self) -> &mut SimBus<MAX_DATA, MAX_QUEUED> {
         &mut self.inner
     }
 

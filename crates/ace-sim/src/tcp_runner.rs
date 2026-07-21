@@ -37,16 +37,27 @@ pub trait TcpEventHandler {
 ///
 /// `N` - max message payload bytes
 /// `Q` - max messages in-flight on the bus
-pub struct TcpSimRunner<const N: usize, const Q: usize> {
-    bus: TcpSimBus<N, Q>,
+pub struct TcpSimRunner<
+    const MAX_DATA: usize,
+    const MAX_QUEUED: usize,
+    const TCP_MAX_EVENTS: usize,
+    const MAX_OUTBOX: usize,
+> {
+    bus: TcpSimBus<MAX_DATA, MAX_QUEUED, TCP_MAX_EVENTS>,
 }
 
-impl<const N: usize, const Q: usize> TcpSimRunner<N, Q> {
-    pub fn new(bus: TcpSimBus<N, Q>) -> Self {
+impl<
+        const MAX_DATA: usize,
+        const MAX_QUEUED: usize,
+        const TCP_MAX_EVENTS: usize,
+        const MAX_OUTBOX: usize,
+    > TcpSimRunner<MAX_DATA, MAX_QUEUED, TCP_MAX_EVENTS, MAX_OUTBOX>
+{
+    pub fn new(bus: TcpSimBus<MAX_DATA, MAX_QUEUED, TCP_MAX_EVENTS>) -> Self {
         Self { bus }
     }
 
-    pub fn bus(&mut self) -> &mut TcpSimBus<N, Q> {
+    pub fn bus(&mut self) -> &mut TcpSimBus<MAX_DATA, MAX_QUEUED, TCP_MAX_EVENTS> {
         &mut self.bus
     }
 
@@ -65,7 +76,7 @@ impl<const N: usize, const Q: usize> TcpSimRunner<N, Q> {
     /// Returns the number of messages delivered.
     pub fn tick(
         &mut self,
-        nodes: &mut [&mut dyn SimNodeErased<N, Q>],
+        nodes: &mut [&mut dyn SimNodeErased<MAX_DATA, MAX_OUTBOX>],
         tcp_event_nodes: &mut [&mut dyn TcpEventHandler],
         duration: Duration,
     ) -> usize {
@@ -82,7 +93,7 @@ impl<const N: usize, const Q: usize> TcpSimRunner<N, Q> {
             }
         }
 
-        let tcp_events: heapless::Vec<TcpEvent, 16> = self.bus.drain_events().collect();
+        let tcp_events: heapless::Vec<TcpEvent, TCP_MAX_EVENTS> = self.bus.drain_events().collect();
         for event in &tcp_events {
             for handler in tcp_event_nodes.iter_mut() {
                 handler.on_tcp_event(event, now);
@@ -93,7 +104,7 @@ impl<const N: usize, const Q: usize> TcpSimRunner<N, Q> {
             node.tick(now);
         }
 
-        let mut outbox: heapless::Vec<(NodeAddress, heapless::Vec<u8, N>), Q> =
+        let mut outbox: heapless::Vec<(NodeAddress, heapless::Vec<u8, MAX_DATA>), MAX_OUTBOX> =
             heapless::Vec::new();
         for node in nodes.iter_mut() {
             outbox.clear();

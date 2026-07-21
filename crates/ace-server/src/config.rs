@@ -216,20 +216,31 @@ pub struct SecurityLevelConfig {
 /// All lookups are O(n) over the small, fixed-size `heapless::Vec` collections - appropriate for
 /// the sizes involved.
 #[derive(Debug, Clone)]
-pub struct ServerConfig {
+pub struct ServerConfig<
+    const MAX_SESSIONS: usize,
+    const MAX_SERVICES: usize,
+    const MAX_DIDS: usize,
+    const MAX_SECURITY_LEVELS: usize,
+> {
     /// Physical address this server responds to.
     pub physical_address: u16,
 
     /// Functional (broadcast) address this server listens on.
     pub functional_address: u16,
 
-    pub sessions: heapless::Vec<SessionConfig, 8>,
-    pub services: heapless::Vec<ServiceConfig, 32>,
-    pub data_identifiers: heapless::Vec<DidConfig, 64>,
-    pub security_levels: heapless::Vec<SecurityLevelConfig, 8>,
+    pub sessions: heapless::Vec<SessionConfig, MAX_SESSIONS>,
+    pub services: heapless::Vec<ServiceConfig, MAX_SERVICES>,
+    pub data_identifiers: heapless::Vec<DidConfig, MAX_DIDS>,
+    pub security_levels: heapless::Vec<SecurityLevelConfig, MAX_SECURITY_LEVELS>,
 }
 
-impl ServerConfig {
+impl<
+        const MAX_SESSIONS: usize,
+        const MAX_SERVICES: usize,
+        const MAX_DIDS: usize,
+        const MAX_SECURITY_LEVELS: usize,
+    > ServerConfig<MAX_SESSIONS, MAX_SERVICES, MAX_DIDS, MAX_SECURITY_LEVELS>
+{
     pub fn new(physical_address: u16, functional_address: u16) -> Self {
         Self {
             physical_address,
@@ -257,6 +268,7 @@ impl ServerConfig {
         let _ = self.data_identifiers.push(d);
         self
     }
+
     pub fn with_security_level(mut self, l: SecurityLevelConfig) -> Self {
         let _ = self.security_levels.push(l);
         self

@@ -86,13 +86,13 @@ pub enum SegmentResult {
 ///
 /// `st_min` from received FC frames is stored but not enforced - the caller
 /// is responsible for honouring the inter-frame delay on bare metal targets.
-pub struct Segmenter<const N: usize = 4096> {
+pub struct Segmenter<const ISOTP_MAX_FRAME: usize> {
     config: SegmenterConfig,
-    payload: heapless::Vec<u8, N>,
+    payload: heapless::Vec<u8, ISOTP_MAX_FRAME>,
     state: SegmenterState,
 }
 
-impl<const N: usize> Segmenter<N> {
+impl<const ISOTP_MAX_FRAME: usize> Segmenter<ISOTP_MAX_FRAME> {
     pub fn new(config: SegmenterConfig) -> Self {
         Self {
             config,
@@ -107,7 +107,7 @@ impl<const N: usize> Segmenter<N> {
             return Err(IsoTpError::InvalidLength);
         }
 
-        if payload.len() > N {
+        if payload.len() > ISOTP_MAX_FRAME {
             return Err(IsoTpError::PayloadTooLarge);
         }
 

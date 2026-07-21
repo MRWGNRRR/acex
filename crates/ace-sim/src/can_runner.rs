@@ -38,12 +38,12 @@ pub struct CanSimRunner<const N: usize, const Q: usize> {
     bus: CanSimBus<N, Q>,
 }
 
-impl<const N: usize, const Q: usize> CanSimRunner<N, Q> {
-    pub fn new(bus: CanSimBus<N, Q>) -> Self {
+impl<const MAX_FRAME: usize, const MAX_OUTBOX: usize> CanSimRunner<MAX_FRAME, MAX_OUTBOX> {
+    pub fn new(bus: CanSimBus<MAX_FRAME, MAX_OUTBOX>) -> Self {
         Self { bus }
     }
 
-    pub fn bus(&mut self) -> &mut CanSimBus<N, Q> {
+    pub fn bus(&mut self) -> &mut CanSimBus<MAX_FRAME, MAX_OUTBOX> {
         &mut self.bus
     }
 
@@ -63,7 +63,7 @@ impl<const N: usize, const Q: usize> CanSimRunner<N, Q> {
     /// Returns the number of frames delivered.
     pub fn tick(
         &mut self,
-        nodes: &mut [&mut dyn SimNodeErased<N, Q>],
+        nodes: &mut [&mut dyn SimNodeErased<MAX_FRAME, MAX_OUTBOX>],
         can_event_nodes: &mut [&mut dyn CanEventHandler],
         duration: Duration,
     ) -> usize {
@@ -91,7 +91,7 @@ impl<const N: usize, const Q: usize> CanSimRunner<N, Q> {
             node.tick(now);
         }
 
-        let mut outbox: heapless::Vec<(NodeAddress, heapless::Vec<u8, N>), Q> =
+        let mut outbox: heapless::Vec<(NodeAddress, heapless::Vec<u8, MAX_FRAME>), MAX_OUTBOX> =
             heapless::Vec::new();
         for node in nodes.iter_mut() {
             outbox.clear();

@@ -27,7 +27,7 @@ use ace_doip::{
     },
     session::{ActivationAuthProvider, ActivationStateMachine, ConnectionEvent, ConnectionState},
 };
-use ace_proto::{doip::constants::DOIP_HEADER_LEN, DoipFrame};
+use ace_proto::DoipFrame;
 use ace_sim::{clock::Instant, io::NodeAddress};
 
 use crate::{
@@ -39,23 +39,23 @@ use crate::{
 
 // region: Capacity Constants
 
-/// Max DoIP frame size for the TCP bus side.
-pub const TCP_MAX_FRAME: usize = 4096 + DOIP_HEADER_LEN + 4; // UDS + DoIP header + addresses
-
-/// Max outbox depth on the TCP bus side.
-pub const TCP_MAX_OUTBOX: usize = 16;
-
-/// Max raw UDS frame size for the CAN bus side
-pub const CAN_MAX_FRAME: usize = 4096;
-
-/// Max outbox depth on the CAN bus side.
-pub const CAN_MAX_OUTBOX: usize = 16;
-
-/// Max raw UDS frame size
-pub const UDS_MAX_FRAME: usize = 4096;
-
-/// Max outbox depth for UDS
-pub const UDS_MAX_OUTBOX: usize = 8;
+// /// Max DoIP frame size for the TCP bus side.
+// pub const TCP_MAX_FRAME: usize = 4096; // UDS + DoIP header + addresses
+//
+// /// Max outbox depth on the TCP bus side.
+// pub const TCP_MAX_OUTBOX: usize = 8;
+//
+// /// Max raw UDS frame size for the CAN bus side
+// pub const CAN_MAX_FRAME: usize = 4096;
+//
+// /// Max outbox depth on the CAN bus side.
+// pub const CAN_MAX_OUTBOX: usize = 16;
+//
+// /// Max raw UDS frame size
+// pub const UDS_MAX_FRAME: usize = 4096;
+//
+// /// Max outbox depth for UDS
+// pub const UDS_MAX_OUTBOX: usize = 8;
 
 // endregion: Capacity Constants
 
@@ -93,17 +93,17 @@ pub enum GatewayError {
 ///
 /// The gateway owns one of these per registered ECU. All CAN framing for that ECU goes through
 /// here. The scenario never touches ISO-TP directly - it only calls gateway methods.
-struct EcuIsoTpNode<const N: usize = UDS_MAX_FRAME> {
+struct EcuIsoTpNode<const ISOTP_MAX_FRAME: usize> {
     request_can_id: u32,
     response_can_id: u32,
     /// Segments UDS request bytes -> ISO-TP CAN frames for the ECU.
-    req_segmenter: Segmenter<N>,
+    req_segmenter: Segmenter<ISOTP_MAX_FRAME>,
 
     /// Reassembles ISO-TP CAN response frames from the ECU -> UDS bytes.
-    resp_reassembler: Reassembler<N>,
+    resp_reassembler: Reassembler<ISOTP_MAX_FRAME>,
 }
 
-impl<const N: usize> EcuIsoTpNode<N> {
+impl<const ISOTP_MAX_FRAME: usize> EcuIsoTpNode<ISOTP_MAX_FRAME> {
     fn new(request_can_id: u32, response_can_id: u32, mode: IsoTpAddressingMode) -> Self {
         Self {
             request_can_id,
@@ -119,25 +119,46 @@ impl<const N: usize> EcuIsoTpNode<N> {
 // region: ConnectionSlot
 
 /// A slot for one tester TCP connection.
-struct ConnectionSlot<A: ActivationAuthProvider, const BUF: usize> {
+struct ConnectionSlot<
+    // region: ConnectionState Constants
+    const UDS_MAX_FRAME: usize,
+    const MAX_CONNECTION_EVENTS: usize,
+    const MAX_TESTERS: usize,
+    const MAX_ACTIVATION_TYPES: usize,
+    // endregion: ConnectionState Constants
+    A: ActivationAuthProvider,
+> {
     /// The logical address of the connected tester - `None` if slot is free.
     tester_address: Option<u16>,
-    state: ConnectionState<A, BUF>,
+    state:
+        ConnectionState<UDS_MAX_FRAME, MAX_CONNECTION_EVENTS, MAX_TESTERS, MAX_ACTIVATION_TYPES, A>,
 }
 
 // endregion: ConnectionSlot
 
 // region: DoipGateway
 
-pub struct DoipGateway<A, const MAX_TESTERS: usize = 1, const BUF: usize = 4096>
-where
+pub struct DoipGateway<
+    const CAN_MAX_FRAME: usize,
+    const ISOTP_MAX_NODES: usize,
+    const TCP_MAX_FRAME: usize,
+    const TCP_MAX_OUTBOX: usize,
+    const CAN_MAX_OUTBOX: usize,
+    const MAX_TESTERS: usize,
+    const MAX_FRAME: usize,
+    const UDS_MAX_FRAME: usize,
+    const MAX_CONNECTION_EVENTS: usize,
+    const MAX_ACTIVATION_TYPES: usize,
+    const MAX_NODES: usize,
+    A,
+> where
     A: ActivationAuthProvider + Clone,
 {
-    config: GatewayConfig,
+    config: GatewayConfig<MAX_NODES, MAX_TESTERS, MAX_ACTIVATION_TYPES>,
     auth: A,
     address: NodeAddress,
 
-    isotp_nodes: heapless::Vec<EcuIsoTpNode<BUF>, 8>,
+    isotp_nodes: heapless::Vec<EcuIsoTpNode<CAN_MAX_FRAME>, ISOTP_MAX_NODES>,
 
     /// Outbound DoIP frames for the TCP bus.
     tcp_outbox: heapless::Vec<(NodeAddress, heapless::Vec<u8, TCP_MAX_FRAME>), TCP_MAX_OUTBOX>,
@@ -149,15 +170,51 @@ where
     routes: PendingRouteTable<MAX_TESTERS>,
 
     /// Active tester connection slots.
-    connections: heapless::Vec<ConnectionSlot<A, BUF>, MAX_TESTERS>,
+    connections: heapless::Vec<
+        ConnectionSlot<UDS_MAX_FRAME, MAX_CONNECTION_EVENTS, MAX_TESTERS, MAX_ACTIVATION_TYPES, A>,
+        MAX_TESTERS,
+    >,
 }
 
-impl<A, const MAX_TESTERS: usize, const BUF: usize> DoipGateway<A, MAX_TESTERS, BUF>
+impl<
+        const CAN_MAX_FRAME: usize,
+        const ISOTP_MAX_NODES: usize,
+        const TCP_MAX_FRAME: usize,
+        const TCP_MAX_OUTBOX: usize,
+        const CAN_MAX_OUTBOX: usize,
+        const MAX_TESTERS: usize,
+        const MAX_FRAME: usize,
+        const UDS_MAX_FRAME: usize,
+        const MAX_CONNECTION_EVENTS: usize,
+        const MAX_ACTIVATION_TYPES: usize,
+        const MAX_NODES: usize,
+        A,
+    >
+    DoipGateway<
+        CAN_MAX_FRAME,
+        ISOTP_MAX_NODES,
+        TCP_MAX_FRAME,
+        TCP_MAX_OUTBOX,
+        CAN_MAX_OUTBOX,
+        MAX_TESTERS,
+        MAX_FRAME,
+        UDS_MAX_FRAME,
+        MAX_CONNECTION_EVENTS,
+        MAX_ACTIVATION_TYPES,
+        MAX_NODES,
+        A,
+    >
 where
     A: ActivationAuthProvider + Clone,
 {
-    pub fn new(config: GatewayConfig, auth: A, address: NodeAddress) -> Self {
-        let mut isotp_nodes: heapless::Vec<EcuIsoTpNode<BUF>, 8> = heapless::Vec::new();
+    pub fn new(
+        config: GatewayConfig<MAX_NODES, MAX_TESTERS, MAX_ACTIVATION_TYPES>,
+        auth: A,
+        address: NodeAddress,
+    ) -> Self {
+        let mut isotp_nodes: heapless::Vec<EcuIsoTpNode<CAN_MAX_FRAME>, ISOTP_MAX_NODES> =
+            heapless::Vec::new();
+
         for node in &config.nodes {
             let _ = isotp_nodes.push(EcuIsoTpNode::new(
                 node.request_can_id,
@@ -165,6 +222,7 @@ where
                 config.isotp_addressing_mode.clone(),
             ));
         }
+
         Self {
             config,
             auth,
@@ -346,7 +404,7 @@ where
         for idx in 0..self.connections.len() {
             self.connections[idx].state.tick(now);
 
-            let events: heapless::Vec<ConnectionEvent<BUF>, 8> =
+            let events: heapless::Vec<ConnectionEvent<UDS_MAX_FRAME>, MAX_CONNECTION_EVENTS> =
                 self.connections[idx].state.drain_events().collect();
 
             let tester_addr = self.connections[idx]
@@ -459,7 +517,7 @@ where
         tester: &NodeAddress,
         _now: Instant,
     ) -> Result<(), GatewayError> {
-        let events: heapless::Vec<ConnectionEvent<BUF>, 8> =
+        let events: heapless::Vec<ConnectionEvent<UDS_MAX_FRAME>, MAX_CONNECTION_EVENTS> =
             self.connections[slot_idx].state.drain_events().collect();
 
         for event in events {
@@ -473,7 +531,7 @@ where
         &mut self,
         slot_idx: usize,
         tester: &NodeAddress,
-        event: ConnectionEvent<BUF>,
+        event: ConnectionEvent<UDS_MAX_FRAME>,
     ) -> Result<(), GatewayError> {
         match event {
             ConnectionEvent::SendActivationResponse(resp) => {

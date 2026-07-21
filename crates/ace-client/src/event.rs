@@ -15,12 +15,12 @@ use heapless::Vec;
 /// corrective action autonomously.
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum ClientEvent {
+pub enum ClientEvent<const MAX_DATA: usize> {
     /// A positive response was received for the given service.
     ///
     /// `sid` is the request SID (not the response SID).
     /// `data` contains the response payload bytes after the response SID.
-    PositiveResponse { sid: u8, data: Vec<u8, 256> },
+    PositiveResponse { sid: u8, data: Vec<u8, MAX_DATA> },
 
     /// A negative response was received.
     ///
@@ -53,14 +53,14 @@ pub enum ClientEvent {
         did: u8,
 
         /// Data record bytes
-        data: Vec<u8, 256>,
+        data: Vec<u8, MAX_DATA>,
     },
 
     /// A response arrived with no matching pending request.
     ///
     /// This can occur under fault injection (reordered or delayed responses arriving after a
     /// timeout) or if the server sends an unsolicited response.
-    Unsolicited { data: Vec<u8, 256> },
+    Unsolicited { data: Vec<u8, MAX_DATA> },
 }
 
 // endregion: Client Event

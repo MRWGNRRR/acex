@@ -8,16 +8,25 @@ use ace_sim::node::SimNode;
 // region: Capacity Constants
 
 /// Maximum UDS frame payload bytes = matches ace-server for bus compatibility.
-pub const SIM_MAX_FRAME: usize = 4096;
+// pub const SIM_MAX_FRAME: usize = 4096;
 
 /// Maximum outbox depth.
-pub const SIM_MAX_OUTBOX: usize = 16;
+// pub const SIM_MAX_OUTBOX: usize = 16;
 
 // endregion: Capacity Constants
 
 // region: SimNode for UdsClient
 
-impl<const N: usize> SimNode<SIM_MAX_FRAME, SIM_MAX_OUTBOX> for UdsClient<N> {
+impl<
+        const PENDING: usize,
+        const SIM_MAX_FRAME: usize,
+        const SIM_MAX_OUTBOX: usize,
+        const MAX_EVENTS: usize,
+        const PERIODIC_DIDS: usize,
+        const MAX_DATA: usize,
+    > SimNode<SIM_MAX_FRAME, SIM_MAX_OUTBOX>
+    for UdsClient<PENDING, SIM_MAX_FRAME, SIM_MAX_OUTBOX, MAX_EVENTS, PERIODIC_DIDS, MAX_DATA>
+{
     type Error = ClientError;
 
     fn address(&self) -> &ace_sim::io::NodeAddress {
