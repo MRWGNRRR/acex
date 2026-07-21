@@ -2,7 +2,7 @@
 
 use ace_client::client::UdsClient;
 use ace_client::event::ClientEvent;
-use ace_client::{SIM_MAX_FRAME, SIM_MAX_OUTBOX};
+// use ace_client::{SIM_MAX_FRAME, SIM_MAX_OUTBOX};
 use ace_server::server::UdsServer;
 use ace_sim::bus::SimBus;
 use ace_sim::clock::Duration;
@@ -33,9 +33,50 @@ pub const ECU_ADDR: NodeAddress = NodeAddress(0x0001);
 /// seed and fault config always produce the same sequence of events.
 pub struct DstScenario {
     pub runner: SimRunner<SIM_MAX_FRAME, SIM_MAX_OUTBOX>,
-    pub server: UdsServer<TestHandler, TestSecurityProvider>,
-    pub client: UdsClient<1>,
+    pub server: MyUdsServer,
+    pub client: DstScenarioUdsClient,
 }
+
+pub type MyUdsServer = UdsServer<
+    UDS_MAX_FRAME,
+    UDS_MAX_OUTBOX,
+    MAX_SESSIONS,
+    MAX_SERVICES,
+    MAX_DIDS,
+    MAX_SECURITY_LEVELS,
+    DEFAULT_S3,
+    DEFAULT_P2,
+    DEFAULT_P2_EXT,
+    DEFAULT_LOCKOUT,
+    DEFAULT_MAX_SECURITY_ATTEMPTS,
+    MAX_SEED,
+    MAX_PERIODIC,
+    TestHandler,
+    TestSecurityProvider,
+>;
+
+const PENDING: usize = 8;
+const SIM_MAX_FRAME: usize = 4096;
+const SIM_MAX_OUTBOX: usize = 8;
+const MAX_TARGET_EVENTS: usize = 4;
+const PERIODIC_DIDS: usize = 2;
+const MAX_DATA: usize = 256;
+const UDS_MAX_FRAME: usize = 4096;
+const UDS_MAX_OUTBOX: usize = 8;
+const MAX_SESSIONS: usize = 8;
+const MAX_SERVICES: usize = 16;
+const MAX_DIDS: usize = 128;
+const MAX_SECURITY_LEVELS: usize = 8;
+const DEFAULT_S3: u64 = 5_000;
+const DEFAULT_P2: u64 = 50;
+const DEFAULT_P2_EXT: u64 = 4_000;
+const DEFAULT_LOCKOUT: u64 = 10_000;
+const DEFAULT_MAX_SECURITY_ATTEMPTS: u8 = 8;
+const MAX_SEED: usize = 3;
+const MAX_PERIODIC: usize = 16;
+
+pub type DstScenarioUdsClient =
+    UdsClient<PENDING, SIM_MAX_FRAME, SIM_MAX_OUTBOX, MAX_TARGET_EVENTS, PERIODIC_DIDS, MAX_DATA>;
 
 impl DstScenario {
     /// Creates a new scenario with the given seed and fault config.
@@ -91,7 +132,7 @@ impl DstScenario {
 
 /// Drains client events and returns the first `PositiveResponse` for `sid`. Panics if no matching
 /// positive response is found.
-pub fn expect_positive(client: &mut UdsClient<1>, sid: u8) -> Vec<u8, 256> {
+pub fn expect_positive(client: &mut DstScenarioUdsClient, sid: u8) -> Vec<u8, MAX_DATA> {
     client
         .drain_events()
         .find_map(|e| match e {
@@ -103,7 +144,7 @@ pub fn expect_positive(client: &mut UdsClient<1>, sid: u8) -> Vec<u8, 256> {
 
 /// Drains client events and returns the NRC byte of the first `NegativeResponse` for `sid`. Panics
 /// if none is found.
-pub fn expect_nrc(client: &mut UdsClient<1>, sid: u8) -> u8 {
+pub fn expect_nrc(client: &mut DstScenarioUdsClient, sid: u8) -> u8 {
     client
         .drain_events()
         .find_map(|e| match e {
@@ -114,7 +155,7 @@ pub fn expect_nrc(client: &mut UdsClient<1>, sid: u8) -> u8 {
 }
 
 /// Drains client events and asserts a `Timeout` event exists for `sid`. Panics if none found.
-pub fn expect_timeout(client: &mut UdsClient<1>, sid: u8) {
+pub fn expect_timeout(client: &mut DstScenarioUdsClient, sid: u8) {
     let found = client
         .drain_events()
         .any(|e| matches!(e, ClientEvent::Timeout { sid: s } if s == sid));
@@ -125,7 +166,7 @@ pub fn expect_timeout(client: &mut UdsClient<1>, sid: u8) {
 
 /// Drains client events and returns data from the first `PeriodicData` event for `did`. Panics if
 /// none found.
-pub fn expect_periodic(client: &mut UdsClient<1>, did: u8) -> Vec<u8, 256> {
+pub fn expect_periodic(client: &mut DstScenarioUdsClient, did: u8) -> Vec<u8, MAX_DATA> {
     client
         .drain_events()
         .find_map(|e| match e {
@@ -136,7 +177,7 @@ pub fn expect_periodic(client: &mut UdsClient<1>, did: u8) -> Vec<u8, 256> {
 }
 
 /// Asserts the server is in the expected session type.
-pub fn assert_session(server: &UdsServer<TestHandler, TestSecurityProvider>, expected: u8) {
+pub fn assert_session(server: &MyUdsServer, expected: u8) {
     assert_eq!(
         server.session_type(),
         expected,
@@ -147,7 +188,7 @@ pub fn assert_session(server: &UdsServer<TestHandler, TestSecurityProvider>, exp
 }
 
 /// Asserts the server has the expected security level unlocked.
-pub fn assert_security(server: &UdsServer<TestHandler, TestSecurityProvider>, expected: u8) {
+pub fn assert_security(server: &MyUdsServer, expected: u8) {
     assert_eq!(
         server.security_level(),
         expected,

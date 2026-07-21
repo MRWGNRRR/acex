@@ -15,16 +15,6 @@ use crate::security_provider::SecurityProvider;
 
 // endregion: Imports
 
-// region: Capacity constants
-
-pub const MAX_OUTBOX: usize = 16;
-pub const MAX_FRAME: usize = 4096;
-pub const MAX_PERIODIC: usize = 8;
-pub const MAX_DATA_BUF: usize = 256;
-pub const MAX_SEED: usize = 16;
-
-// endregion: Capacity constants
-
 // region: ServerError
 
 #[derive(Debug)]
@@ -64,14 +54,14 @@ impl SessionState {
 // region: SecurityState
 
 #[derive(Debug, Clone)]
-struct SecurityState {
+struct SecurityState<const MAX_SEED: usize> {
     pending_seed: Vec<u8, MAX_SEED>,
     pending_level: u8,
     failed_attempts: Vec<(u8, u8), 8>,
     lockout_until: Vec<(u8, Instant), 8>,
 }
 
-impl SecurityState {
+impl<const MAX_SEED: usize> SecurityState<MAX_SEED> {
     fn new() -> Self {
         Self {
             pending_seed: Vec::new(),
@@ -138,11 +128,11 @@ struct PeriodicEntry {
 }
 
 #[derive(Debug)]
-struct PeriodicState {
+struct PeriodicState<const MAX_PERIODIC: usize> {
     entries: Vec<PeriodicEntry, MAX_PERIODIC>,
 }
 
-impl PeriodicState {
+impl<const MAX_PERIODIC: usize> PeriodicState<MAX_PERIODIC> {
     fn new() -> Self {
         Self {
             entries: Vec::new(),
@@ -202,28 +192,76 @@ impl PeriodicState {
 /// All timing is driven by [`tick`] - no blocking, no hardware timers,
 /// no OS calls. Suitable for direct use as a `SimNode` in `ace-sim`.
 #[derive(Debug)]
-pub struct UdsServer<H, S>
-where
+pub struct UdsServer<
+    const MAX_FRAME: usize,
+    const MAX_OUTBOX: usize,
+    const MAX_SESSIONS: usize,
+    const MAX_SERVICES: usize,
+    const MAX_DIDS: usize,
+    const MAX_SECURITY_LEVELS: usize,
+    const DEFAULT_S3: u64,
+    const DEFAULT_P2: u64,
+    const DEFAULT_P2_EXT: u64,
+    const DEFAULT_LOCKOUT: u64,
+    const DEFAULT_MAX_SECURITY_ATTEMPTS: u8,
+    const MAX_SEED: usize,
+    const MAX_PERIODIC: usize,
+    H,
+    S,
+> where
     H: ServerHandler,
     S: SecurityProvider,
 {
-    config: ServerConfig,
+    config: ServerConfig<MAX_SESSIONS, MAX_SERVICES, MAX_DIDS, MAX_SECURITY_LEVELS>,
     handler: H,
     security_provider: S,
     address: NodeAddress,
     session: SessionState,
-    security: SecurityState,
-    periodic: PeriodicState,
+    security: SecurityState<MAX_SEED>,
+    periodic: PeriodicState<MAX_PERIODIC>,
     outbox: Vec<(NodeAddress, Vec<u8, MAX_FRAME>), MAX_OUTBOX>,
 }
 
-impl<H, S> UdsServer<H, S>
+impl<
+        const MAX_FRAME: usize,
+        const MAX_OUTBOX: usize,
+        const MAX_SESSIONS: usize,
+        const MAX_SERVICES: usize,
+        const MAX_DIDS: usize,
+        const MAX_SECURITY_LEVELS: usize,
+        const DEFAULT_S3: u64,
+        const DEFAULT_P2: u64,
+        const DEFAULT_P2_EXT: u64,
+        const DEFAULT_LOCKOUT: u64,
+        const DEFAULT_MAX_SECURITY_ATTEMPTS: u8,
+        const MAX_SEED: usize,
+        const MAX_PERIODIC: usize,
+        H,
+        S,
+    >
+    UdsServer<
+        MAX_FRAME,
+        MAX_OUTBOX,
+        MAX_SESSIONS,
+        MAX_SERVICES,
+        MAX_DIDS,
+        MAX_SECURITY_LEVELS,
+        DEFAULT_S3,
+        DEFAULT_P2,
+        DEFAULT_P2_EXT,
+        DEFAULT_LOCKOUT,
+        DEFAULT_MAX_SECURITY_ATTEMPTS,
+        MAX_SEED,
+        MAX_PERIODIC,
+        H,
+        S,
+    >
 where
     H: ServerHandler,
     S: SecurityProvider,
 {
     pub fn new(
-        config: ServerConfig,
+        config: ServerConfig<MAX_SESSIONS, MAX_SERVICES, MAX_DIDS, MAX_SECURITY_LEVELS>,
         handler: H,
         security_provider: S,
         address: NodeAddress,
@@ -382,7 +420,7 @@ where
         let s3 = self
             .current_session()
             .map(|s| s.s3_timeout)
-            .unwrap_or(Duration::from_millis(5_000));
+            .unwrap_or(Duration::from_millis(DEFAULT_S3));
         if let Some(elapsed) = now.checked_duration_since(self.session.last_rx) {
             if elapsed > s3 {
                 self.session.session_type = 0x01;
@@ -530,7 +568,7 @@ where
                     s.p2_extended_timeout.as_millis() / 10,
                 )
             })
-            .unwrap_or((50, 500));
+            .unwrap_or((DEFAULT_P2, DEFAULT_P2_EXT));
 
         let payload = [
             session_type,
@@ -616,7 +654,7 @@ where
                 .extend_from_slice(&seed_buf[..seed_len]);
             self.security.pending_level = level;
 
-            let mut payload: Vec<u8, { MAX_SEED + 1 }> = Vec::new();
+            let mut payload: Vec<u8, MAX_SEED> = Vec::new();
             let _ = payload.push(level);
             let _ = payload.extend_from_slice(&seed_buf[..seed_len]);
             self.pos(src, 0x27, &payload, now)
@@ -636,10 +674,12 @@ where
             let key = frame.payload().get(1..).unwrap_or(&[]);
 
             let level_cfg = self.config.find_security_level(level);
-            let max_attempts = level_cfg.map(|l| l.max_attempts).unwrap_or(3);
+            let max_attempts = level_cfg
+                .map(|l| l.max_attempts)
+                .unwrap_or(DEFAULT_MAX_SECURITY_ATTEMPTS);
             let lockout_dur = level_cfg
                 .map(|l| l.lockout_duration)
-                .unwrap_or(Duration::from_millis(10_000));
+                .unwrap_or(Duration::from_millis(DEFAULT_LOCKOUT));
 
             let seed = self.security.pending_seed.clone();
 
@@ -700,7 +740,7 @@ where
             let _ = resp.push(chunk[0]);
             let _ = resp.push(chunk[1]);
 
-            let mut data_buf = [0u8; MAX_DATA_BUF];
+            let mut data_buf = [0u8; MAX_FRAME];
             let len = self
                 .handler
                 .read_did(did, &mut data_buf)
@@ -831,7 +871,7 @@ where
         let routine_id = u16::from_be_bytes([payload[1], payload[2]]);
         let option_record = payload.get(3..).unwrap_or(&[]);
 
-        let mut buf = [0u8; MAX_DATA_BUF];
+        let mut buf = [0u8; MAX_FRAME];
         let len = self
             .handler
             .routine_control(routine_id, sub_function, option_record, &mut buf)
@@ -841,7 +881,7 @@ where
             return Ok(());
         }
 
-        let mut resp: Vec<u8, { MAX_DATA_BUF + 3 }> = Vec::new();
+        let mut resp: Vec<u8, MAX_FRAME> = Vec::new();
         let _ = resp.push(sub_function);
         let _ = resp.push(payload[1]);
         let _ = resp.push(payload[2]);
@@ -901,13 +941,13 @@ where
         let control_param = payload[2];
         let control_state = payload.get(3..).unwrap_or(&[]);
 
-        let mut buf = [0u8; MAX_DATA_BUF];
+        let mut buf = [0u8; MAX_FRAME];
         let len = self
             .handler
             .io_control(did, control_param, control_state, &mut buf)
             .map_err(ServerError::Handler)?;
 
-        let mut resp: Vec<u8, { MAX_DATA_BUF + 2 }> = Vec::new();
+        let mut resp: Vec<u8, MAX_FRAME> = Vec::new();
         let _ = resp.push(payload[0]);
         let _ = resp.push(payload[1]);
         let _ = resp.extend_from_slice(&buf[..len]);
@@ -979,13 +1019,13 @@ where
         let block_seq = payload[0];
         let data = payload.get(1..).unwrap_or(&[]);
 
-        let mut buf = [0u8; MAX_DATA_BUF];
+        let mut buf = [0u8; MAX_FRAME];
         let len = self
             .handler
             .transfer_data(block_seq, data, &mut buf)
             .map_err(ServerError::Handler)?;
 
-        let mut resp: Vec<u8, { MAX_DATA_BUF + 1 }> = Vec::new();
+        let mut resp: Vec<u8, MAX_FRAME> = Vec::new();
         let _ = resp.push(block_seq);
         let _ = resp.extend_from_slice(&buf[..len]);
         self.pos(src, 0x36, &resp, now)
@@ -1000,7 +1040,7 @@ where
     ) -> Result<(), ServerError<H::Error>> {
         let parameter_record = frame.payload();
 
-        let mut buf = [0u8; MAX_DATA_BUF];
+        let mut buf = [0u8; MAX_FRAME];
         let len = self
             .handler
             .request_transfer_exit(parameter_record, &mut buf)
@@ -1031,7 +1071,7 @@ where
         let path_len = u16::from_be_bytes([payload[1], payload[2]]) as usize;
         let path = payload.get(3..3 + path_len).unwrap_or(&[]);
 
-        let mut buf = [0u8; MAX_DATA_BUF];
+        let mut buf = [0u8; MAX_FRAME];
         let len = self
             .handler
             .request_file_transfer(operation, path, &mut buf)
@@ -1049,7 +1089,7 @@ where
         self.periodic.collect_due(now, &mut due);
 
         for (did, client) in &due {
-            let mut data_buf = [0u8; MAX_DATA_BUF];
+            let mut data_buf = [0u8; MAX_FRAME];
             let len = self
                 .handler
                 .read_did(*did, &mut data_buf)

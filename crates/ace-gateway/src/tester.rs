@@ -17,7 +17,7 @@
 
 // region: Imports
 
-use crate::gateway::{TCP_MAX_FRAME, TCP_MAX_OUTBOX};
+// use crate::gateway::{TCP_MAX_FRAME, TCP_MAX_OUTBOX};
 use ace_client::{client::UdsClient, config::ClientConfig, event::ClientEvent, ClientError};
 use ace_core::{FrameRead, FrameWrite};
 use ace_doip::{
@@ -166,12 +166,26 @@ pub enum DoipConnectionPhase {
 /// Each target has its own UdsClient tracking P2/P2* independently. P2/P2* are updated when a
 /// DiagnosticSessionControlResponse arrives from this target.
 #[derive(Debug)]
-pub struct TargetState {
+pub struct TargetState<
+    const PENDING: usize,
+    const SIM_MAX_FRAME: usize,
+    const SIM_MAX_OUTBOX: usize,
+    const MAX_TARGET_EVENTS: usize,
+    const PERIODIC_DIDS: usize,
+    const MAX_DATA: usize,
+> {
     /// ECU logical address.
     pub address: u16,
 
     /// UDS client for this target - owns P2 timer and event queue.
-    pub client: UdsClient<1>,
+    pub client: UdsClient<
+        PENDING,
+        SIM_MAX_FRAME,
+        SIM_MAX_OUTBOX,
+        MAX_TARGET_EVENTS,
+        PERIODIC_DIDS,
+        MAX_DATA,
+    >,
 
     /// Current P2 timeout - updated from DSC response.
     p2: Duration,
@@ -180,7 +194,15 @@ pub struct TargetState {
     p2_star: Duration,
 }
 
-impl TargetState {
+impl<
+        const PENDING: usize,
+        const SIM_MAX_FRAME: usize,
+        const SIM_MAX_OUTBOX: usize,
+        const MAX_EVENTS: usize,
+        const PERIODIC_DIDS: usize,
+        const MAX_DATA: usize,
+    > TargetState<PENDING, SIM_MAX_FRAME, SIM_MAX_OUTBOX, MAX_EVENTS, PERIODIC_DIDS, MAX_DATA>
+{
     fn new(address: u16, default_p2: Duration, default_p2_star: Duration) -> Self {
         let config = ClientConfig::new(0, address)
             .with_p2_timeout(default_p2)
@@ -229,7 +251,23 @@ impl TargetState {
 ///
 /// `MAX_TARGETS` - max concurrent ECU targets on this connection.
 #[derive(Debug)]
-pub struct DoipConnection<const MAX_TARGETS: usize = 8> {
+pub struct DoipConnection<
+    // region: DoipConnection Constants
+    const MAX_TARGETS: usize,
+    const TCP_MAX_FRAME: usize,
+    const TCP_MAX_OUTBOX: usize,
+    const MAX_CONNECTION_EVENTS: usize,
+    // endregion: DoipConnection Constants
+
+    // region: Target Constants
+    const PENDING: usize,
+    const SIM_MAX_FRAME: usize,
+    const SIM_MAX_OUTBOX: usize,
+    const MAX_TARGET_EVENTS: usize,
+    const PERIODIC_DIDS: usize,
+    const MAX_DATA: usize,
+    // endregion: Target Constants
+> {
     config: DoipConnectionConfig,
     phase: DoipConnectionPhase,
 
@@ -237,12 +275,52 @@ pub struct DoipConnection<const MAX_TARGETS: usize = 8> {
     tester_address: u16,
 
     /// Per-ECU target state.
-    pub targets: heapless::Vec<TargetState, MAX_TARGETS>,
+    pub targets: heapless::Vec<
+        TargetState<
+            PENDING,
+            SIM_MAX_FRAME,
+            SIM_MAX_OUTBOX,
+            MAX_TARGET_EVENTS,
+            PERIODIC_DIDS,
+            MAX_DATA,
+        >,
+        MAX_TARGETS,
+    >,
     outbox: heapless::Vec<(NodeAddress, heapless::Vec<u8, TCP_MAX_FRAME>), TCP_MAX_OUTBOX>,
-    events: heapless::Vec<(ConnectionId, TargetId, DoipTesterEvent), 64>,
+    events:
+        heapless::Vec<(ConnectionId, TargetId, DoipTesterEvent<MAX_DATA>), MAX_CONNECTION_EVENTS>,
 }
 
-impl<const MAX_TARGETS: usize> DoipConnection<MAX_TARGETS> {
+impl<
+        // region: DoipConnection Constants
+        const MAX_TARGETS: usize,
+        const TCP_MAX_FRAME: usize,
+        const TCP_MAX_OUTBOX: usize,
+        const MAX_CONNECTION_EVENTS: usize,
+        // endregion: DoipConnection Constants
+
+        // region: Target Constants
+        const PENDING: usize,
+        const SIM_MAX_FRAME: usize,
+        const SIM_MAX_OUTBOX: usize,
+        const MAX_TARGET_EVENTS: usize,
+        const PERIODIC_DIDS: usize,
+        const MAX_DATA: usize,
+        // endregion: Target Constants
+    >
+    DoipConnection<
+        MAX_TARGETS,
+        TCP_MAX_FRAME,
+        TCP_MAX_OUTBOX,
+        MAX_CONNECTION_EVENTS,
+        PENDING,
+        SIM_MAX_FRAME,
+        SIM_MAX_OUTBOX,
+        MAX_TARGET_EVENTS,
+        PERIODIC_DIDS,
+        MAX_DATA,
+    >
+{
     pub fn new(tester_address: u16, config: DoipConnectionConfig) -> Self {
         Self {
             config,
@@ -273,7 +351,19 @@ impl<const MAX_TARGETS: usize> DoipConnection<MAX_TARGETS> {
         ));
     }
 
-    fn find_target_mut(&mut self, address: u16) -> Option<&mut TargetState> {
+    fn find_target_mut(
+        &mut self,
+        address: u16,
+    ) -> Option<
+        &mut TargetState<
+            PENDING,
+            SIM_MAX_FRAME,
+            SIM_MAX_OUTBOX,
+            MAX_TARGET_EVENTS,
+            PERIODIC_DIDS,
+            MAX_DATA,
+        >,
+    > {
         self.targets.iter_mut().find(|t| t.address == address)
     }
 
@@ -409,7 +499,8 @@ impl<const MAX_TARGETS: usize> DoipConnection<MAX_TARGETS> {
 
         for target in self.targets.iter_mut() {
             let _ = target.client.tick(now);
-            let uds_events: heapless::Vec<ClientEvent, 32> = target.client.drain_events().collect();
+            let uds_events: heapless::Vec<ClientEvent<MAX_DATA>, MAX_TARGET_EVENTS> =
+                target.client.drain_events().collect();
 
             for e in uds_events {
                 if let ClientEvent::PositiveResponse {
@@ -448,7 +539,7 @@ impl<const MAX_TARGETS: usize> DoipConnection<MAX_TARGETS> {
 
     pub fn drain_events(
         &mut self,
-    ) -> impl Iterator<Item = (ConnectionId, TargetId, DoipTesterEvent)> + '_ {
+    ) -> impl Iterator<Item = (ConnectionId, TargetId, DoipTesterEvent<MAX_DATA>)> + '_ {
         self.events.drain(..)
     }
 
@@ -515,7 +606,8 @@ impl<const MAX_TARGETS: usize> DoipConnection<MAX_TARGETS> {
             let conn_id = self.connection_id();
             let target_id = TargetId(u16::from(source));
 
-            let mut client_events = heapless::Vec::<ClientEvent, 16>::new();
+            let mut client_events =
+                heapless::Vec::<ClientEvent<MAX_DATA>, MAX_TARGET_EVENTS>::new();
 
             if let Some(target) = self.find_target_mut(source) {
                 let _ = target
@@ -540,9 +632,9 @@ impl<const MAX_TARGETS: usize> DoipConnection<MAX_TARGETS> {
             payload_data.get(0).copied().unwrap_or(0),
             payload_data.get(1).copied().unwrap_or(0),
         ]);
-        let mut buf: heapless::Vec<u8, 256> = heapless::Vec::new();
+        let mut buf: heapless::Vec<u8, MAX_DATA> = heapless::Vec::new();
 
-        let _ = buf.extend_from_slice(&payload_data[..payload_data.len().min(256)]);
+        let _ = buf.extend_from_slice(&payload_data[..payload_data.len().min(MAX_DATA)]);
 
         let _ = self.events.push((
             self.connection_id(),
@@ -686,22 +778,101 @@ impl<const MAX_TARGETS: usize> DoipConnection<MAX_TARGETS> {
 /// Owns multiple simultaneous TCP connection (`DoipConnection`), each of which can address
 /// multiple ECUs simultaneously.
 ///
-/// `MAX_CONNECTIONS` - max simultaneous TCP connections (default 8)
-/// `MAX_TARGETS` - max ECU targets per connection (default 16)
-pub struct DoipTester<const MAX_CONNECTIONS: usize = 8, const MAX_TARGETS: usize = 16> {
+/// # Memory footprint
+///
+/// All backing storage is inline (`heapless::Vec`), so the stack/static
+/// footprint of `UdsClient` grows with its const generics as:
+///
+/// ```text
+/// size(UdsClient) = O(PENDING)
+///                  + O(SIM_MAX_OUTBOX * SIM_MAX_FRAME)
+///                  + O(MAX_EVENTS * MAX_DATA)
+///                  + O(PERIODIC_DIDS)
+///                  + O(1)
+/// ```
+///
+/// `SIM_MAX_OUTBOX * SIM_MAX_FRAME` and `MAX_EVENTS * MAX_DATA` are
+/// **products** of two independent generics, not sums: each outbox slot
+/// holds a full `SIM_MAX_FRAME`-byte frame, and each buffered event holds a
+/// full `MAX_DATA`-byte record. Doubling either factor in one of these pairs
+/// roughly doubles that field's size; doubling both roughly quadruples it.
+/// `PENDING` and `PERIODIC_DIDS` scale linearly and are comparatively cheap.
+///
+/// For the exact byte count of a given configuration (padding/alignment
+/// included), use [`UdsClient::FOOTPRINT_BYTES`] rather than computing the
+/// formula above by hand.
+pub struct DoipTester<
+    // region: DoipTester Constants
+    const MAX_CONNECTIONS: usize,
+    // endregion: DoipTester Constants
+
+    // region: DoipConnection Constants
+    const MAX_TARGETS: usize,
+    const TCP_MAX_FRAME: usize,
+    const TCP_MAX_OUTBOX: usize,
+    const MAX_CONNECTION_EVENTS: usize,
+    // endregion: DoipConnection Constants
+
+    // region: Target Constants
+    const PENDING: usize,
+    const SIM_MAX_FRAME: usize,
+    const SIM_MAX_OUTBOX: usize,
+    const MAX_TARGET_EVENTS: usize,
+    const PERIODIC_DIDS: usize,
+    const MAX_DATA: usize,
+    // endregion: Target Constants
+> {
     /// Logical address of this tester device - shared across all connections.
     tester_address: u16,
 
     /// NodeAddress of this tester on the simulation TCP bus.
     address: NodeAddress,
-    pub connections: heapless::Vec<DoipConnection<MAX_TARGETS>, MAX_CONNECTIONS>,
+    pub connections: heapless::Vec<
+        DoipConnection<
+            MAX_TARGETS,
+            TCP_MAX_FRAME,
+            TCP_MAX_OUTBOX,
+            MAX_CONNECTION_EVENTS,
+            PENDING,
+            SIM_MAX_FRAME,
+            SIM_MAX_OUTBOX,
+            MAX_TARGET_EVENTS,
+            PERIODIC_DIDS,
+            MAX_DATA,
+        >,
+        MAX_CONNECTIONS,
+    >,
 
     /// Per-gateway metadata profiles accumulated from announcements.
     profiles: heapless::Vec<(u16, DoipNodeProfile), MAX_CONNECTIONS>,
 }
 
-impl<const MAX_CONNECTIONS: usize, const MAX_TARGETS: usize>
-    DoipTester<MAX_CONNECTIONS, MAX_TARGETS>
+impl<
+        const MAX_CONNECTIONS: usize,
+        const MAX_TARGETS: usize,
+        const TCP_MAX_FRAME: usize,
+        const TCP_MAX_OUTBOX: usize,
+        const MAX_CONNECTION_EVENTS: usize,
+        const PENDING: usize,
+        const SIM_MAX_FRAME: usize,
+        const SIM_MAX_OUTBOX: usize,
+        const MAX_TARGET_EVENTS: usize,
+        const PERIODIC_DIDS: usize,
+        const MAX_DATA: usize,
+    >
+    DoipTester<
+        MAX_CONNECTIONS,
+        MAX_TARGETS,
+        TCP_MAX_FRAME,
+        TCP_MAX_OUTBOX,
+        MAX_CONNECTION_EVENTS,
+        PENDING,
+        SIM_MAX_FRAME,
+        SIM_MAX_OUTBOX,
+        MAX_TARGET_EVENTS,
+        PERIODIC_DIDS,
+        MAX_DATA,
+    >
 {
     pub fn new(tester_address: u16, address: NodeAddress) -> Self {
         Self {
@@ -715,6 +886,9 @@ impl<const MAX_CONNECTIONS: usize, const MAX_TARGETS: usize>
     pub fn address(&self) -> &NodeAddress {
         &self.address
     }
+
+    /// Exact stack footprint in bytes for this configuration.
+    pub const FOOTPRINT_BYTES: usize = core::mem::size_of::<Self>();
 
     // region: Connection Management
 
@@ -740,14 +914,43 @@ impl<const MAX_CONNECTIONS: usize, const MAX_TARGETS: usize>
         Ok(id)
     }
 
-    pub fn find_conn_mut(&mut self, id: ConnectionId) -> Option<&mut DoipConnection<MAX_TARGETS>> {
+    pub fn find_conn_mut(
+        &mut self,
+        id: ConnectionId,
+    ) -> Option<
+        &mut DoipConnection<
+            MAX_TARGETS,
+            TCP_MAX_FRAME,
+            TCP_MAX_OUTBOX,
+            MAX_CONNECTION_EVENTS,
+            PENDING,
+            SIM_MAX_FRAME,
+            SIM_MAX_OUTBOX,
+            MAX_TARGET_EVENTS,
+            PERIODIC_DIDS,
+            MAX_DATA,
+        >,
+    > {
         self.connections.iter_mut().find(|c| c.id() == id)
     }
 
     fn find_conn_by_gateway_mut(
         &mut self,
         gateway_address: u16,
-    ) -> Option<&mut DoipConnection<MAX_TARGETS>> {
+    ) -> Option<
+        &mut DoipConnection<
+            MAX_TARGETS,
+            TCP_MAX_FRAME,
+            TCP_MAX_OUTBOX,
+            MAX_CONNECTION_EVENTS,
+            PENDING,
+            SIM_MAX_FRAME,
+            SIM_MAX_OUTBOX,
+            MAX_TARGET_EVENTS,
+            PERIODIC_DIDS,
+            MAX_DATA,
+        >,
+    > {
         self.connections
             .iter_mut()
             .find(|c| c.config.gateway_address == gateway_address)
@@ -893,9 +1096,11 @@ impl<const MAX_CONNECTIONS: usize, const MAX_TARGETS: usize>
 
     pub fn drain_events(
         &mut self,
-    ) -> impl Iterator<Item = (ConnectionId, TargetId, DoipTesterEvent)> + '_ {
-        let mut all: heapless::Vec<(ConnectionId, TargetId, DoipTesterEvent), 128> =
-            heapless::Vec::new();
+    ) -> impl Iterator<Item = (ConnectionId, TargetId, DoipTesterEvent<MAX_DATA>)> + '_ {
+        let mut all: heapless::Vec<
+            (ConnectionId, TargetId, DoipTesterEvent<MAX_DATA>),
+            MAX_CONNECTION_EVENTS,
+        > = heapless::Vec::new();
 
         for conn in self.connections.iter_mut() {
             for ev in conn.drain_events() {
@@ -958,13 +1163,13 @@ impl<const MAX_CONNECTIONS: usize, const MAX_TARGETS: usize>
 // region: DoipTesterEvent
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum DoipTesterEvent {
+pub enum DoipTesterEvent<const MAX_DATA: usize> {
     ActivationSucceeded,
     ActivationDenied { code: u8 },
     ConnectionReset,
     ConnectionRefused,
     ConnectionTimeout,
-    Uds(ClientEvent),
+    Uds(ClientEvent<MAX_DATA>),
 }
 
 // endregion: DoipTesterEvent

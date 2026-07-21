@@ -10,6 +10,8 @@ use ace_server::{
 use ace_sim::{clock::Duration, io::NodeAddress};
 use heapless::Vec;
 
+use crate::harness::MyUdsServer;
+
 // endregion: Imports
 
 // region: TestHandler
@@ -126,7 +128,39 @@ impl SecurityProvider for TestSecurityProvider {
 ///     - 0xF101 (ECU serial, read-only, extended + programming)
 ///     - 0xF120 (application version, read/write, extended, security level 1)
 /// Security: level 1, max 3 attempts, 10s lockout, 1 byte seed/key
-pub fn default_server(address: NodeAddress) -> UdsServer<TestHandler, TestSecurityProvider> {
+pub fn default_server<
+    const UDS_MAX_FRAME: usize,
+    const UDS_MAX_OUTBOX: usize,
+    const MAX_SESSIONS: usize,
+    const MAX_SERVICES: usize,
+    const MAX_DIDS: usize,
+    const MAX_SECURITY_LEVELS: usize,
+    const DEFAULT_S3: u64,
+    const DEFAULT_P2: u64,
+    const DEFAULT_P2_EXT: u64,
+    const DEFAULT_LOCKOUT: u64,
+    const DEFAULT_MAX_SECURITY_ATTEMPTS: u8,
+    const MAX_SEED: usize,
+    const MAX_PERIODIC: usize,
+>(
+    address: NodeAddress,
+) -> UdsServer<
+    UDS_MAX_FRAME,
+    UDS_MAX_OUTBOX,
+    MAX_SESSIONS,
+    MAX_SERVICES,
+    MAX_DIDS,
+    MAX_SECURITY_LEVELS,
+    DEFAULT_S3,
+    DEFAULT_P2,
+    DEFAULT_P2_EXT,
+    DEFAULT_LOCKOUT,
+    DEFAULT_MAX_SECURITY_ATTEMPTS,
+    MAX_SEED,
+    MAX_PERIODIC,
+    TestHandler,
+    TestSecurityProvider,
+> {
     let mut handler = TestHandler::new();
     handler.set_did(0xF190, b"TESTVIN1234567890");
     handler.set_did(0xF290, b"TESTVIN1234567890");

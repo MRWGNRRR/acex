@@ -143,7 +143,7 @@ struct _TcpConnectionHandle {
 /// ```
 pub struct DoipVehicleDriver {
     pub config: VehicleDriverConfig,
-    tester: DoipTester<8, 16>,
+    tester: MyDoipTester,
 
     /// Inbound bytes from TCP reader threads.
     tcp_rx: Receiver<InboundMessage>,
@@ -156,6 +156,32 @@ pub struct DoipVehicleDriver {
     /// Inbound bytes from the UDP reader thread.
     udp_rx: Receiver<Vec<u8>>,
 }
+
+const MAX_CONNECTIONS: usize = 8;
+const MAX_TARGETS: usize = 16;
+const TCP_MAX_OUTBOX: usize = 8;
+const TCP_MAX_FRAME: usize = 4096;
+const MAX_CONNECTION_EVENTS: usize = 8;
+const PENDING: usize = 8;
+const SIM_MAX_FRAME: usize = 4096;
+const SIM_MAX_OUTBOX: usize = 8;
+const MAX_TARGET_EVENTS: usize = 4;
+const PERIODIC_DIDS: usize = 2;
+const MAX_DATA: usize = 256;
+
+pub type MyDoipTester = DoipTester<
+    MAX_CONNECTIONS,
+    MAX_TARGETS,
+    TCP_MAX_FRAME,
+    TCP_MAX_OUTBOX,
+    MAX_CONNECTION_EVENTS,
+    PENDING,
+    SIM_MAX_FRAME,
+    SIM_MAX_OUTBOX,
+    MAX_TARGET_EVENTS,
+    PERIODIC_DIDS,
+    MAX_DATA,
+>;
 
 impl DoipVehicleDriver {
     pub fn new(config: VehicleDriverConfig) -> Self {
@@ -302,7 +328,7 @@ impl DoipVehicleDriver {
     /// Drains all accumulated tester events.
     pub fn drain_events(
         &mut self,
-    ) -> impl Iterator<Item = (ConnectionId, TargetId, DoipTesterEvent)> + '_ {
+    ) -> impl Iterator<Item = (ConnectionId, TargetId, DoipTesterEvent<MAX_DATA>)> + '_ {
         self.tester.drain_events()
     }
 
@@ -322,11 +348,8 @@ impl DoipVehicleDriver {
 
     fn flush_outbox(&mut self) {
         let mut outbox: heapless::Vec<
-            (
-                NodeAddress,
-                heapless::Vec<u8, { ace_gateway::gateway::TCP_MAX_FRAME }>,
-            ),
-            { ace_gateway::gateway::TCP_MAX_OUTBOX },
+            (NodeAddress, heapless::Vec<u8, TCP_MAX_FRAME>),
+            TCP_MAX_OUTBOX,
         > = heapless::Vec::new();
 
         self.tester.drain_outbox(&mut outbox);

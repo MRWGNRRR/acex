@@ -78,17 +78,17 @@ pub enum ReassembleResult {
 ///
 /// Buffer size `N` must be large enough to hold the complete reassembled
 /// message. For classic CAN ISO-TP the maximum is 4095 bytes.
-pub struct Reassembler<const N: usize> {
+pub struct Reassembler<const MAX_FRAME: usize> {
     config: ReassemblerConfig,
-    buf: [u8; N],
+    buf: [u8; MAX_FRAME],
     state: ReassemblerState,
 }
 
-impl<const N: usize> Reassembler<N> {
+impl<const MAX_FRAME: usize> Reassembler<MAX_FRAME> {
     pub fn new(config: ReassemblerConfig) -> Self {
         Self {
             config,
-            buf: [0u8; N],
+            buf: [0u8; MAX_FRAME],
             state: ReassemblerState::Idle,
         }
     }
@@ -121,10 +121,10 @@ impl<const N: usize> Reassembler<N> {
                 if len == 0 {
                     return Err(IsoTpError::EmptySingleFrame);
                 }
-                if len > N {
+                if len > MAX_FRAME {
                     return Err(IsoTpError::PayloadTooLarge);
                 }
-                let copy_len = data.len().min(len).min(N);
+                let copy_len = data.len().min(len).min(MAX_FRAME);
                 self.buf[..copy_len].copy_from_slice(&data[..copy_len]);
                 self.state = ReassemblerState::Idle;
                 Ok(ReassembleResult::Complete { len })
@@ -137,13 +137,13 @@ impl<const N: usize> Reassembler<N> {
                 if total == 0 {
                     return Err(IsoTpError::InvalidLength);
                 }
-                if total > N {
+                if total > MAX_FRAME {
                     return Err(IsoTpError::PayloadTooLarge);
                 }
 
                 let was_active = matches!(self.state, ReassemblerState::Active { .. });
 
-                let copy_len = data.len().min(total).min(N);
+                let copy_len = data.len().min(total).min(MAX_FRAME);
                 self.buf[..copy_len].copy_from_slice(&data[..copy_len]);
 
                 self.state = ReassemblerState::Active {

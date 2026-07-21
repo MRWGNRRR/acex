@@ -16,7 +16,7 @@ use heapless::Vec;
 ///
 /// `N` - max message payload bytes
 /// `Q` - max messages in outbox simultaneously
-pub trait SimNode<const N: usize, const Q: usize> {
+pub trait SimNode<const MAX_FRAME: usize, const MAX_OUTBOX: usize> {
     type Error: core::fmt::Debug;
 
     /// Returns this node's address on the simulation bus.
@@ -37,7 +37,7 @@ pub trait SimNode<const N: usize, const Q: usize> {
     /// `tick` call to collect and route output.
     fn drain_outbox(
         &mut self,
-        out: &mut heapless::Vec<(NodeAddress, heapless::Vec<u8, N>), Q>,
+        out: &mut heapless::Vec<(NodeAddress, heapless::Vec<u8, MAX_FRAME>), MAX_OUTBOX>,
     ) -> usize;
 }
 
@@ -45,17 +45,20 @@ pub trait SimNode<const N: usize, const Q: usize> {
 
 // region: SimNodeErased Trait
 
-pub trait SimNodeErased<const N: usize, const Q: usize> {
+pub trait SimNodeErased<const MAX_FRAME: usize, const MAX_OUTBOX: usize> {
     fn address(&self) -> &NodeAddress;
     fn handle(&mut self, src: &NodeAddress, data: &[u8], now: Instant);
     fn tick(&mut self, now: Instant);
-    fn drain_outbox(&mut self, out: &mut Vec<(NodeAddress, Vec<u8, N>), Q>) -> usize;
+    fn drain_outbox(
+        &mut self,
+        out: &mut Vec<(NodeAddress, Vec<u8, MAX_FRAME>), MAX_OUTBOX>,
+    ) -> usize;
 }
 
 /// Blanket impl - any SimNode becomes a SimNodeErased by discarding errors.
-impl<const N: usize, const Q: usize, T> SimNodeErased<N, Q> for T
+impl<const MAX_FRAME: usize, const MAX_OUTBOX: usize, T> SimNodeErased<MAX_FRAME, MAX_OUTBOX> for T
 where
-    T: SimNode<N, Q>,
+    T: SimNode<MAX_FRAME, MAX_OUTBOX>,
     T::Error: core::fmt::Debug,
 {
     fn address(&self) -> &NodeAddress {
@@ -77,7 +80,10 @@ where
         }
     }
 
-    fn drain_outbox(&mut self, out: &mut Vec<(NodeAddress, Vec<u8, N>), Q>) -> usize {
+    fn drain_outbox(
+        &mut self,
+        out: &mut Vec<(NodeAddress, Vec<u8, MAX_FRAME>), MAX_OUTBOX>,
+    ) -> usize {
         SimNode::drain_outbox(self, out)
     }
 }

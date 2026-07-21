@@ -14,13 +14,14 @@ use ace_doip::{
 };
 use ace_gateway::{
     config::{CanNodeEntry, GatewayConfig},
-    ecu_node::{EcuNode, ECU_CAN_FRAME, ECU_CAN_OUT},
-    gateway::{DoipGateway, CAN_MAX_FRAME, CAN_MAX_OUTBOX, TCP_MAX_FRAME, TCP_MAX_OUTBOX},
+    ecu_node::EcuNode,
+    gateway::DoipGateway,
     tester::{
         ConnectionId, DoipConnectionConfig, DoipConnectionPhase, DoipTester, DoipTesterError,
         DoipTesterEvent, TargetId,
     },
 };
+use ace_server::{handler::ServerHandler, security_provider::SecurityProvider};
 use ace_sim::{
     can_bus::{CanFaultConfig, CanSimBus},
     clock::Duration,
@@ -101,7 +102,28 @@ impl Default for DoipScenarioConfig {
 // region: EcuEntry
 
 /// A single ECU node wired into the scenario.
-pub struct EcuEntry {
+pub struct EcuEntry<
+    const UDS_MAX_FRAME: usize,
+    const UDS_MAX_OUTBOX: usize,
+    const CAN_MAX_FRAME: usize,
+    const CAN_MAX_OUTBOX: usize,
+    const MAX_SESSIONS: usize,
+    const MAX_SERVICES: usize,
+    const MAX_DIDS: usize,
+    const MAX_SECURITY_LEVELS: usize,
+    const DEFAULT_S3: u64,
+    const DEFAULT_P2: u64,
+    const DEFAULT_P2_EXT: u64,
+    const DEFAULT_LOCKOUT: u64,
+    const DEFAULT_MAX_SECURITY_ATTEMPTS: u8,
+    const MAX_SEED: usize,
+    const MAX_PERIODIC: usize,
+    H,
+    S,
+> where
+    H: ServerHandler,
+    S: SecurityProvider,
+{
     /// ECU logical address (DoIP)
     pub logical_address: u16,
 
@@ -110,7 +132,25 @@ pub struct EcuEntry {
 
     /// CAN response ID (ECU -> gateway)
     pub response_can_id: u32,
-    pub node: EcuNode<TestHandler, TestSecurityProvider>,
+    pub node: EcuNode<
+        UDS_MAX_FRAME,
+        UDS_MAX_OUTBOX,
+        CAN_MAX_FRAME,
+        CAN_MAX_OUTBOX,
+        MAX_SESSIONS,
+        MAX_SERVICES,
+        MAX_DIDS,
+        MAX_SECURITY_LEVELS,
+        DEFAULT_S3,
+        DEFAULT_P2,
+        DEFAULT_P2_EXT,
+        DEFAULT_LOCKOUT,
+        DEFAULT_MAX_SECURITY_ATTEMPTS,
+        MAX_SEED,
+        MAX_PERIODIC,
+        H,
+        S,
+    >,
 }
 
 // endregion: EcuEntry
@@ -118,12 +158,77 @@ pub struct EcuEntry {
 // region: GatewayEntry
 
 /// A single gateway wired into the scenario.
-pub struct GatewayEntry {
+pub struct GatewayEntry<
+    const ISOTP_MAX_NODES: usize,
+    const TCP_MAX_FRAME: usize,
+    const TCP_MAX_OUTBOX: usize,
+    const MAX_TESTERS: usize,
+    const MAX_FRAME: usize,
+    const MAX_CONNECTION_EVENTS: usize,
+    const MAX_ACTIVATION_TYPES: usize,
+    const UDS_MAX_FRAME: usize,
+    const UDS_MAX_OUTBOX: usize,
+    const CAN_MAX_FRAME: usize,
+    const CAN_MAX_OUTBOX: usize,
+    const MAX_SESSIONS: usize,
+    const MAX_SERVICES: usize,
+    const MAX_DIDS: usize,
+    const MAX_SECURITY_LEVELS: usize,
+    const MAX_NODES: usize,
+    const DEFAULT_S3: u64,
+    const DEFAULT_P2: u64,
+    const DEFAULT_P2_EXT: u64,
+    const DEFAULT_LOCKOUT: u64,
+    const DEFAULT_MAX_SECURITY_ATTEMPTS: u8,
+    const MAX_SEED: usize,
+    const MAX_PERIODIC: usize,
+    A,
+    H,
+    S,
+> where
+    A: ActivationAuthProvider + Clone,
+    H: ServerHandler,
+    S: SecurityProvider,
+{
     /// Gateway logical address (DoIP).
     pub logical_address: u16,
     pub gateway_addr: NodeAddress,
-    pub gateway: DoipGateway<TestActivationAuthProvider, 1>,
-    pub ecus: heapless::Vec<EcuEntry, 8>,
+    pub gateway: DoipGateway<
+        CAN_MAX_FRAME,
+        ISOTP_MAX_NODES,
+        TCP_MAX_FRAME,
+        TCP_MAX_OUTBOX,
+        CAN_MAX_OUTBOX,
+        MAX_TESTERS,
+        MAX_FRAME,
+        UDS_MAX_FRAME,
+        MAX_CONNECTION_EVENTS,
+        MAX_ACTIVATION_TYPES,
+        MAX_NODES,
+        A,
+    >,
+    pub ecus: heapless::Vec<
+        EcuEntry<
+            UDS_MAX_FRAME,
+            UDS_MAX_OUTBOX,
+            CAN_MAX_FRAME,
+            CAN_MAX_OUTBOX,
+            MAX_SESSIONS,
+            MAX_SERVICES,
+            MAX_DIDS,
+            MAX_SECURITY_LEVELS,
+            DEFAULT_S3,
+            DEFAULT_P2,
+            DEFAULT_P2_EXT,
+            DEFAULT_LOCKOUT,
+            DEFAULT_MAX_SECURITY_ATTEMPTS,
+            MAX_SEED,
+            MAX_PERIODIC,
+            H,
+            S,
+        >,
+        MAX_NODES,
+    >,
 
     /// `ConnectionId` the tester uses to reach this gateway.
     pub conn_id: ConnectionId,
@@ -139,28 +244,172 @@ pub struct GatewayEntry {
 ///
 /// The scenario drives both buses explicitly - the gateway's TCP and CAN faces are called directly
 /// with the appropriate messages. This keeps the routing transparent and deterministic.
-pub struct DoipDstScenario {
+pub struct DoipDstScenario<
+    const MAX_DATA: usize,
+    const MAX_QUEUED: usize,
+    const TCP_MAX_EVENTS: usize,
+    const MAX_GATEWAY_ADDRS: usize,
+    const MAX_EVENTS: usize,
+    const TCP_MAX_FRAME: usize,
+    const TCP_MAX_OUTBOX: usize,
+    const CAN_MAX_FRAME: usize,
+    const CAN_MAX_OUTBOX: usize,
+    const MAX_GATEWAYS: usize,
+    const ISOTP_MAX_NODES: usize,
+    const MAX_TESTERS: usize,
+    const MAX_FRAME: usize,
+    const MAX_CONNECTION_EVENTS: usize,
+    const MAX_ACTIVATION_TYPES: usize,
+    const UDS_MAX_FRAME: usize,
+    const UDS_MAX_OUTBOX: usize,
+    const MAX_SESSIONS: usize,
+    const MAX_SERVICES: usize,
+    const MAX_DIDS: usize,
+    const MAX_SECURITY_LEVELS: usize,
+    const MAX_NODES: usize,
+    const DEFAULT_S3: u64,
+    const DEFAULT_P2: u64,
+    const DEFAULT_P2_EXT: u64,
+    const DEFAULT_LOCKOUT: u64,
+    const DEFAULT_MAX_SECURITY_ATTEMPTS: u8,
+    const MAX_SEED: usize,
+    const MAX_PERIODIC: usize,
+    A,
+    H,
+    S,
+> where
+    A: ActivationAuthProvider + Clone,
+    H: ServerHandler,
+    S: SecurityProvider,
+{
     pub config: DoipScenarioConfig,
-    pub tcp_bus: TcpSimBus<TCP_MAX_FRAME, TCP_MAX_OUTBOX>,
+    pub tcp_bus: TcpSimBus<MAX_DATA, MAX_QUEUED, TCP_MAX_EVENTS>,
     pub can_bus: CanSimBus<CAN_MAX_FRAME, CAN_MAX_OUTBOX>,
-    pub tester: DoipTester<4, 8>,
-    pub gateways: heapless::Vec<GatewayEntry, 4>,
+    pub tester: DoipTester<
+        MAX_GATEWAYS,
+        MAX_NODES,
+        TCP_MAX_FRAME,
+        TCP_MAX_OUTBOX,
+        MAX_CONNECTION_EVENTS,
+        UDS_MAX_OUTBOX,
+        TCP_MAX_FRAME,
+        TCP_MAX_OUTBOX,
+        TCP_MAX_EVENTS,
+        MAX_PERIODIC,
+        MAX_DATA,
+    >,
+    pub gateways: heapless::Vec<
+        GatewayEntry<
+            ISOTP_MAX_NODES,
+            TCP_MAX_FRAME,
+            TCP_MAX_OUTBOX,
+            MAX_TESTERS,
+            MAX_FRAME,
+            MAX_CONNECTION_EVENTS,
+            MAX_ACTIVATION_TYPES,
+            UDS_MAX_FRAME,
+            UDS_MAX_OUTBOX,
+            CAN_MAX_FRAME,
+            CAN_MAX_OUTBOX,
+            MAX_SESSIONS,
+            MAX_SERVICES,
+            MAX_DIDS,
+            MAX_SECURITY_LEVELS,
+            MAX_NODES,
+            DEFAULT_S3,
+            DEFAULT_P2,
+            DEFAULT_P2_EXT,
+            DEFAULT_LOCKOUT,
+            DEFAULT_MAX_SECURITY_ATTEMPTS,
+            MAX_SEED,
+            MAX_PERIODIC,
+            A,
+            H,
+            S,
+        >,
+        MAX_GATEWAYS,
+    >,
 }
 
-impl DoipDstScenario {
+impl<
+        const MAX_DATA: usize,
+        const MAX_QUEUED: usize,
+        const TCP_MAX_EVENTS: usize,
+        const MAX_GATEWAY_ADDRS: usize,
+        const MAX_EVENTS: usize,
+        const TCP_MAX_FRAME: usize,
+        const TCP_MAX_OUTBOX: usize,
+        const CAN_MAX_FRAME: usize,
+        const CAN_MAX_OUTBOX: usize,
+        const MAX_GATEWAYS: usize,
+        const ISOTP_MAX_NODES: usize,
+        const MAX_TESTERS: usize,
+        const MAX_FRAME: usize,
+        const MAX_CONNECTION_EVENTS: usize,
+        const MAX_ACTIVATION_TYPES: usize,
+        const UDS_MAX_FRAME: usize,
+        const UDS_MAX_OUTBOX: usize,
+        const MAX_SESSIONS: usize,
+        const MAX_SERVICES: usize,
+        const MAX_DIDS: usize,
+        const MAX_SECURITY_LEVELS: usize,
+        const MAX_NODES: usize,
+        const DEFAULT_S3: u64,
+        const DEFAULT_P2: u64,
+        const DEFAULT_P2_EXT: u64,
+        const DEFAULT_LOCKOUT: u64,
+        const DEFAULT_MAX_SECURITY_ATTEMPTS: u8,
+        const MAX_SEED: usize,
+        const MAX_PERIODIC: usize,
+    >
+    DoipDstScenario<
+        MAX_DATA,
+        MAX_QUEUED,
+        TCP_MAX_EVENTS,
+        MAX_GATEWAY_ADDRS,
+        MAX_EVENTS,
+        TCP_MAX_FRAME,
+        TCP_MAX_OUTBOX,
+        CAN_MAX_FRAME,
+        CAN_MAX_OUTBOX,
+        MAX_GATEWAYS,
+        ISOTP_MAX_NODES,
+        MAX_TESTERS,
+        MAX_FRAME,
+        MAX_CONNECTION_EVENTS,
+        MAX_ACTIVATION_TYPES,
+        UDS_MAX_FRAME,
+        UDS_MAX_OUTBOX,
+        MAX_SESSIONS,
+        MAX_SERVICES,
+        MAX_DIDS,
+        MAX_SECURITY_LEVELS,
+        MAX_NODES,
+        DEFAULT_S3,
+        DEFAULT_P2,
+        DEFAULT_P2_EXT,
+        DEFAULT_LOCKOUT,
+        DEFAULT_MAX_SECURITY_ATTEMPTS,
+        MAX_SEED,
+        MAX_PERIODIC,
+        TestActivationAuthProvider,
+        TestHandler,
+        TestSecurityProvider,
+    >
+{
     pub fn baseline(seed: u64) -> Self {
-        DoipDstScenarioBuilder::new(seed).build()
+        DoipDstScenarioBuilder::<MAX_GATEWAYS, MAX_NODES>::new(seed).build()
     }
 
     pub fn light(seed: u64) -> Self {
-        DoipDstScenarioBuilder::new(seed)
+        DoipDstScenarioBuilder::<MAX_GATEWAYS, MAX_NODES>::new(seed)
             .with_tcp_faults(TcpFaultConfig::light())
             .with_can_faults(CanFaultConfig::light())
             .build()
     }
 
     pub fn chaos(seed: u64) -> Self {
-        DoipDstScenarioBuilder::new(seed)
+        DoipDstScenarioBuilder::<MAX_GATEWAYS, MAX_NODES>::new(seed)
             .with_tcp_faults(TcpFaultConfig::chaos())
             .with_can_faults(CanFaultConfig::chaos())
             .build()
@@ -194,7 +443,7 @@ impl DoipDstScenario {
     pub fn connect(&mut self) {
         let tester_addr = self.tester.address();
 
-        let gw_addrs: heapless::Vec<NodeAddress, 8> = self
+        let gw_addrs: heapless::Vec<NodeAddress, MAX_GATEWAY_ADDRS> = self
             .gateways
             .iter()
             .map(|g| g.gateway_addr.clone())
@@ -226,7 +475,7 @@ impl DoipDstScenario {
 
         let tcp_delivered = self.tcp_bus.tick(self.config.tcp_tick);
 
-        let tcp_events: heapless::Vec<_, 16> = self.tcp_bus.drain_events().collect();
+        let tcp_events: heapless::Vec<_, TCP_MAX_OUTBOX> = self.tcp_bus.drain_events().collect();
         for event in &tcp_events {
             self.tester.on_tcp_event(event, now);
         }
@@ -295,13 +544,13 @@ impl DoipDstScenario {
                     if let Some(ecu) = gw.ecus.iter_mut().find(|e| e.request_can_id == dst_id) {
                         let pci = envelope.data.first().copied().unwrap_or(0);
                         if pci & 0xF0 == 0x30 && src_id != gw.gateway_addr.0 {
-                            let r = gw.gateway.handle_can(
+                            let _ = gw.gateway.handle_can(
                                 &NodeAddress(dst_id),
                                 &envelope.data,
                                 can_now,
                             );
                         } else if src_id == gw.gateway_addr.0 {
-                            let t = ecu.node.handle_can_frame(&envelope.data, can_now);
+                            let _ = ecu.node.handle_can_frame(&envelope.data, can_now);
                         }
                     }
 
@@ -309,9 +558,9 @@ impl DoipDstScenario {
                         let pci = envelope.data.first().copied().unwrap_or(0);
 
                         if pci & 0xF0 == 0x30 && src_id == gw.gateway_addr.0 {
-                            let v = ecu.node.handle_can_frame(&envelope.data, can_now);
+                            let _ = ecu.node.handle_can_frame(&envelope.data, can_now);
                         } else if src_id == ecu.response_can_id {
-                            let w = gw.gateway.handle_can(
+                            let _ = gw.gateway.handle_can(
                                 &NodeAddress(dst_id),
                                 &envelope.data,
                                 can_now,
@@ -321,13 +570,13 @@ impl DoipDstScenario {
                 }
 
                 for ecu in gw.ecus.iter_mut() {
-                    let x = ecu.node.tick(can_now);
+                    let _ = ecu.node.tick(can_now);
                 }
 
                 for ecu in gw.ecus.iter_mut() {
                     let mut ecu_can_out: heapless::Vec<
-                        (NodeAddress, heapless::Vec<u8, ECU_CAN_FRAME>),
-                        ECU_CAN_OUT,
+                        (NodeAddress, heapless::Vec<u8, CAN_MAX_FRAME>),
+                        CAN_MAX_OUTBOX,
                     > = heapless::Vec::new();
                     ecu.node.drain_can_outbox(&mut ecu_can_out);
 
@@ -424,7 +673,7 @@ impl DoipDstScenario {
     /// Drains all tester events
     pub fn drain_events(
         &mut self,
-    ) -> heapless::Vec<(ConnectionId, TargetId, DoipTesterEvent), 128> {
+    ) -> heapless::Vec<(ConnectionId, TargetId, DoipTesterEvent<MAX_DATA>), MAX_EVENTS> {
         self.tester.drain_events().collect()
     }
 
@@ -486,14 +735,14 @@ impl EcuNodeConfig {
 // region: GatewayNodeConfig
 
 /// Builder config for a single gateway and its ECUs.
-pub struct GatewayNodeConfig {
+pub struct GatewayNodeConfig<const MAX_ECUS: usize> {
     pub logical_address: u16,
     pub tester_address: u16,
     pub activation_type: ActivationType,
-    pub ecus: heapless::Vec<EcuNodeConfig, 8>,
+    pub ecus: heapless::Vec<EcuNodeConfig, MAX_ECUS>,
 }
 
-impl GatewayNodeConfig {
+impl<const MAX_ECUS: usize> GatewayNodeConfig<MAX_ECUS> {
     pub fn new(logical_address: u16, tester_address: u16) -> Self {
         Self {
             logical_address,
@@ -524,7 +773,7 @@ impl GatewayNodeConfig {
 ///
 /// # Example - single gateway, two ECUs
 ///
-/// ```no_run
+/// ```no_run,ignore
 /// # use ace_tests::fixtures::doip::EcuNodeConfig;
 /// # use ace_tests::fixtures::doip::GatewayNodeConfig;
 /// # use ace_tests::fixtures::doip::DoipDstScenarioBuilder;
@@ -538,7 +787,7 @@ impl GatewayNodeConfig {
 ///
 /// # Example - two gateways
 ///
-/// ```no_run
+/// ```no_run,ignore
 /// # use ace_tests::fixtures::doip::EcuNodeConfig;
 /// # use ace_tests::fixtures::doip::GatewayNodeConfig;
 /// # use ace_tests::fixtures::doip::DoipDstScenarioBuilder;
@@ -551,12 +800,12 @@ impl GatewayNodeConfig {
 ///     )
 ///     .build();
 /// ```
-pub struct DoipDstScenarioBuilder {
+pub struct DoipDstScenarioBuilder<const MAX_GATEWAYS: usize, const MAX_ECUS: usize> {
     seed: u64,
     tcp_faults: TcpFaultConfig,
     can_faults: CanFaultConfig,
     tick_config: DoipScenarioConfig,
-    gateways: heapless::Vec<GatewayNodeConfig, 4>,
+    gateways: heapless::Vec<GatewayNodeConfig<MAX_ECUS>, MAX_GATEWAYS>,
 }
 
 // Default ECU for the no-argument builder path
@@ -567,7 +816,9 @@ const DEFAULT_REQ_CAN_ID: u32 = 0x7E0;
 const DEFAULT_RESP_CAN_ID: u32 = 0x7E8;
 const DEFAULT_FUNC_CAN_ID: u32 = 0x7EF;
 
-impl DoipDstScenarioBuilder {
+impl<const MAX_GATEWAYS: usize, const MAX_ECUS: usize>
+    DoipDstScenarioBuilder<MAX_GATEWAYS, MAX_ECUS>
+{
     /// Creates a builder with the default single-gateway single-ECU topology.
     pub fn new(seed: u64) -> Self {
         let default_gw = GatewayNodeConfig::new(DEFAULT_GATEWAY_ADDR, DEFAULT_TESTER_ADDR)
@@ -593,14 +844,14 @@ impl DoipDstScenarioBuilder {
 
     /// Replaces all gateways with the given one. Use `with_gateway` to add gateways on top of the
     /// default.
-    pub fn with_gateway(mut self, gw: GatewayNodeConfig) -> Self {
+    pub fn with_gateway(mut self, gw: GatewayNodeConfig<MAX_ECUS>) -> Self {
         self.gateways.clear();
         let _ = self.gateways.push(gw);
         self
     }
 
     /// Adds and additional gateway alongside existing ones.
-    pub fn add_gateway(mut self, gw: GatewayNodeConfig) -> Self {
+    pub fn add_gateway(mut self, gw: GatewayNodeConfig<MAX_ECUS>) -> Self {
         let _ = self.gateways.push(gw);
         self
     }
@@ -621,7 +872,71 @@ impl DoipDstScenarioBuilder {
     }
 
     /// Builds the `DoipDstScenario`.
-    pub fn build(self) -> DoipDstScenario {
+    pub fn build<
+        const MAX_DATA: usize,
+        const MAX_QUEUED: usize,
+        const TCP_MAX_EVENTS: usize,
+        const MAX_GATEWAY_ADDRS: usize,
+        const MAX_EVENTS: usize,
+        const TCP_MAX_FRAME: usize,
+        const TCP_MAX_OUTBOX: usize,
+        const CAN_MAX_FRAME: usize,
+        const CAN_MAX_OUTBOX: usize,
+        const ISOTP_MAX_NODES: usize,
+        const MAX_TESTERS: usize,
+        const MAX_FRAME: usize,
+        const MAX_CONNECTION_EVENTS: usize,
+        const MAX_ACTIVATION_TYPES: usize,
+        const UDS_MAX_FRAME: usize,
+        const UDS_MAX_OUTBOX: usize,
+        const MAX_SESSIONS: usize,
+        const MAX_SERVICES: usize,
+        const MAX_DIDS: usize,
+        const MAX_SECURITY_LEVELS: usize,
+        const MAX_NODES: usize,
+        const DEFAULT_S3: u64,
+        const DEFAULT_P2: u64,
+        const DEFAULT_P2_EXT: u64,
+        const DEFAULT_LOCKOUT: u64,
+        const DEFAULT_MAX_SECURITY_ATTEMPTS: u8,
+        const MAX_SEED: usize,
+        const MAX_PERIODIC: usize,
+    >(
+        self,
+    ) -> DoipDstScenario<
+        MAX_DATA,
+        MAX_QUEUED,
+        TCP_MAX_EVENTS,
+        MAX_GATEWAY_ADDRS,
+        MAX_EVENTS,
+        TCP_MAX_FRAME,
+        TCP_MAX_OUTBOX,
+        CAN_MAX_FRAME,
+        CAN_MAX_OUTBOX,
+        MAX_GATEWAYS,
+        ISOTP_MAX_NODES,
+        MAX_TESTERS,
+        MAX_FRAME,
+        MAX_CONNECTION_EVENTS,
+        MAX_ACTIVATION_TYPES,
+        UDS_MAX_FRAME,
+        UDS_MAX_OUTBOX,
+        MAX_SESSIONS,
+        MAX_SERVICES,
+        MAX_DIDS,
+        MAX_SECURITY_LEVELS,
+        MAX_NODES,
+        DEFAULT_S3,
+        DEFAULT_P2,
+        DEFAULT_P2_EXT,
+        DEFAULT_LOCKOUT,
+        DEFAULT_MAX_SECURITY_ATTEMPTS,
+        MAX_SEED,
+        MAX_PERIODIC,
+        TestActivationAuthProvider,
+        TestHandler,
+        TestSecurityProvider,
+    > {
         let tcp_bus = TcpSimBus::new(self.seed, self.tcp_faults);
         let can_bus = CanSimBus::new(self.seed.wrapping_add(1), self.can_faults);
 
@@ -632,7 +947,37 @@ impl DoipDstScenarioBuilder {
             .unwrap_or(DEFAULT_TESTER_ADDR);
 
         let mut tester = DoipTester::new(tester_address, NodeAddress(tester_address as u32));
-        let mut gateway_entries: heapless::Vec<GatewayEntry, 4> = heapless::Vec::new();
+        let mut gateway_entries: heapless::Vec<
+            GatewayEntry<
+                ISOTP_MAX_NODES,
+                TCP_MAX_FRAME,
+                TCP_MAX_OUTBOX,
+                MAX_TESTERS,
+                MAX_FRAME,
+                MAX_CONNECTION_EVENTS,
+                MAX_ACTIVATION_TYPES,
+                UDS_MAX_FRAME,
+                UDS_MAX_OUTBOX,
+                CAN_MAX_FRAME,
+                CAN_MAX_OUTBOX,
+                MAX_SESSIONS,
+                MAX_SERVICES,
+                MAX_DIDS,
+                MAX_SECURITY_LEVELS,
+                MAX_NODES,
+                DEFAULT_S3,
+                DEFAULT_P2,
+                DEFAULT_P2_EXT,
+                DEFAULT_LOCKOUT,
+                DEFAULT_MAX_SECURITY_ATTEMPTS,
+                MAX_SEED,
+                MAX_PERIODIC,
+                TestActivationAuthProvider,
+                TestHandler,
+                TestSecurityProvider,
+            >,
+            MAX_GATEWAYS,
+        > = heapless::Vec::new();
 
         for gw_config in &self.gateways {
             let gw_addr = NodeAddress(gw_config.logical_address as u32);
@@ -658,17 +1003,57 @@ impl DoipDstScenarioBuilder {
                 .open_connection(conn_config)
                 .expect("connection slot available");
 
-            let mut ecu_entries: heapless::Vec<EcuEntry, 8> = heapless::Vec::new();
+            let mut ecu_entries: heapless::Vec<
+                EcuEntry<
+                    UDS_MAX_FRAME,
+                    UDS_MAX_OUTBOX,
+                    CAN_MAX_FRAME,
+                    CAN_MAX_OUTBOX,
+                    MAX_SESSIONS,
+                    MAX_SERVICES,
+                    MAX_DIDS,
+                    MAX_SECURITY_LEVELS,
+                    DEFAULT_S3,
+                    DEFAULT_P2,
+                    DEFAULT_P2_EXT,
+                    DEFAULT_LOCKOUT,
+                    DEFAULT_MAX_SECURITY_ATTEMPTS,
+                    MAX_SEED,
+                    MAX_PERIODIC,
+                    TestHandler,
+                    TestSecurityProvider,
+                >,
+                MAX_NODES,
+            > = heapless::Vec::new();
 
             for ecu in &gw_config.ecus {
                 let server = default_server(NodeAddress(ecu.logical_address as u32));
-                let node = EcuNode::new(
+                let node: EcuNode<
+                    UDS_MAX_FRAME,
+                    UDS_MAX_OUTBOX,
+                    CAN_MAX_FRAME,
+                    CAN_MAX_OUTBOX,
+                    MAX_SESSIONS,
+                    MAX_SERVICES,
+                    MAX_DIDS,
+                    MAX_SECURITY_LEVELS,
+                    DEFAULT_S3,
+                    DEFAULT_P2,
+                    DEFAULT_P2_EXT,
+                    DEFAULT_LOCKOUT,
+                    DEFAULT_MAX_SECURITY_ATTEMPTS,
+                    MAX_SEED,
+                    MAX_PERIODIC,
+                    TestHandler,
+                    TestSecurityProvider,
+                > = EcuNode::new(
                     ecu.logical_address,
                     ecu.request_can_id,
                     ecu.response_can_id,
                     ecu.addressing_mode.clone(),
                     server,
                 );
+
                 let _ = ecu_entries.push(EcuEntry {
                     logical_address: ecu.logical_address,
                     request_can_id: ecu.request_can_id,

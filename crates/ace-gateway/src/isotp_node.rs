@@ -18,13 +18,13 @@ use ace_sim::{clock::Instant, io::NodeAddress};
 // region: Capacity Constants
 
 /// Max reassembled UDS message size.
-pub const ISOTP_MAX_UDS: usize = 4096;
+// pub const ISOTP_MAX_UDS: usize = 4096;
 
 /// Max CAN frame payload bytes (classic CAN = 8, CAN FD = 64).
-pub const ISOTP_MAX_FRAME: usize = 64;
+// pub const ISOTP_MAX_FRAME: usize = 64;
 
 /// Max outbox depth.
-pub const ISOTP_MAX_OUT: usize = 64;
+// pub const ISOTP_MAX_OUT: usize = 64;
 
 // endregion: Capacity Constants
 
@@ -53,7 +53,12 @@ pub enum IsoTpNodeError {
 ///     ECU UdsServer puts raw UDS bytes in its outbox addressed to IsoTpNode. IsoTpNode segments
 ///     and puts CAN frames on the bus addressed to `response_can_id` so the gateway can route them
 ///     back to the tester.
-pub struct IsoTpNode<const N: usize = ISOTP_MAX_UDS> {
+pub struct IsoTpNode<
+    const UDS_MAX_FRAME: usize,
+    const ISOTP_MAX_FRAME: usize,
+    const ISOTP_MAX_OUT: usize,
+    const UDS_MAX_OUTBOX: usize,
+> {
     /// CAN ID this node uses for receiving requests from the gateway.
     request_can_id: u32,
 
@@ -62,18 +67,24 @@ pub struct IsoTpNode<const N: usize = ISOTP_MAX_UDS> {
 
     /// This node's own NodeAddress on the CAN sim bus.
     address: NodeAddress,
-    reassembler: Reassembler<N>,
-    req_segmenter: Segmenter<N>,
-    resp_segmenter: Segmenter<N>,
+    reassembler: Reassembler<ISOTP_MAX_FRAME>,
+    req_segmenter: Segmenter<ISOTP_MAX_FRAME>,
+    resp_segmenter: Segmenter<ISOTP_MAX_FRAME>,
 
     /// Outbound CAN frames for the CAN bus.
     pub can_outbox: heapless::Vec<(NodeAddress, heapless::Vec<u8, ISOTP_MAX_FRAME>), ISOTP_MAX_OUT>,
 
     /// Outbound UDS bytes for the UdsServer.
-    uds_outbox: heapless::Vec<(NodeAddress, heapless::Vec<u8, N>), 4>,
+    uds_outbox: heapless::Vec<(NodeAddress, heapless::Vec<u8, UDS_MAX_FRAME>), UDS_MAX_OUTBOX>,
 }
 
-impl<const N: usize> IsoTpNode<N> {
+impl<
+        const UDS_MAX_FRAME: usize,
+        const ISOTP_MAX_FRAME: usize,
+        const ISOTP_MAX_OUT: usize,
+        const UDS_MAX_OUTBOX: usize,
+    > IsoTpNode<UDS_MAX_FRAME, ISOTP_MAX_FRAME, ISOTP_MAX_OUT, UDS_MAX_OUTBOX>
+{
     pub fn new(
         request_can_id: u32,
         response_can_id: u32,
@@ -157,7 +168,7 @@ impl<const N: usize> IsoTpNode<N> {
                     let gateway_addr = NodeAddress(self.request_can_id);
                     let mut frame = heapless::Vec::new();
 
-                    let _ = frame.extend_from_slice(&uds_bytes[..len.min(N)]);
+                    let _ = frame.extend_from_slice(&uds_bytes[..len.min(ISOTP_MAX_FRAME)]);
                     self.uds_outbox
                         .push((gateway_addr, frame))
                         .map_err(|_| IsoTpNodeError::OutboxFull)?;
@@ -211,7 +222,7 @@ impl<const N: usize> IsoTpNode<N> {
     /// Drains reassembled UDS bytes destined for the UdsServer.
     pub fn drain_uds_outbox(
         &mut self,
-        out: &mut heapless::Vec<(NodeAddress, heapless::Vec<u8, N>), 4>,
+        out: &mut heapless::Vec<(NodeAddress, heapless::Vec<u8, UDS_MAX_FRAME>), UDS_MAX_OUTBOX>,
     ) -> usize {
         let n = self.uds_outbox.len();
 
@@ -227,7 +238,7 @@ impl<const N: usize> IsoTpNode<N> {
     // region: Internal helpers
 
     fn drain_segmenter(
-        segmenter: &mut Segmenter<N>,
+        segmenter: &mut Segmenter<ISOTP_MAX_FRAME>,
         dst: NodeAddress,
         can_outbox: &mut heapless::Vec<
             (NodeAddress, heapless::Vec<u8, ISOTP_MAX_FRAME>),

@@ -16,11 +16,83 @@ use ace_gateway::tester::{DoipConnectionPhase, DoipTesterEvent};
 use ace_sim::{clock::Duration, io::NodeAddress, tcp_bus::TcpEvent};
 
 use crate::{
-    fixtures::doip::{DoipDstScenario, GATEWAY_ADDR},
+    fixtures::{
+        doip::{DoipDstScenario, TestActivationAuthProvider, GATEWAY_ADDR},
+        TestHandler, TestSecurityProvider,
+    },
     harness::{assert_session, TESTER_ADDR},
 };
 
 // endregion: Imports
+
+// region: Scenario Initialisation
+
+const MAX_DATA: usize = 256;
+const MAX_QUEUED: usize = 16;
+const TCP_MAX_EVENTS: usize = 16;
+const MAX_GATEWAY_ADDRS: usize = 8;
+const MAX_EVENTS: usize = 16;
+const TCP_MAX_FRAME: usize = 256;
+const TCP_MAX_OUTBOX: usize = 16;
+const CAN_MAX_FRAME: usize = 256;
+const CAN_MAX_OUTBOX: usize = 16;
+const MAX_GATEWAYS: usize = 8;
+const ISOTP_MAX_NODES: usize = 8;
+const MAX_TESTERS: usize = 2;
+const MAX_FRAME: usize = 256;
+const MAX_CONNECTION_EVENTS: usize = 16;
+const MAX_ACTIVATION_TYPES: usize = 16;
+const UDS_MAX_FRAME: usize = 256;
+const UDS_MAX_OUTBOX: usize = 16;
+const MAX_SESSIONS: usize = 16;
+const MAX_SERVICES: usize = 16;
+const MAX_DIDS: usize = 48;
+const MAX_SECURITY_LEVELS: usize = 8;
+const MAX_NODES: usize = 8;
+const DEFAULT_S3: u64 = 50;
+const DEFAULT_P2: u64 = 50;
+const DEFAULT_P2_EXT: u64 = 5000;
+const DEFAULT_LOCKOUT: u64 = 30;
+const DEFAULT_MAX_SECURITY_ATTEMPTS: u8 = 3;
+const MAX_SEED: usize = 3;
+const MAX_PERIODIC: usize = 16;
+
+type MyDoipDstScenario = DoipDstScenario<
+    MAX_DATA,
+    MAX_QUEUED,
+    TCP_MAX_EVENTS,
+    MAX_GATEWAY_ADDRS,
+    MAX_EVENTS,
+    TCP_MAX_FRAME,
+    TCP_MAX_OUTBOX,
+    CAN_MAX_FRAME,
+    CAN_MAX_OUTBOX,
+    MAX_GATEWAYS,
+    ISOTP_MAX_NODES,
+    MAX_TESTERS,
+    MAX_FRAME,
+    MAX_CONNECTION_EVENTS,
+    MAX_ACTIVATION_TYPES,
+    UDS_MAX_FRAME,
+    UDS_MAX_OUTBOX,
+    MAX_SESSIONS,
+    MAX_SERVICES,
+    MAX_DIDS,
+    MAX_SECURITY_LEVELS,
+    MAX_NODES,
+    DEFAULT_S3,
+    DEFAULT_P2,
+    DEFAULT_P2_EXT,
+    DEFAULT_LOCKOUT,
+    DEFAULT_MAX_SECURITY_ATTEMPTS,
+    MAX_SEED,
+    MAX_PERIODIC,
+    TestActivationAuthProvider,
+    TestHandler,
+    TestSecurityProvider,
+>;
+
+// endregion: Scenario Initialisation
 
 //  region: Tick parameters
 
@@ -33,7 +105,7 @@ const MAX_TICKS: usize = 1_000;
 #[test]
 fn p1_routing_activation_succeeds_no_faults() {
     for seed in [0] {
-        let mut s = DoipDstScenario::baseline(seed);
+        let mut s = MyDoipDstScenario::baseline(seed);
         s.connect();
         s.tick_n(50);
 
@@ -46,8 +118,9 @@ fn p1_routing_activation_succeeds_no_faults() {
 
 #[test]
 fn p1_activation_response_event_emitted() {
-    let mut s = DoipDstScenario::baseline(0);
+    let mut s = MyDoipDstScenario::baseline(0);
     s.connect();
+
     s.tick_n(50);
 
     let events = s.drain_events();
@@ -65,7 +138,7 @@ fn p1_activation_response_event_emitted() {
 #[test]
 fn p2_dsc_extended_round_trip_no_faults() {
     for seed in 0..10u64 {
-        let mut s = DoipDstScenario::baseline(seed);
+        let mut s = MyDoipDstScenario::baseline(seed);
         s.connect();
         s.tick_n(50);
         assert!(s.is_activated(), "seed {seed}: not activated");
@@ -109,7 +182,7 @@ fn p2_dsc_extended_round_trip_no_faults() {
 
 #[test]
 fn p3_rdbi_vin_over_doip_no_faults() {
-    let mut s = DoipDstScenario::baseline(0);
+    let mut s = MyDoipDstScenario::baseline(0);
     s.connect();
     s.tick_n(50);
 
@@ -145,7 +218,7 @@ fn p3_rdbi_vin_over_doip_no_faults() {
 
 #[test]
 fn p4_activation_line_drop_produces_connection_reset() {
-    let mut s = DoipDstScenario::baseline(0);
+    let mut s = MyDoipDstScenario::baseline(0);
     s.connect();
     s.tick_n(50);
     assert!(s.is_activated());
@@ -180,7 +253,7 @@ fn p5_full_stack_light_faults() {
     const T3_TICKS: usize = 2000;
 
     for seed in 0..50u64 {
-        let mut s = DoipDstScenario::light(seed);
+        let mut s = MyDoipDstScenario::light(seed);
         s.connect();
 
         let conn_id = s.conn_id();
@@ -273,7 +346,7 @@ fn p5_full_stack_light_faults() {
 #[ignore = "Takes too long"]
 fn p6_no_silent_hands_under_chaos() {
     for seed in 0..100u64 {
-        let mut s = DoipDstScenario::chaos(seed);
+        let mut s = MyDoipDstScenario::chaos(seed);
         s.connect();
         s.tick_n(MAX_TICKS * 10);
 

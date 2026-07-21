@@ -35,7 +35,11 @@ pub struct CanNodeEntry {
 /// Defines the gateway's own logical address, the set of ECU nodes it routes to, the registered
 /// tester addresses it accepts activations from, and the activation types it supports.
 #[derive(Debug, Clone)]
-pub struct GatewayConfig {
+pub struct GatewayConfig<
+    const MAX_NODES: usize,
+    const MAX_TESTERS: usize,
+    const MAX_ACTIVATION_TYPES: usize,
+> {
     /// DoIP logical address of this gateway entity.
     pub logical_address: u16,
 
@@ -43,16 +47,16 @@ pub struct GatewayConfig {
     pub protocol_version: ProtocolVersion,
 
     /// ECU nodes reachable through this gateway.
-    pub nodes: heapless::Vec<CanNodeEntry, 16>,
+    pub nodes: heapless::Vec<CanNodeEntry, MAX_NODES>,
 
     /// Tester logical addresses that may activate routing on this gateway. A
     /// `RoutingActivationRequest` from an address not in this list is denied with
     /// `DeniedUnknownSourceAddress`
-    pub registered_testers: heapless::Vec<u16, 16>,
+    pub registered_testers: heapless::Vec<u16, MAX_TESTERS>,
 
     /// Activation types this gateway supports. A request for an unsupported type is denied with
     /// `DeniedUnsupportedRoutingActivationType`
-    pub supported_activation_types: heapless::Vec<ActivationType, 4>,
+    pub supported_activation_types: heapless::Vec<ActivationType, MAX_ACTIVATION_TYPES>,
 
     /// ISO-TP addressing mode for CAN communication.
     pub isotp_addressing_mode: IsoTpAddressingMode,
@@ -61,7 +65,9 @@ pub struct GatewayConfig {
     pub connection_config: ConnectionConfig,
 }
 
-impl GatewayConfig {
+impl<const MAX_NODES: usize, const MAX_TESTERS: usize, const MAX_ACTIVATION_TYPES: usize>
+    GatewayConfig<MAX_NODES, MAX_TESTERS, MAX_ACTIVATION_TYPES>
+{
     pub fn new(logical_address: u16) -> Self {
         let mut supported = heapless::Vec::new();
         let _ = supported.push(ActivationType::Default);
