@@ -13,6 +13,7 @@ use crate::{
     io::NodeAddress,
     node::SimNodeErased,
 };
+use ace_core::Vec;
 
 // endregion: Imports
 
@@ -80,7 +81,7 @@ impl<const MAX_FRAME: usize, const MAX_OUTBOX: usize> CanSimRunner<MAX_FRAME, MA
             }
         }
 
-        let can_events: heapless::Vec<CanEvent, 16> = self.bus.drain_events().collect();
+        let can_events: Vec<CanEvent, 16> = self.bus.drain_events().collect();
         for event in &can_events {
             for handler in can_event_nodes.iter_mut() {
                 handler.on_can_event(event, now);
@@ -91,8 +92,7 @@ impl<const MAX_FRAME: usize, const MAX_OUTBOX: usize> CanSimRunner<MAX_FRAME, MA
             node.tick(now);
         }
 
-        let mut outbox: heapless::Vec<(NodeAddress, heapless::Vec<u8, MAX_FRAME>), MAX_OUTBOX> =
-            heapless::Vec::new();
+        let mut outbox: Vec<(NodeAddress, Vec<u8, MAX_FRAME>), MAX_OUTBOX> = Vec::new();
         for node in nodes.iter_mut() {
             outbox.clear();
             node.drain_outbox(&mut outbox);

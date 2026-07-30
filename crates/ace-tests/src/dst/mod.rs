@@ -1,6 +1,6 @@
 // region: Imports
 
-use ace_sim::clock::Duration;
+use ace::sim::clock::Duration;
 
 // endregion: Imports
 

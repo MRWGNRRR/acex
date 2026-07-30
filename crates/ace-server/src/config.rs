@@ -1,5 +1,6 @@
 // region: Imports
 
+use ace_core::Vec;
 use ace_sim::clock::Duration;
 
 // endregion: Imports
@@ -213,7 +214,7 @@ pub struct SecurityLevelConfig {
 /// Complete server configuration - mirrors what an ODX ECU description provides.
 ///
 /// Constructed once (typically as a static or const) and referenced by the server state machine.
-/// All lookups are O(n) over the small, fixed-size `heapless::Vec` collections - appropriate for
+/// All look-ups are O(n) over the small, fixed-size `heapless::Vec` collections - appropriate for
 /// the sizes involved.
 #[derive(Debug, Clone)]
 pub struct ServerConfig<
@@ -228,10 +229,10 @@ pub struct ServerConfig<
     /// Functional (broadcast) address this server listens on.
     pub functional_address: u16,
 
-    pub sessions: heapless::Vec<SessionConfig, MAX_SESSIONS>,
-    pub services: heapless::Vec<ServiceConfig, MAX_SERVICES>,
-    pub data_identifiers: heapless::Vec<DidConfig, MAX_DIDS>,
-    pub security_levels: heapless::Vec<SecurityLevelConfig, MAX_SECURITY_LEVELS>,
+    pub sessions: Vec<SessionConfig, MAX_SESSIONS>,
+    pub services: Vec<ServiceConfig, MAX_SERVICES>,
+    pub data_identifiers: Vec<DidConfig, MAX_DIDS>,
+    pub security_levels: Vec<SecurityLevelConfig, MAX_SECURITY_LEVELS>,
 }
 
 impl<
@@ -245,10 +246,10 @@ impl<
         Self {
             physical_address,
             functional_address,
-            sessions: heapless::Vec::new(),
-            services: heapless::Vec::new(),
-            data_identifiers: heapless::Vec::new(),
-            security_levels: heapless::Vec::new(),
+            sessions: Vec::new(),
+            services: Vec::new(),
+            data_identifiers: Vec::new(),
+            security_levels: Vec::new(),
         }
     }
 

@@ -4,9 +4,9 @@
 // Run with:
 //   cargo run --example connect_to_vehicle -- 192.168.1.10
 
-use ace_client::event::ClientEvent;
-use ace_doip::header::ProtocolVersion;
-use ace_gateway::tester::{DoipConnectionConfig, DoipTesterEvent};
+use ace::client::event::ClientEvent;
+use ace::doip::header::ProtocolVersion;
+use ace::gateway::tester::{DoipConnectionConfig, DoipTesterEvent};
 use ace_transport::doip_vehicle_driver::{DoipVehicleDriver, VehicleDriverConfig};
 use std::time::Duration;
 

@@ -4,6 +4,7 @@ use crate::clock::{Clock, Duration, Instant, SimClock};
 use crate::fault::FaultConfig;
 use crate::io::NodeAddress;
 use crate::rng::{Rng, Xorshift64};
+use ace_core::Vec;
 
 // endregion: Imports
 
@@ -14,7 +15,7 @@ use crate::rng::{Rng, Xorshift64};
 pub struct Envelope<const MAX_DATA: usize> {
     pub src: NodeAddress,
     pub dst: NodeAddress,
-    pub data: heapless::Vec<u8, MAX_DATA>,
+    pub data: Vec<u8, MAX_DATA>,
     /// Earliest time this message may be delivered.
     pub deliver_at: Instant,
 }
@@ -35,7 +36,7 @@ pub struct SimBus<const MAX_DATA: usize, const MAX_QUEUED: usize> {
     clock: SimClock,
     rng: Xorshift64,
     faults: FaultConfig,
-    queue: heapless::Vec<Envelope<MAX_DATA>, MAX_QUEUED>,
+    queue: Vec<Envelope<MAX_DATA>, MAX_QUEUED>,
 }
 
 impl<const MAX_DATA: usize, const MAX_QUEUED: usize> SimBus<MAX_DATA, MAX_QUEUED> {
@@ -44,7 +45,7 @@ impl<const MAX_DATA: usize, const MAX_QUEUED: usize> SimBus<MAX_DATA, MAX_QUEUED
             clock: SimClock::new(),
             rng: Xorshift64::new(seed),
             faults,
-            queue: heapless::Vec::new(),
+            queue: Vec::new(),
         }
     }
 
@@ -55,12 +56,12 @@ impl<const MAX_DATA: usize, const MAX_QUEUED: usize> SimBus<MAX_DATA, MAX_QUEUED
 
     /// Advances simulation time by `duration` and returns all messages that are due for delivery
     /// at or before the new time.
-    pub fn tick(&mut self, duration: Duration) -> heapless::Vec<Envelope<MAX_DATA>, MAX_QUEUED> {
+    pub fn tick(&mut self, duration: Duration) -> Vec<Envelope<MAX_DATA>, MAX_QUEUED> {
         self.clock.advance(duration);
         let now = self.clock.now();
 
-        let mut delivered = heapless::Vec::new();
-        let mut remaining = heapless::Vec::new();
+        let mut delivered = Vec::new();
+        let mut remaining = Vec::new();
 
         for envelope in self.queue.drain(..) {
             if envelope.deliver_at <= now {
@@ -105,7 +106,7 @@ impl<const MAX_DATA: usize, const MAX_QUEUED: usize> SimBus<MAX_DATA, MAX_QUEUED
             return false;
         }
 
-        let mut payload = heapless::Vec::new();
+        let mut payload = Vec::new();
 
         for &byte in data {
             if self
@@ -135,7 +136,13 @@ impl<const MAX_DATA: usize, const MAX_QUEUED: usize> SimBus<MAX_DATA, MAX_QUEUED
             deliver_at,
         };
 
-        self.queue.push(envelope).is_ok()
+        if self.queue.len() >= MAX_QUEUED {
+            return false;
+        }
+
+        let _ = self.queue.push(envelope);
+
+        true
     }
 
     /// Returns a reference to the current fault config

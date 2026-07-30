@@ -7,12 +7,13 @@
 
 // region: Imports
 
-use ace_can::IsoTpAddressingMode;
-use ace_doip::{
+use ace::can::IsoTpAddressingMode;
+use ace::core::Vec;
+use ace::doip::{
     payload::ActivationType,
     session::{ActivationAuthProvider, ActivationDenialReason},
 };
-use ace_gateway::{
+use ace::gateway::{
     config::{CanNodeEntry, GatewayConfig},
     ecu_node::EcuNode,
     gateway::DoipGateway,
@@ -21,8 +22,8 @@ use ace_gateway::{
         DoipTesterEvent, TargetId,
     },
 };
-use ace_server::{handler::ServerHandler, security_provider::SecurityProvider};
-use ace_sim::{
+use ace::server::{handler::ServerHandler, security_provider::SecurityProvider};
+use ace::sim::{
     can_bus::{CanFaultConfig, CanSimBus},
     clock::Duration,
     io::NodeAddress,
@@ -49,7 +50,7 @@ impl ActivationAuthProvider for TestActivationAuthProvider {
         &mut self,
         _source_address: u16,
         _oem_data: &[u8],
-    ) -> Result<(), ace_doip::session::ActivationDenialReason> {
+    ) -> Result<(), ace::doip::session::ActivationDenialReason> {
         Ok(())
     }
 }
@@ -207,7 +208,7 @@ pub struct GatewayEntry<
         MAX_NODES,
         A,
     >,
-    pub ecus: heapless::Vec<
+    pub ecus: Vec<
         EcuEntry<
             UDS_MAX_FRAME,
             UDS_MAX_OUTBOX,
@@ -298,7 +299,7 @@ pub struct DoipDstScenario<
         MAX_PERIODIC,
         MAX_DATA,
     >,
-    pub gateways: heapless::Vec<
+    pub gateways: Vec<
         GatewayEntry<
             ISOTP_MAX_NODES,
             TCP_MAX_FRAME,
@@ -443,7 +444,7 @@ impl<
     pub fn connect(&mut self) {
         let tester_addr = self.tester.address();
 
-        let gw_addrs: heapless::Vec<NodeAddress, MAX_GATEWAY_ADDRS> = self
+        let gw_addrs: Vec<NodeAddress, MAX_GATEWAY_ADDRS> = self
             .gateways
             .iter()
             .map(|g| g.gateway_addr.clone())
@@ -475,7 +476,7 @@ impl<
 
         let tcp_delivered = self.tcp_bus.tick(self.config.tcp_tick);
 
-        let tcp_events: heapless::Vec<_, TCP_MAX_OUTBOX> = self.tcp_bus.drain_events().collect();
+        let tcp_events: Vec<_, TCP_MAX_OUTBOX> = self.tcp_bus.drain_events().collect();
         for event in &tcp_events {
             self.tester.on_tcp_event(event, now);
         }
@@ -498,10 +499,7 @@ impl<
 
         self.tester.tick(now);
 
-        let mut tester_out: heapless::Vec<
-            (NodeAddress, heapless::Vec<u8, TCP_MAX_FRAME>),
-            TCP_MAX_OUTBOX,
-        > = heapless::Vec::new();
+        let mut tester_out: Vec<(NodeAddress, Vec<u8, TCP_MAX_FRAME>), TCP_MAX_OUTBOX> = Vec::new();
         self.tester.drain_outbox(&mut tester_out);
 
         for (dst, data) in &tester_out {
@@ -509,10 +507,8 @@ impl<
         }
 
         for gw in self.gateways.iter_mut() {
-            let mut gw_tcp_out: heapless::Vec<
-                (NodeAddress, heapless::Vec<u8, TCP_MAX_FRAME>),
-                TCP_MAX_OUTBOX,
-            > = heapless::Vec::new();
+            let mut gw_tcp_out: Vec<(NodeAddress, Vec<u8, TCP_MAX_FRAME>), TCP_MAX_OUTBOX> =
+                Vec::new();
             gw.gateway.drain_tcp_outbox(&mut gw_tcp_out);
 
             for (dst, data) in &gw_tcp_out {
@@ -520,10 +516,8 @@ impl<
                     .send(gw.gateway_addr.clone(), dst.clone(), data);
             }
 
-            let mut gw_can_out: heapless::Vec<
-                (NodeAddress, heapless::Vec<u8, CAN_MAX_FRAME>),
-                CAN_MAX_OUTBOX,
-            > = heapless::Vec::new();
+            let mut gw_can_out: Vec<(NodeAddress, Vec<u8, CAN_MAX_FRAME>), CAN_MAX_OUTBOX> =
+                Vec::new();
             gw.gateway.drain_can_outbox(&mut gw_can_out);
 
             for (dst, data) in &gw_can_out {
@@ -574,10 +568,10 @@ impl<
                 }
 
                 for ecu in gw.ecus.iter_mut() {
-                    let mut ecu_can_out: heapless::Vec<
-                        (NodeAddress, heapless::Vec<u8, CAN_MAX_FRAME>),
+                    let mut ecu_can_out: Vec<
+                        (NodeAddress, Vec<u8, CAN_MAX_FRAME>),
                         CAN_MAX_OUTBOX,
-                    > = heapless::Vec::new();
+                    > = Vec::new();
                     ecu.node.drain_can_outbox(&mut ecu_can_out);
 
                     for (dst, data) in &ecu_can_out {
@@ -586,10 +580,8 @@ impl<
                     }
                 }
 
-                let mut gw_can_fc: heapless::Vec<
-                    (NodeAddress, heapless::Vec<u8, CAN_MAX_FRAME>),
-                    CAN_MAX_OUTBOX,
-                > = heapless::Vec::new();
+                let mut gw_can_fc: Vec<(NodeAddress, Vec<u8, CAN_MAX_FRAME>), CAN_MAX_OUTBOX> =
+                    Vec::new();
                 gw.gateway.drain_can_outbox(&mut gw_can_fc);
 
                 for (dst, data) in &gw_can_fc {
@@ -597,10 +589,8 @@ impl<
                         .send(gw.gateway_addr.clone(), dst.clone(), data);
                 }
 
-                let mut gw_tcp_resp: heapless::Vec<
-                    (NodeAddress, heapless::Vec<u8, TCP_MAX_FRAME>),
-                    TCP_MAX_OUTBOX,
-                > = heapless::Vec::new();
+                let mut gw_tcp_resp: Vec<(NodeAddress, Vec<u8, TCP_MAX_FRAME>), TCP_MAX_OUTBOX> =
+                    Vec::new();
                 gw.gateway.drain_tcp_outbox(&mut gw_tcp_resp);
 
                 for (dst, data) in &gw_tcp_resp {
@@ -673,7 +663,7 @@ impl<
     /// Drains all tester events
     pub fn drain_events(
         &mut self,
-    ) -> heapless::Vec<(ConnectionId, TargetId, DoipTesterEvent<MAX_DATA>), MAX_EVENTS> {
+    ) -> Vec<(ConnectionId, TargetId, DoipTesterEvent<MAX_DATA>), MAX_EVENTS> {
         self.tester.drain_events().collect()
     }
 
@@ -685,7 +675,7 @@ impl<
 
         let now = self.tcp_bus.now();
         self.tester.on_tcp_event(
-            &ace_sim::tcp_bus::TcpEvent::ConnectionReset {
+            &ace::sim::tcp_bus::TcpEvent::ConnectionReset {
                 from: tester_addr,
                 to: gateway_addr,
             },
@@ -739,7 +729,7 @@ pub struct GatewayNodeConfig<const MAX_ECUS: usize> {
     pub logical_address: u16,
     pub tester_address: u16,
     pub activation_type: ActivationType,
-    pub ecus: heapless::Vec<EcuNodeConfig, MAX_ECUS>,
+    pub ecus: Vec<EcuNodeConfig, MAX_ECUS>,
 }
 
 impl<const MAX_ECUS: usize> GatewayNodeConfig<MAX_ECUS> {
@@ -748,7 +738,7 @@ impl<const MAX_ECUS: usize> GatewayNodeConfig<MAX_ECUS> {
             logical_address,
             tester_address,
             activation_type: ActivationType::Default,
-            ecus: heapless::Vec::new(),
+            ecus: Vec::new(),
         }
     }
 
@@ -805,7 +795,7 @@ pub struct DoipDstScenarioBuilder<const MAX_GATEWAYS: usize, const MAX_ECUS: usi
     tcp_faults: TcpFaultConfig,
     can_faults: CanFaultConfig,
     tick_config: DoipScenarioConfig,
-    gateways: heapless::Vec<GatewayNodeConfig<MAX_ECUS>, MAX_GATEWAYS>,
+    gateways: Vec<GatewayNodeConfig<MAX_ECUS>, MAX_GATEWAYS>,
 }
 
 // Default ECU for the no-argument builder path
@@ -835,7 +825,7 @@ impl<const MAX_GATEWAYS: usize, const MAX_ECUS: usize>
             can_faults: CanFaultConfig::none(),
             tick_config: DoipScenarioConfig::default(),
             gateways: {
-                let mut v = heapless::Vec::new();
+                let mut v = Vec::new();
                 let _ = v.push(default_gw);
                 v
             },
@@ -947,7 +937,7 @@ impl<const MAX_GATEWAYS: usize, const MAX_ECUS: usize>
             .unwrap_or(DEFAULT_TESTER_ADDR);
 
         let mut tester = DoipTester::new(tester_address, NodeAddress(tester_address as u32));
-        let mut gateway_entries: heapless::Vec<
+        let mut gateway_entries: Vec<
             GatewayEntry<
                 ISOTP_MAX_NODES,
                 TCP_MAX_FRAME,
@@ -977,7 +967,7 @@ impl<const MAX_GATEWAYS: usize, const MAX_ECUS: usize>
                 TestSecurityProvider,
             >,
             MAX_GATEWAYS,
-        > = heapless::Vec::new();
+        > = Vec::new();
 
         for gw_config in &self.gateways {
             let gw_addr = NodeAddress(gw_config.logical_address as u32);
@@ -1003,7 +993,7 @@ impl<const MAX_GATEWAYS: usize, const MAX_ECUS: usize>
                 .open_connection(conn_config)
                 .expect("connection slot available");
 
-            let mut ecu_entries: heapless::Vec<
+            let mut ecu_entries: Vec<
                 EcuEntry<
                     UDS_MAX_FRAME,
                     UDS_MAX_OUTBOX,
@@ -1024,7 +1014,7 @@ impl<const MAX_GATEWAYS: usize, const MAX_ECUS: usize>
                     TestSecurityProvider,
                 >,
                 MAX_NODES,
-            > = heapless::Vec::new();
+            > = Vec::new();
 
             for ecu in &gw_config.ecus {
                 let server = default_server(NodeAddress(ecu.logical_address as u32));

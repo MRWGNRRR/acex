@@ -1,6 +1,7 @@
 // region: Imports
 
 use ace_can::IsoTpAddressingMode;
+use ace_core::Vec;
 use ace_doip::{header::ProtocolVersion, payload::ActivationType, session::ConnectionConfig};
 
 // endregion: Imports
@@ -47,16 +48,16 @@ pub struct GatewayConfig<
     pub protocol_version: ProtocolVersion,
 
     /// ECU nodes reachable through this gateway.
-    pub nodes: heapless::Vec<CanNodeEntry, MAX_NODES>,
+    pub nodes: Vec<CanNodeEntry, MAX_NODES>,
 
     /// Tester logical addresses that may activate routing on this gateway. A
     /// `RoutingActivationRequest` from an address not in this list is denied with
     /// `DeniedUnknownSourceAddress`
-    pub registered_testers: heapless::Vec<u16, MAX_TESTERS>,
+    pub registered_testers: Vec<u16, MAX_TESTERS>,
 
     /// Activation types this gateway supports. A request for an unsupported type is denied with
     /// `DeniedUnsupportedRoutingActivationType`
-    pub supported_activation_types: heapless::Vec<ActivationType, MAX_ACTIVATION_TYPES>,
+    pub supported_activation_types: Vec<ActivationType, MAX_ACTIVATION_TYPES>,
 
     /// ISO-TP addressing mode for CAN communication.
     pub isotp_addressing_mode: IsoTpAddressingMode,
@@ -69,14 +70,14 @@ impl<const MAX_NODES: usize, const MAX_TESTERS: usize, const MAX_ACTIVATION_TYPE
     GatewayConfig<MAX_NODES, MAX_TESTERS, MAX_ACTIVATION_TYPES>
 {
     pub fn new(logical_address: u16) -> Self {
-        let mut supported = heapless::Vec::new();
+        let mut supported = Vec::new();
         let _ = supported.push(ActivationType::Default);
 
         Self {
             logical_address,
             protocol_version: ProtocolVersion::Iso13400_2012,
-            nodes: heapless::Vec::new(),
-            registered_testers: heapless::Vec::new(),
+            nodes: Vec::new(),
+            registered_testers: Vec::new(),
             supported_activation_types: supported,
             isotp_addressing_mode: IsoTpAddressingMode::Normal,
             connection_config: ConnectionConfig::default(),

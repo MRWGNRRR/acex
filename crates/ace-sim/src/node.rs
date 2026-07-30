@@ -3,7 +3,7 @@
 use crate::bus::SimBus;
 use crate::clock::{Duration, Instant};
 use crate::io::NodeAddress;
-use heapless::Vec;
+use ace_core::Vec;
 
 // endregion: Imports
 
@@ -37,7 +37,7 @@ pub trait SimNode<const MAX_FRAME: usize, const MAX_OUTBOX: usize> {
     /// `tick` call to collect and route output.
     fn drain_outbox(
         &mut self,
-        out: &mut heapless::Vec<(NodeAddress, heapless::Vec<u8, MAX_FRAME>), MAX_OUTBOX>,
+        out: &mut Vec<(NodeAddress, Vec<u8, MAX_FRAME>), MAX_OUTBOX>,
     ) -> usize;
 }
 
@@ -132,7 +132,7 @@ impl<const N: usize, const Q: usize> SimRunner<N, Q> {
             let _ = node.tick(now);
         }
 
-        let mut outbox = heapless::Vec::new();
+        let mut outbox = Vec::new();
 
         for node in nodes.iter_mut() {
             outbox.clear();

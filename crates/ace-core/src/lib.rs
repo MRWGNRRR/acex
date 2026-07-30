@@ -9,6 +9,9 @@ pub use codec::{take_n, FrameCodec, FrameRead, FrameWrite, Writer};
 pub mod iter;
 pub use iter::FrameIter;
 
+pub mod storage;
+pub use storage::Vec;
+
 // region: Addressing
 
 pub trait DiagnosticAddress: Clone + core::fmt::Debug {

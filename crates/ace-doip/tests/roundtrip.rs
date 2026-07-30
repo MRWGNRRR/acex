@@ -12,14 +12,21 @@
 // successfully. This catches encoder/decoder asymmetry without needing to
 // generate structurally valid DoIP frames.
 
-use ace_core::codec::{FrameRead, FrameWrite};
+#[cfg(feature = "alloc")]
+use ace_core::codec::FrameWrite;
+#[cfg(feature = "alloc")]
+use ace_core::FrameRead;
+#[cfg(feature = "alloc")]
 use ace_doip::message::*;
+#[cfg(feature = "alloc")]
 use ace_doip::payload::*;
+#[cfg(feature = "alloc")]
 use bytes::BytesMut;
 use proptest::prelude::*;
 
 // region: Helpers
 
+#[cfg(feature = "alloc")]
 fn encode<T: FrameWrite>(value: &T) -> BytesMut
 where
     T::Error: core::fmt::Debug,
@@ -31,6 +38,7 @@ where
     buf
 }
 
+#[cfg(feature = "alloc")]
 fn try_decode<'a, T: FrameRead<'a>>(bytes: &'a [u8]) -> Option<T> {
     let mut cursor = bytes;
     T::decode(&mut cursor).ok()
@@ -44,6 +52,7 @@ macro_rules! roundtrip {
     ($name:ident, $ty:ty) => {
         proptest! {
             #![proptest_config(ProptestConfig { failure_persistence: None, ..ProptestConfig::default() })]
+            #[cfg(feature = "alloc")]
             #[test]
             fn $name(bytes in proptest::collection::vec(any::<u8>(), 0..=256usize)) {
                 if let Some(first) = try_decode::<$ty>(&bytes) {
@@ -97,6 +106,7 @@ roundtrip!(rt_diagnostic_message_nack, DiagnosticMessageNack);
 
 proptest! {
     #![proptest_config(ProptestConfig { failure_persistence: None, ..ProptestConfig::default() })]
+    #[cfg(feature = "alloc")]
     #[test]
     fn rt_doip_message(bytes in proptest::collection::vec(any::<u8>(), 0..=256usize)) {
         if let Some(first) = try_decode::<DoipMessage>(&bytes) {

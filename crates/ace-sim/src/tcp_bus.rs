@@ -6,8 +6,6 @@
 
 // region: Imports
 
-use heapless::Vec;
-
 use crate::{
     bus::{Envelope, SimBus},
     clock::{Duration, Instant},
@@ -15,6 +13,7 @@ use crate::{
     io::NodeAddress,
     rng::{Rng, Xorshift64},
 };
+use ace_core::Vec;
 
 // endregion: Imports
 
