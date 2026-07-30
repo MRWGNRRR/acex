@@ -21,7 +21,7 @@ alloc = [
 	"ace-sim/alloc",
 ]
 std = ["alloc", "ace-core/std", "ace-proto/std", "ace-sim/std"]
-tokio = ["dep:tokio-util", "alloc"]
+tokio = ["dep:tokio-util", "alloc", "dep:bytes"]
 
 [dependencies]
 ace-macros = { workspace = true }
