@@ -1,8 +1,8 @@
 // region: Imports
 
-use ace::client::event::ClientEvent;
-use ace::sim::clock::Duration;
-use ace::sim::fault::FaultConfig;
+use aced::client::event::ClientEvent;
+use aced::sim::clock::Duration;
+use aced::sim::fault::FaultConfig;
 
 use crate::{
     dst::{MAX_TICKS, TICK_MS},

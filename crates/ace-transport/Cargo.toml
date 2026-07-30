@@ -5,10 +5,10 @@ edition = "2024"
 publish = false
 
 [dependencies]
-ace = { workspace = true }
+aced = { workspace = true }
 
 [dev-dependencies]
-ace = { workspace = true }
+aced = { workspace = true }
 
 [[example]]
 name = "connect_to_vehicle"

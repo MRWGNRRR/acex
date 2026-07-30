@@ -1,4 +1,4 @@
-//! Batteries-included entry point for the ACE diagnostics stack.
+//! Batteries-included entry point for the ACED diagnostics stack.
 //!
 //! Alloc-backed by default. For no_std/embedded targets, depend on the
 //! individual `ace-*` crates directly instead of this facade.

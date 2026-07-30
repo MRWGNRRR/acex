@@ -7,13 +7,13 @@
 
 // region: Imports
 
-use ace::can::IsoTpAddressingMode;
-use ace::core::Vec;
-use ace::doip::{
+use aced::can::IsoTpAddressingMode;
+use aced::core::Vec;
+use aced::doip::{
     payload::ActivationType,
     session::{ActivationAuthProvider, ActivationDenialReason},
 };
-use ace::gateway::{
+use aced::gateway::{
     config::{CanNodeEntry, GatewayConfig},
     ecu_node::EcuNode,
     gateway::DoipGateway,
@@ -22,8 +22,8 @@ use ace::gateway::{
         DoipTesterEvent, TargetId,
     },
 };
-use ace::server::{handler::ServerHandler, security_provider::SecurityProvider};
-use ace::sim::{
+use aced::server::{handler::ServerHandler, security_provider::SecurityProvider};
+use aced::sim::{
     can_bus::{CanFaultConfig, CanSimBus},
     clock::Duration,
     io::NodeAddress,
@@ -50,7 +50,7 @@ impl ActivationAuthProvider for TestActivationAuthProvider {
         &mut self,
         _source_address: u16,
         _oem_data: &[u8],
-    ) -> Result<(), ace::doip::session::ActivationDenialReason> {
+    ) -> Result<(), aced::doip::session::ActivationDenialReason> {
         Ok(())
     }
 }
@@ -675,7 +675,7 @@ impl<
 
         let now = self.tcp_bus.now();
         self.tester.on_tcp_event(
-            &ace::sim::tcp_bus::TcpEvent::ConnectionReset {
+            &aced::sim::tcp_bus::TcpEvent::ConnectionReset {
                 from: tester_addr,
                 to: gateway_addr,
             },

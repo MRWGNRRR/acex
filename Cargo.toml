@@ -16,7 +16,7 @@ serde = { version = "1.0.228" }
 tokio-util = { version = "0.7.18" }
 derive_more = { version = "2.1.1" }
 
-ace = { path = "crates/ace", version = "0.5.0" }
+aced = { path = "crates/aced", version = "0.4.0" }
 ace-core = { path = "crates/ace-core", version = "0.5.0" }
 ace-macros = { path = "crates/ace-macros", version = "0.5.0" }
 ace-proto = { path = "crates/ace-proto", version = "0.5.0" }

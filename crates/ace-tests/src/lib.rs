@@ -1,3 +1,5 @@
+pub mod dst;
+pub mod fixtures;
 ///! Workspace-level RST and integration test crate.
 ///!
 ///! Structure:
@@ -13,7 +15,3 @@
 ///     - assertion helpers - expect_positive, expect_nrc, expect_timeout,
 ///     expect_periodic, assert_session, asset_security
 pub mod harness;
-
-pub mod fixtures;
-
-pub mod dst;

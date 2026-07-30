@@ -5,5 +5,5 @@ edition = "2024"
 publish = false
 
 [dependencies]
-ace = { workspace = true }
+aced = { workspace = true }
 heapless = { workspace = true }
