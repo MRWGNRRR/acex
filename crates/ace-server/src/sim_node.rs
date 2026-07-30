@@ -5,6 +5,7 @@ use crate::{
     security_provider::SecurityProvider,
     server::{ServerError, UdsServer},
 };
+use ace_core::Vec;
 use ace_sim::node::SimNode;
 
 // endregion: Imports
@@ -83,10 +84,7 @@ where
     /// the SimBus.
     fn drain_outbox(
         &mut self,
-        out: &mut heapless::Vec<
-            (ace_sim::io::NodeAddress, heapless::Vec<u8, MAX_FRAME>),
-            MAX_OUTBOX,
-        >,
+        out: &mut Vec<(ace_sim::io::NodeAddress, Vec<u8, MAX_FRAME>), MAX_OUTBOX>,
     ) -> usize {
         UdsServer::drain_outbox(self, out)
     }

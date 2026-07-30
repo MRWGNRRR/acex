@@ -1,21 +1,13 @@
 // region: Imports
 
-// use crate::{SIM_MAX_FRAME, SIM_MAX_OUTBOX};
+use ace_core::Vec;
 use ace_proto::{common::RawFrame, UdsFrame};
 use ace_sim::{clock::Instant, io::NodeAddress};
 use ace_uds::ext::UdsFrameExt;
-use heapless::Vec;
 
 use crate::{config::ClientConfig, event::ClientEvent, pending::PendingRequest, ClientError};
 
 // endregion: Imports
-
-// region: Capacity Constants
-
-// const MAX_EVENTS: usize = 32;
-// const MAX_DATA: usize = 256;
-
-// endregion: Capacity Constants
 
 // region: UDS Client
 
@@ -242,16 +234,17 @@ impl<
             None => return Err(ClientError::EmptyRequest),
         };
 
-        if self.pending.is_full() {
+        if self.pending.len() >= PENDING {
             return Err(ClientError::QueueFull);
         }
 
         let mut frame: Vec<u8, SIM_MAX_FRAME> = Vec::new();
         let _ = frame.extend_from_slice(data);
 
-        self.outbox
-            .push((self.server.clone(), frame))
-            .map_err(|_| ClientError::OutboxFull)?;
+        if self.outbox.len() >= SIM_MAX_OUTBOX {
+            return Err(ClientError::OutboxFull);
+        }
+        let _ = self.outbox.push((self.server.clone(), frame));
 
         let _ = self
             .pending

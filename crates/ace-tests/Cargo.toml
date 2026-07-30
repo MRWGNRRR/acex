@@ -5,12 +5,5 @@ edition = "2024"
 publish = false
 
 [dependencies]
-ace-sim = { workspace = true }
-ace-server = { workspace = true }
-ace-client = { workspace = true }
-ace-proto = { workspace = true }
-ace-uds = { workspace = true }
-ace-doip = { workspace = true }
-ace-can = { workspace = true }
-ace-gateway = { workspace = true }
+ace = { workspace = true }
 heapless = { workspace = true }

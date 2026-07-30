@@ -16,7 +16,7 @@ use ace_can::{
     IsoTpAddressingMode, ReassembleResult, Reassembler, ReassemblerConfig, SegmentResult,
     Segmenter, SegmenterConfig,
 };
-use ace_core::FrameWrite;
+use ace_core::{FrameWrite, Vec};
 use ace_doip::{
     error::DoipError,
     ext::DoipFrameExt,
@@ -158,19 +158,19 @@ pub struct DoipGateway<
     auth: A,
     address: NodeAddress,
 
-    isotp_nodes: heapless::Vec<EcuIsoTpNode<CAN_MAX_FRAME>, ISOTP_MAX_NODES>,
+    isotp_nodes: Vec<EcuIsoTpNode<CAN_MAX_FRAME>, ISOTP_MAX_NODES>,
 
     /// Outbound DoIP frames for the TCP bus.
-    tcp_outbox: heapless::Vec<(NodeAddress, heapless::Vec<u8, TCP_MAX_FRAME>), TCP_MAX_OUTBOX>,
+    tcp_outbox: Vec<(NodeAddress, Vec<u8, TCP_MAX_FRAME>), TCP_MAX_OUTBOX>,
 
     /// Outbound UDS bytes for the CAN bus (address by CAN request ID).
-    can_outbox: heapless::Vec<(NodeAddress, heapless::Vec<u8, CAN_MAX_FRAME>), CAN_MAX_OUTBOX>,
+    can_outbox: Vec<(NodeAddress, Vec<u8, CAN_MAX_FRAME>), CAN_MAX_OUTBOX>,
 
     /// Pending route table - matches CAN responses to tester connections.
     routes: PendingRouteTable<MAX_TESTERS>,
 
     /// Active tester connection slots.
-    connections: heapless::Vec<
+    connections: Vec<
         ConnectionSlot<UDS_MAX_FRAME, MAX_CONNECTION_EVENTS, MAX_TESTERS, MAX_ACTIVATION_TYPES, A>,
         MAX_TESTERS,
     >,
@@ -212,8 +212,7 @@ where
         auth: A,
         address: NodeAddress,
     ) -> Self {
-        let mut isotp_nodes: heapless::Vec<EcuIsoTpNode<CAN_MAX_FRAME>, ISOTP_MAX_NODES> =
-            heapless::Vec::new();
+        let mut isotp_nodes: Vec<EcuIsoTpNode<CAN_MAX_FRAME>, ISOTP_MAX_NODES> = Vec::new();
 
         for node in &config.nodes {
             let _ = isotp_nodes.push(EcuIsoTpNode::new(
@@ -228,10 +227,10 @@ where
             auth,
             address,
             isotp_nodes,
-            tcp_outbox: heapless::Vec::new(),
-            can_outbox: heapless::Vec::new(),
+            tcp_outbox: Vec::new(),
+            can_outbox: Vec::new(),
             routes: PendingRouteTable::new(),
-            connections: heapless::Vec::new(),
+            connections: Vec::new(),
         }
     }
 
@@ -315,12 +314,14 @@ where
                         SegmentResult::Complete => break,
                         SegmentResult::WaitForFlowControl => break,
                         SegmentResult::Frame { len } => {
-                            let mut frame: heapless::Vec<u8, CAN_MAX_FRAME> = heapless::Vec::new();
+                            let mut frame: Vec<u8, CAN_MAX_FRAME> = Vec::new();
                             let _ = frame.extend_from_slice(&out_buf[..len]);
 
-                            self.can_outbox
-                                .push((NodeAddress(request_can_id), frame))
-                                .map_err(|_| GatewayError::CanOutboxFull)?;
+                            if self.can_outbox.len() >= CAN_MAX_OUTBOX {
+                                return Err(GatewayError::CanOutboxFull);
+                            } else {
+                                self.can_outbox.push((NodeAddress(request_can_id), frame));
+                            }
                         }
                     }
                 }
@@ -339,8 +340,8 @@ where
             None => return Ok(()),
         };
 
-        let mut pending: Option<(NodeAddress, u16, u16, heapless::Vec<u8, UDS_MAX_FRAME>)> = None;
-        let mut fc_frame: Option<heapless::Vec<u8, CAN_MAX_FRAME>> = None;
+        let mut pending: Option<(NodeAddress, u16, u16, Vec<u8, UDS_MAX_FRAME>)> = None;
+        let mut fc_frame: Option<Vec<u8, CAN_MAX_FRAME>> = None;
 
         if let Some(isotp) = self
             .isotp_nodes
@@ -355,7 +356,7 @@ where
                 ReassembleResult::Complete { len } => {
                     if let Some(uds_bytes) = isotp.resp_reassembler.message(len) {
                         if let Some(route) = self.routes.take_by_can_response_id(response_can_id) {
-                            let mut buf: heapless::Vec<u8, UDS_MAX_FRAME> = heapless::Vec::new();
+                            let mut buf: Vec<u8, UDS_MAX_FRAME> = Vec::new();
                             let _ = buf.extend_from_slice(&uds_bytes[..len.min(UDS_MAX_FRAME)]);
 
                             pending = Some((
@@ -368,7 +369,7 @@ where
                     }
                 }
                 ReassembleResult::FlowControl { frame, len: fc_len } => {
-                    let mut fc: heapless::Vec<u8, CAN_MAX_FRAME> = heapless::Vec::new();
+                    let mut fc: Vec<u8, CAN_MAX_FRAME> = Vec::new();
                     let _ = fc.extend_from_slice(&frame[..fc_len]);
 
                     fc_frame = Some(fc);
@@ -377,7 +378,7 @@ where
                     flow_control,
                     fc_len,
                 } => {
-                    let mut fc: heapless::Vec<u8, CAN_MAX_FRAME> = heapless::Vec::new();
+                    let mut fc: Vec<u8, CAN_MAX_FRAME> = Vec::new();
                     let _ = fc.extend_from_slice(&flow_control[..fc_len]);
 
                     fc_frame = Some(fc);
@@ -388,9 +389,11 @@ where
         }
 
         if let Some(fc) = fc_frame {
-            self.can_outbox
-                .push((NodeAddress(response_can_id), fc))
-                .map_err(|_| GatewayError::CanOutboxFull)?;
+            if self.can_outbox.len() >= CAN_MAX_OUTBOX {
+                return Err(GatewayError::CanOutboxFull);
+            }
+
+            let _ = self.can_outbox.push((NodeAddress(response_can_id), fc));
         }
 
         if let Some((dst, source, target, data)) = pending {
@@ -404,7 +407,7 @@ where
         for idx in 0..self.connections.len() {
             self.connections[idx].state.tick(now);
 
-            let events: heapless::Vec<ConnectionEvent<UDS_MAX_FRAME>, MAX_CONNECTION_EVENTS> =
+            let events: Vec<ConnectionEvent<UDS_MAX_FRAME>, MAX_CONNECTION_EVENTS> =
                 self.connections[idx].state.drain_events().collect();
 
             let tester_addr = self.connections[idx]
@@ -423,7 +426,7 @@ where
     /// Drains outbound DoIP frames for the TCP bus.
     pub fn drain_tcp_outbox(
         &mut self,
-        out: &mut heapless::Vec<(NodeAddress, heapless::Vec<u8, TCP_MAX_FRAME>), TCP_MAX_OUTBOX>,
+        out: &mut Vec<(NodeAddress, Vec<u8, TCP_MAX_FRAME>), TCP_MAX_OUTBOX>,
     ) -> usize {
         let n = self.tcp_outbox.len();
 
@@ -437,7 +440,7 @@ where
     /// Drains outbound UDS frames for the CAN bus.
     pub fn drain_can_outbox(
         &mut self,
-        out: &mut heapless::Vec<(NodeAddress, heapless::Vec<u8, CAN_MAX_FRAME>), CAN_MAX_OUTBOX>,
+        out: &mut Vec<(NodeAddress, Vec<u8, CAN_MAX_FRAME>), CAN_MAX_OUTBOX>,
     ) -> usize {
         let n = self.can_outbox.len();
 
@@ -463,17 +466,17 @@ where
             return Ok(());
         }
 
-        if self.connections.is_full() {
+        if self.connections.len() >= MAX_TESTERS {
             return Err(GatewayError::NoConnectionSlot);
         }
 
-        let mut registered = heapless::Vec::new();
+        let mut registered = Vec::new();
 
         for &addr in &self.config.registered_testers {
             let _ = registered.push(addr);
         }
 
-        let mut supported = heapless::Vec::new();
+        let mut supported = Vec::new();
 
         for t in &self.config.supported_activation_types {
             let _ = supported.push(t.clone());
@@ -517,7 +520,7 @@ where
         tester: &NodeAddress,
         _now: Instant,
     ) -> Result<(), GatewayError> {
-        let events: heapless::Vec<ConnectionEvent<UDS_MAX_FRAME>, MAX_CONNECTION_EVENTS> =
+        let events: Vec<ConnectionEvent<UDS_MAX_FRAME>, MAX_CONNECTION_EVENTS> =
             self.connections[slot_idx].state.drain_events().collect();
 
         for event in events {
@@ -620,12 +623,14 @@ where
                         SegmentResult::Complete => break,
                         SegmentResult::WaitForFlowControl => break,
                         SegmentResult::Frame { len } => {
-                            let mut frame: heapless::Vec<u8, CAN_MAX_FRAME> = heapless::Vec::new();
+                            let mut frame: Vec<u8, CAN_MAX_FRAME> = Vec::new();
                             let _ = frame.extend_from_slice(&out_buf[..len]);
 
-                            self.can_outbox
-                                .push((NodeAddress(request_can_id), frame))
-                                .map_err(|_| GatewayError::CanOutboxFull)?;
+                            if self.can_outbox.len() >= CAN_MAX_OUTBOX {
+                                return Err(GatewayError::CanOutboxFull);
+                            }
+
+                            let _ = self.can_outbox.push((NodeAddress(request_can_id), frame));
                         }
                     }
                 }
@@ -694,19 +699,25 @@ where
 
         let header_len = 8 - header_slice.len();
 
-        let mut frame: heapless::Vec<u8, TCP_MAX_FRAME> = heapless::Vec::new();
+        let mut frame: Vec<u8, TCP_MAX_FRAME> = Vec::new();
 
-        frame
-            .extend_from_slice(&header_staging[..header_len])
-            .map_err(|_| GatewayError::Codec)?;
+        if frame.len() + header_len > TCP_MAX_FRAME {
+            return Err(GatewayError::Codec);
+        }
+        frame.extend_from_slice(&header_staging[..header_len]);
 
-        frame
-            .extend_from_slice(&payload_staging[..payload_len])
-            .map_err(|_| GatewayError::Codec)?;
+        if frame.len() + payload_len > TCP_MAX_FRAME {
+            return Err(GatewayError::Codec);
+        }
+        frame.extend_from_slice(&payload_staging[..payload_len]);
 
-        self.tcp_outbox
-            .push((dst.clone(), frame))
-            .map_err(|_| GatewayError::TcpOutboxFull)
+        if self.tcp_outbox.len() >= TCP_MAX_OUTBOX {
+            return Err(GatewayError::TcpOutboxFull);
+        }
+
+        let _ = self.tcp_outbox.push((dst.clone(), frame));
+
+        Ok(())
     }
 
     fn send_diagnostic_message(
@@ -725,7 +736,7 @@ where
             payload_length: payload_len as u32,
         };
 
-        let mut frame: heapless::Vec<u8, TCP_MAX_FRAME> = heapless::Vec::new();
+        let mut frame: Vec<u8, TCP_MAX_FRAME> = Vec::new();
         let mut header_staging = [0u8; 8];
         {
             let mut slice: &mut [u8] = &mut header_staging;
@@ -737,9 +748,12 @@ where
         let _ = frame.extend_from_slice(&target_address.to_be_bytes());
         let _ = frame.extend_from_slice(uds_data);
 
-        self.tcp_outbox
-            .push((dst.clone(), frame))
-            .map_err(|_| GatewayError::TcpOutboxFull)
+        if self.tcp_outbox.len() >= TCP_MAX_OUTBOX {
+            return Err(GatewayError::TcpOutboxFull);
+        }
+        let _ = self.tcp_outbox.push((dst.clone(), frame));
+
+        Ok(())
     }
 
     fn send_generic_nack(&mut self, dst: &NodeAddress) -> Result<(), GatewayError> {

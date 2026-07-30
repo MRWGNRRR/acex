@@ -1,19 +1,10 @@
 // region: Imports
 
 use crate::{client::UdsClient, ClientError};
+use ace_core::Vec;
 use ace_sim::node::SimNode;
 
 // endregion: Imports
-
-// region: Capacity Constants
-
-/// Maximum UDS frame payload bytes = matches ace-server for bus compatibility.
-// pub const SIM_MAX_FRAME: usize = 4096;
-
-/// Maximum outbox depth.
-// pub const SIM_MAX_OUTBOX: usize = 16;
-
-// endregion: Capacity Constants
 
 // region: SimNode for UdsClient
 
@@ -48,10 +39,7 @@ impl<
 
     fn drain_outbox(
         &mut self,
-        out: &mut heapless::Vec<
-            (ace_sim::io::NodeAddress, heapless::Vec<u8, SIM_MAX_FRAME>),
-            SIM_MAX_OUTBOX,
-        >,
+        out: &mut Vec<(ace_sim::io::NodeAddress, Vec<u8, SIM_MAX_FRAME>), SIM_MAX_OUTBOX>,
     ) -> usize {
         UdsClient::drain_outbox(self, out)
     }

@@ -4,11 +4,11 @@ version = "0.0.0"
 edition = "2024"
 
 [features]
-default = ["alloc"]
-alloc = []
+default = []
+alloc = ["ace-core/alloc"]
 
 [dependencies]
 ace-macros = { path = ".." }
-ace-core = { workspace = true, features = ["alloc"] }
+ace-core = { workspace = true }
 heapless = { workspace = true }
 bytes = { workspace = true }

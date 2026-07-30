@@ -20,12 +20,12 @@
 
 // region: Imports
 
-use ace_doip::header::ProtocolVersion;
-use ace_gateway::tester::{
+use ace::doip::header::ProtocolVersion;
+use ace::gateway::tester::{
     ConnectionId, DoipConnectionConfig, DoipConnectionPhase, DoipNodeProfile, DoipTester,
     DoipTesterError, DoipTesterEvent, TargetId,
 };
-use ace_sim::io::NodeAddress;
+use ace::sim::io::NodeAddress;
 use core::time::Duration;
 use std::{
     io::{Read, Write},
@@ -251,7 +251,7 @@ impl DoipVehicleDriver {
             )
         })?;
 
-        let now = ace_sim::clock::Instant::from_micros(
+        let now = ace::sim::clock::Instant::from_micros(
             SystemTime::now()
                 .duration_since(UNIX_EPOCH)
                 .unwrap_or_default()
@@ -347,10 +347,10 @@ impl DoipVehicleDriver {
     // region: Internal Helpers
 
     fn flush_outbox(&mut self) {
-        let mut outbox: heapless::Vec<
-            (NodeAddress, heapless::Vec<u8, TCP_MAX_FRAME>),
+        let mut outbox: ace::core::Vec<
+            (NodeAddress, ace::core::Vec<u8, TCP_MAX_FRAME>),
             TCP_MAX_OUTBOX,
-        > = heapless::Vec::new();
+        > = ace::core::Vec::new();
 
         self.tester.drain_outbox(&mut outbox);
 
@@ -363,8 +363,8 @@ impl DoipVehicleDriver {
         }
     }
 
-    fn wall_clock_now(&self) -> ace_sim::clock::Instant {
-        ace_sim::clock::Instant::from_micros(
+    fn wall_clock_now(&self) -> ace::sim::clock::Instant {
+        ace::sim::clock::Instant::from_micros(
             SystemTime::now()
                 .duration_since(UNIX_EPOCH)
                 .unwrap_or_default()

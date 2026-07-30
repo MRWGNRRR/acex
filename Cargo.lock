@@ -3,6 +3,22 @@
 version = 4
 
 [[package]]
+name = "ace"
+version = "0.4.0"
+dependencies = [
+ "ace-can",
+ "ace-client",
+ "ace-core",
+ "ace-doip",
+ "ace-gateway",
+ "ace-macros",
+ "ace-proto",
+ "ace-server",
+ "ace-sim",
+ "ace-uds",
+]
+
+[[package]]
 name = "ace-can"
 version = "0.4.0"
 dependencies = [
@@ -21,7 +37,6 @@ dependencies = [
  "ace-server",
  "ace-sim",
  "ace-uds",
- "heapless",
 ]
 
 [[package]]
@@ -61,7 +76,6 @@ dependencies = [
  "ace-proto",
  "ace-server",
  "ace-sim",
- "heapless",
 ]
 
 [[package]]
@@ -94,7 +108,6 @@ dependencies = [
  "ace-proto",
  "ace-sim",
  "ace-uds",
- "heapless",
 ]
 
 [[package]]
@@ -102,21 +115,13 @@ name = "ace-sim"
 version = "0.4.0"
 dependencies = [
  "ace-core",
- "heapless",
 ]
 
 [[package]]
 name = "ace-tests"
 version = "0.4.0"
 dependencies = [
- "ace-can",
- "ace-client",
- "ace-doip",
- "ace-gateway",
- "ace-proto",
- "ace-server",
- "ace-sim",
- "ace-uds",
+ "ace",
  "heapless",
 ]
 
@@ -124,11 +129,7 @@ dependencies = [
 name = "ace-transport"
 version = "0.4.0"
 dependencies = [
- "ace-client",
- "ace-doip",
- "ace-gateway",
- "ace-sim",
- "heapless",
+ "ace",
 ]
 
 [[package]]

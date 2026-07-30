@@ -11,15 +11,16 @@ keywords = ["diagnostics", "vehicle", "standards"]
 categories = ["development-tools", "network-programming", "automotive"]
 
 [features]
-default = ["tokio"]
+default = []
 serde = ["dep:serde"]
 alloc = [
 	"ace-core/alloc",
 	"ace-proto/alloc",
 	"ace-uds/alloc",
 	"ace-macros/alloc",
+	"ace-sim/alloc",
 ]
-std = ["alloc", "ace-core/std", "ace-proto/std"]
+std = ["alloc", "ace-core/std", "ace-proto/std", "ace-sim/std"]
 tokio = ["dep:tokio-util", "alloc"]
 
 [dependencies]
@@ -30,12 +31,12 @@ ace-uds = { workspace = true }
 ace-sim = { workspace = true }
 
 derive_more = { workspace = true, features = ["display", "from"] }
-bytes = { workspace = true }
+bytes = { workspace = true, optional = true }
 heapless = { workspace = true }
 serde = { workspace = true, optional = true, features = ["derive"] }
 tokio-util = { workspace = true, optional = true, features = ["codec"] }
 
 [dev-dependencies]
 proptest = { workspace = true }
-ace-core = { workspace = true, features = ["std"] }
+ace-core = { workspace = true }
 bytes = { workspace = true }

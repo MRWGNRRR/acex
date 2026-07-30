@@ -4,7 +4,7 @@ use crate::{
     dst::{MAX_TICKS, TICK_MS},
     harness::{expect_nrc, DstScenario},
 };
-use ace_sim::fault::FaultConfig;
+use ace::sim::fault::FaultConfig;
 
 // endregion: Imports
 

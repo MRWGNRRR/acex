@@ -26,5 +26,5 @@ serde = { workspace = true, optional = true, features = ["derive"] }
 
 [dev-dependencies]
 bytes = { workspace = true }
-ace-core = { workspace = true, features = ["alloc"] }
+ace-core = { workspace = true }
 proptest = { workspace = true }

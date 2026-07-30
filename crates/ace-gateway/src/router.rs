@@ -1,3 +1,9 @@
+// region: Imports
+
+use ace_core::Vec;
+
+// endregion: Imports
+
 // region: PendingRoute
 
 /// A forwarded request awaiting a CAN response.
@@ -29,19 +35,19 @@ pub struct PendingRoute {
 /// `N` - max concurrent pending routes (matches max tester connections).
 #[derive(Debug)]
 pub struct PendingRouteTable<const MAX_PENDING: usize> {
-    entries: heapless::Vec<PendingRoute, MAX_PENDING>,
+    entries: Vec<PendingRoute, MAX_PENDING>,
 }
 
 impl<const MAX_PENDING: usize> PendingRouteTable<MAX_PENDING> {
     pub fn new() -> Self {
         Self {
-            entries: heapless::Vec::new(),
+            entries: Vec::new(),
         }
     }
 
     /// Records a forwarded request.
     pub fn insert(&mut self, route: PendingRoute) -> bool {
-        if self.entries.is_full() {
+        if self.entries.len() >= MAX_PENDING {
             return false;
         }
 

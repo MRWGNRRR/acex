@@ -1,7 +1,7 @@
 // region: Imports
 
-use ace_sim::clock::Duration;
-use ace_sim::fault::FaultConfig;
+use ace::sim::clock::Duration;
+use ace::sim::fault::FaultConfig;
 
 use crate::{
     dst::{MAX_TICKS, TICK_MS},

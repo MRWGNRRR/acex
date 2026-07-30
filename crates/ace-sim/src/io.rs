@@ -1,6 +1,7 @@
 // region: Imports
 
 use crate::clock::Instant;
+use ace_core::Vec;
 
 // endregion: Imports
 
@@ -20,12 +21,12 @@ pub struct NodeAddress(pub u32);
 
 /// A raw byte message between two nodes.
 ///
-/// Used by low-level runtime implementers working diectly with frames.
+/// Used by low-level runtime implementers working directly with frames.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RawMessage<const MAX_DATA: usize> {
     pub src: NodeAddress,
     pub dst: NodeAddress,
-    pub data: heapless::Vec<u8, MAX_DATA>,
+    pub data: Vec<u8, MAX_DATA>,
     pub timestamp: Instant,
 }
 

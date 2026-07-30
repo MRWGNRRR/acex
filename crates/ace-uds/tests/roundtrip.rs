@@ -20,6 +20,7 @@ use proptest::prelude::*;
 // region: Helpers
 
 /// Encode a value into a fresh BytesMut and return it.
+#[cfg(feature = "alloc")]
 fn encode<T: FrameWrite>(value: &T) -> BytesMut
 where
     T::Error: std::fmt::Debug,
@@ -50,6 +51,7 @@ fn try_decode<'a, T: FrameRead<'a>>(bytes: &'a [u8]) -> Option<T> {
 macro_rules! roundtrip {
     ($name:ident, $ty:ty) => {
         proptest! {
+            #[cfg(feature = "alloc")]
             #[test]
             fn $name(bytes in proptest::collection::vec(any::<u8>(), 0..=256usize)) {
                 if let Some(first) = try_decode::<$ty>(&bytes) {
@@ -342,6 +344,7 @@ roundtrip!(rt_negative_response, NegativeResponse);
 // reads the SID byte itself.
 
 proptest! {
+    #[cfg(feature = "alloc")]
     #[test]
     fn rt_uds_message(bytes in proptest::collection::vec(any::<u8>(), 0..=256usize)) {
         if let Some(first) = try_decode::<UdsMessage>(&bytes) {

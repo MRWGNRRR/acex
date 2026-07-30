@@ -1,12 +1,12 @@
 // region: Imports
 
+use ace_core::Vec;
 use ace_proto::uds::UdsFrame;
 use ace_sim::clock::{Duration, Instant};
 use ace_sim::io::NodeAddress;
 use ace_uds::ext::UdsFrameExt;
 use ace_uds::message::service::UdsServiceRequest;
 use ace_uds::message::ServiceIdentifier;
-use heapless::Vec;
 
 use crate::config::{periodic, ServerConfig, SessionConfig};
 use crate::handler::ServerHandler;
@@ -453,9 +453,13 @@ where
         dst: NodeAddress,
         frame: Vec<u8, MAX_FRAME>,
     ) -> Result<(), ServerError<H::Error>> {
-        self.outbox
-            .push((dst, frame))
-            .map_err(|_| ServerError::OutboxFull)
+        if self.outbox.len() >= MAX_OUTBOX {
+            return Err(ServerError::OutboxFull);
+        } else {
+            self.outbox.push((dst, frame));
+
+            Ok(())
+        }
     }
 
     fn pos(

@@ -19,6 +19,7 @@ use ace_proto::doip::constants::{
 use crate::payload::{
     ActivationCode, ActivationType, RoutingActivationRequest, RoutingActivationResponse,
 };
+use ace_core::Vec;
 
 // endregion: Imports
 
@@ -202,10 +203,10 @@ pub struct ActivationStateMachine<
 
     /// Set of registered tester source addresses this gateway recognises. In a real gateway this
     /// is provisioned at build time.
-    registered_addresses: heapless::Vec<u16, MAX_TESTERS>,
+    registered_addresses: Vec<u16, MAX_TESTERS>,
 
     /// Supported activation types for this gateway configuration.
-    supported_types: heapless::Vec<ActivationType, MAX_ACTIVATION_TYPES>,
+    supported_types: Vec<ActivationType, MAX_ACTIVATION_TYPES>,
 
     /// OEM authentication provider - called for CentralSecurity activations.
     auth: A,
@@ -219,8 +220,8 @@ impl<const MAX_TESTERS: usize, const MAX_ACTIVATION_TYPES: usize, A: ActivationA
 {
     pub fn new(
         gateway_address: u16,
-        registered_addresses: heapless::Vec<u16, MAX_TESTERS>,
-        supported_types: heapless::Vec<ActivationType, MAX_ACTIVATION_TYPES>,
+        registered_addresses: Vec<u16, MAX_TESTERS>,
+        supported_types: Vec<ActivationType, MAX_ACTIVATION_TYPES>,
         auth: A,
     ) -> Self {
         Self {

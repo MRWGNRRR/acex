@@ -11,6 +11,7 @@ use ace_can::{
     IsoTpAddressingMode, IsoTpError, ReassembleResult, Reassembler, ReassemblerConfig,
     SegmentResult, Segmenter, SegmenterConfig,
 };
+use ace_core::Vec;
 use ace_sim::{clock::Instant, io::NodeAddress};
 
 // endregion: Imports
@@ -72,10 +73,10 @@ pub struct IsoTpNode<
     resp_segmenter: Segmenter<ISOTP_MAX_FRAME>,
 
     /// Outbound CAN frames for the CAN bus.
-    pub can_outbox: heapless::Vec<(NodeAddress, heapless::Vec<u8, ISOTP_MAX_FRAME>), ISOTP_MAX_OUT>,
+    pub can_outbox: Vec<(NodeAddress, Vec<u8, ISOTP_MAX_FRAME>), ISOTP_MAX_OUT>,
 
     /// Outbound UDS bytes for the UdsServer.
-    uds_outbox: heapless::Vec<(NodeAddress, heapless::Vec<u8, UDS_MAX_FRAME>), UDS_MAX_OUTBOX>,
+    uds_outbox: Vec<(NodeAddress, Vec<u8, UDS_MAX_FRAME>), UDS_MAX_OUTBOX>,
 }
 
 impl<
@@ -102,8 +103,8 @@ impl<
             reassembler: Reassembler::new(rsm_config),
             req_segmenter: Segmenter::new(seg_config.clone()),
             resp_segmenter: Segmenter::new(seg_config),
-            can_outbox: heapless::Vec::new(),
-            uds_outbox: heapless::Vec::new(),
+            can_outbox: Vec::new(),
+            uds_outbox: Vec::new(),
         }
     }
 
@@ -166,22 +167,26 @@ impl<
             ReassembleResult::Complete { len } => {
                 if let Some(uds_bytes) = self.reassembler.message(len) {
                     let gateway_addr = NodeAddress(self.request_can_id);
-                    let mut frame = heapless::Vec::new();
+                    let mut frame = Vec::new();
 
                     let _ = frame.extend_from_slice(&uds_bytes[..len.min(ISOTP_MAX_FRAME)]);
-                    self.uds_outbox
-                        .push((gateway_addr, frame))
-                        .map_err(|_| IsoTpNodeError::OutboxFull)?;
+
+                    if self.uds_outbox.len() >= UDS_MAX_OUTBOX {
+                        return Err(IsoTpNodeError::OutboxFull);
+                    }
+                    let _ = self.uds_outbox.push((gateway_addr, frame));
                 }
             }
             ReassembleResult::FlowControl { frame, len: fc_len } => {
                 let ecu_addr = NodeAddress(self.response_can_id);
-                let mut fc_frame = heapless::Vec::new();
+                let mut fc_frame = Vec::new();
 
                 let _ = fc_frame.extend_from_slice(&frame[..fc_len]);
-                self.can_outbox
-                    .push((ecu_addr, fc_frame))
-                    .map_err(|_| IsoTpNodeError::OutboxFull)?;
+
+                if self.uds_outbox.len() >= ISOTP_MAX_OUT {
+                    return Err(IsoTpNodeError::OutboxFull);
+                }
+                let _ = self.can_outbox.push((ecu_addr, fc_frame));
             }
             ReassembleResult::InProgress => {}
             ReassembleResult::SessionAborted {
@@ -189,7 +194,7 @@ impl<
                 fc_len,
             } => {
                 let ecu_addr = NodeAddress(self.response_can_id);
-                let mut fc_frame = heapless::Vec::new();
+                let mut fc_frame = Vec::new();
 
                 let _ = fc_frame.extend_from_slice(&flow_control[..fc_len]);
                 let _ = self.can_outbox.push((ecu_addr, fc_frame));
@@ -208,7 +213,7 @@ impl<
     /// Drains CAN frames destined for the CAN bus.
     pub fn drain_can_outbox(
         &mut self,
-        out: &mut heapless::Vec<(NodeAddress, heapless::Vec<u8, ISOTP_MAX_FRAME>), ISOTP_MAX_OUT>,
+        out: &mut Vec<(NodeAddress, Vec<u8, ISOTP_MAX_FRAME>), ISOTP_MAX_OUT>,
     ) -> usize {
         let n = self.can_outbox.len();
 
@@ -222,7 +227,7 @@ impl<
     /// Drains reassembled UDS bytes destined for the UdsServer.
     pub fn drain_uds_outbox(
         &mut self,
-        out: &mut heapless::Vec<(NodeAddress, heapless::Vec<u8, UDS_MAX_FRAME>), UDS_MAX_OUTBOX>,
+        out: &mut Vec<(NodeAddress, Vec<u8, UDS_MAX_FRAME>), UDS_MAX_OUTBOX>,
     ) -> usize {
         let n = self.uds_outbox.len();
 
@@ -240,10 +245,7 @@ impl<
     fn drain_segmenter(
         segmenter: &mut Segmenter<ISOTP_MAX_FRAME>,
         dst: NodeAddress,
-        can_outbox: &mut heapless::Vec<
-            (NodeAddress, heapless::Vec<u8, ISOTP_MAX_FRAME>),
-            ISOTP_MAX_OUT,
-        >,
+        can_outbox: &mut Vec<(NodeAddress, Vec<u8, ISOTP_MAX_FRAME>), ISOTP_MAX_OUT>,
     ) -> Result<(), IsoTpNodeError> {
         let mut out_buf = [0u8; ISOTP_MAX_FRAME];
         loop {
@@ -254,11 +256,13 @@ impl<
                 SegmentResult::Complete => break,
                 SegmentResult::WaitForFlowControl => break,
                 SegmentResult::Frame { len } => {
-                    let mut frame: heapless::Vec<u8, ISOTP_MAX_FRAME> = heapless::Vec::new();
+                    let mut frame: Vec<u8, ISOTP_MAX_FRAME> = Vec::new();
                     let _ = frame.extend_from_slice(&out_buf[..len]);
-                    can_outbox
-                        .push((dst.clone(), frame))
-                        .map_err(|_| IsoTpNodeError::OutboxFull)?;
+
+                    if can_outbox.len() >= ISOTP_MAX_OUT {
+                        return Err(IsoTpNodeError::OutboxFull);
+                    }
+                    can_outbox.push((dst.clone(), frame));
                 }
             }
         }

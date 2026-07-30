@@ -1,9 +1,10 @@
+# crates/ace/Cargo.toml
 [package]
-name = "ace-gateway"
+name = "ace"
 version = "0.4.0"
 edition = "2024"
 authors = ["Samuel Preston <samp.reston@outlook.com>"]
-description = "DoIP Gateway, ISO-TP bridge node, and DoIP Tester"
+description = "Batteries-included entry point for the ACE diagnostics stack, alloc-enabled by default. For no_std/embedded use, depend on the individual ace-* crates directly."
 readme = "README.md"
 repository = "https://github.com/samp-reston/ace"
 license = "MIT or Apache-2.0"
@@ -11,24 +12,28 @@ keywords = ["diagnostics", "vehicle", "standards"]
 categories = ["development-tools", "network-programming", "automotive"]
 
 [features]
-default = []
+default = ["alloc"]
 alloc = [
-	"ace-doip/alloc",
-	"ace-can/alloc",
-	"ace-proto/alloc",
 	"ace-core/alloc",
 	"ace-macros/alloc",
+	"ace-proto/alloc",
+	"ace-can/alloc",
+	"ace-sim/alloc",
+	"ace-uds/alloc",
+	"ace-doip/alloc",
 	"ace-client/alloc",
 	"ace-server/alloc",
-	"ace-sim/alloc",
+	"ace-gateway/alloc",
 ]
 
 [dependencies]
-ace-sim = { workspace = true }
-ace-doip = { workspace = true }
-ace-can = { workspace = true }
-ace-proto = { workspace = true }
 ace-core = { workspace = true }
 ace-macros = { workspace = true }
+ace-proto = { workspace = true }
+ace-can = { workspace = true }
+ace-sim = { workspace = true }
+ace-uds = { workspace = true }
+ace-doip = { workspace = true }
 ace-client = { workspace = true }
 ace-server = { workspace = true }
+ace-gateway = { workspace = true }

@@ -19,7 +19,7 @@
 
 // use crate::gateway::{TCP_MAX_FRAME, TCP_MAX_OUTBOX};
 use ace_client::{client::UdsClient, config::ClientConfig, event::ClientEvent, ClientError};
-use ace_core::{FrameRead, FrameWrite};
+use ace_core::{FrameRead, FrameWrite, Vec};
 use ace_doip::{
     error::DoipError,
     ext::DoipFrameExt,
@@ -275,7 +275,7 @@ pub struct DoipConnection<
     tester_address: u16,
 
     /// Per-ECU target state.
-    pub targets: heapless::Vec<
+    pub targets: Vec<
         TargetState<
             PENDING,
             SIM_MAX_FRAME,
@@ -286,9 +286,8 @@ pub struct DoipConnection<
         >,
         MAX_TARGETS,
     >,
-    outbox: heapless::Vec<(NodeAddress, heapless::Vec<u8, TCP_MAX_FRAME>), TCP_MAX_OUTBOX>,
-    events:
-        heapless::Vec<(ConnectionId, TargetId, DoipTesterEvent<MAX_DATA>), MAX_CONNECTION_EVENTS>,
+    outbox: Vec<(NodeAddress, Vec<u8, TCP_MAX_FRAME>), TCP_MAX_OUTBOX>,
+    events: Vec<(ConnectionId, TargetId, DoipTesterEvent<MAX_DATA>), MAX_CONNECTION_EVENTS>,
 }
 
 impl<
@@ -326,9 +325,9 @@ impl<
             config,
             phase: DoipConnectionPhase::Disconnected,
             tester_address,
-            targets: heapless::Vec::new(),
-            outbox: heapless::Vec::new(),
-            events: heapless::Vec::new(),
+            targets: Vec::new(),
+            outbox: Vec::new(),
+            events: Vec::new(),
         }
     }
 
@@ -499,7 +498,7 @@ impl<
 
         for target in self.targets.iter_mut() {
             let _ = target.client.tick(now);
-            let uds_events: heapless::Vec<ClientEvent<MAX_DATA>, MAX_TARGET_EVENTS> =
+            let uds_events: Vec<ClientEvent<MAX_DATA>, MAX_TARGET_EVENTS> =
                 target.client.drain_events().collect();
 
             for e in uds_events {
@@ -526,7 +525,7 @@ impl<
 
     pub fn drain_outbox(
         &mut self,
-        out: &mut heapless::Vec<(NodeAddress, heapless::Vec<u8, TCP_MAX_FRAME>), TCP_MAX_OUTBOX>,
+        out: &mut Vec<(NodeAddress, Vec<u8, TCP_MAX_FRAME>), TCP_MAX_OUTBOX>,
     ) -> usize {
         let n = self.outbox.len();
 
@@ -606,8 +605,7 @@ impl<
             let conn_id = self.connection_id();
             let target_id = TargetId(u16::from(source));
 
-            let mut client_events =
-                heapless::Vec::<ClientEvent<MAX_DATA>, MAX_TARGET_EVENTS>::new();
+            let mut client_events = Vec::<ClientEvent<MAX_DATA>, MAX_TARGET_EVENTS>::new();
 
             if let Some(target) = self.find_target_mut(source) {
                 let _ = target
@@ -632,7 +630,7 @@ impl<
             payload_data.get(0).copied().unwrap_or(0),
             payload_data.get(1).copied().unwrap_or(0),
         ]);
-        let mut buf: heapless::Vec<u8, MAX_DATA> = heapless::Vec::new();
+        let mut buf: Vec<u8, MAX_DATA> = Vec::new();
 
         let _ = buf.extend_from_slice(&payload_data[..payload_data.len().min(MAX_DATA)]);
 
@@ -703,27 +701,34 @@ impl<
         // Calculate AFTER encoding
         let header_len = 8 - header_slice.len();
 
-        let mut frame: heapless::Vec<u8, TCP_MAX_FRAME> = heapless::Vec::new();
+        let mut frame: Vec<u8, TCP_MAX_FRAME> = Vec::new();
 
-        frame
-            .extend_from_slice(&header_staging[..header_len])
-            .map_err(|_| DoipTesterError::Codec)?;
+        if frame.len() + header_len > TCP_MAX_FRAME {
+            return Err(DoipTesterError::Codec);
+        }
+        frame.extend_from_slice(&header_staging[..header_len]);
 
-        frame
-            .extend_from_slice(&self.tester_address.to_be_bytes())
-            .map_err(|_| DoipTesterError::Codec)?;
+        if frame.len() + 2 > TCP_MAX_FRAME {
+            return Err(DoipTesterError::Codec);
+        }
+        frame.extend_from_slice(&self.tester_address.to_be_bytes());
 
-        frame
-            .extend_from_slice(&target_address.to_be_bytes())
-            .map_err(|_| DoipTesterError::Codec)?;
+        if frame.len() + 2 > TCP_MAX_FRAME {
+            return Err(DoipTesterError::Codec);
+        }
+        frame.extend_from_slice(&target_address.to_be_bytes());
 
-        frame
-            .extend_from_slice(uds_data)
-            .map_err(|_| DoipTesterError::Codec)?;
+        if frame.len() + uds_data.len() > TCP_MAX_FRAME {
+            return Err(DoipTesterError::Codec);
+        }
+        frame.extend_from_slice(uds_data);
 
-        self.outbox
-            .push((gateway, frame))
-            .map_err(|_| DoipTesterError::OutboxFull)
+        if self.outbox.len() >= TCP_MAX_OUTBOX {
+            return Err(DoipTesterError::OutboxFull);
+        }
+        let _ = self.outbox.push((gateway, frame));
+
+        Ok(())
     }
 
     fn encode_and_send<T: FrameWrite<Error = DoipError>>(
@@ -751,19 +756,24 @@ impl<
             .map_err(|_| DoipTesterError::Codec)?;
 
         let header_len = 8 - header_slice.len();
-        let mut frame: heapless::Vec<u8, TCP_MAX_FRAME> = heapless::Vec::new();
+        let mut frame: Vec<u8, TCP_MAX_FRAME> = Vec::new();
 
-        frame
-            .extend_from_slice(&header_staging[..header_len])
-            .map_err(|_| DoipTesterError::Codec)?;
+        if frame.len() + header_len > TCP_MAX_FRAME {
+            return Err(DoipTesterError::Codec);
+        }
+        frame.extend_from_slice(&header_staging[..header_len]);
 
-        frame
-            .extend_from_slice(&payload_staging[..payload_len])
-            .map_err(|_| DoipTesterError::Codec)?;
+        if frame.len() + payload_len > TCP_MAX_FRAME {
+            return Err(DoipTesterError::Codec);
+        }
+        frame.extend_from_slice(&payload_staging[..payload_len]);
 
-        self.outbox
-            .push((gateway, frame))
-            .map_err(|_| DoipTesterError::OutboxFull)
+        if self.outbox.len() >= TCP_MAX_OUTBOX {
+            return Err(DoipTesterError::OutboxFull);
+        }
+        let _ = self.outbox.push((gateway, frame));
+
+        Ok(())
     }
 
     // endregion: Frame Construction Helpers
@@ -827,7 +837,7 @@ pub struct DoipTester<
 
     /// NodeAddress of this tester on the simulation TCP bus.
     address: NodeAddress,
-    pub connections: heapless::Vec<
+    pub connections: Vec<
         DoipConnection<
             MAX_TARGETS,
             TCP_MAX_FRAME,
@@ -844,7 +854,7 @@ pub struct DoipTester<
     >,
 
     /// Per-gateway metadata profiles accumulated from announcements.
-    profiles: heapless::Vec<(u16, DoipNodeProfile), MAX_CONNECTIONS>,
+    profiles: Vec<(u16, DoipNodeProfile), MAX_CONNECTIONS>,
 }
 
 impl<
@@ -878,8 +888,8 @@ impl<
         Self {
             tester_address,
             address,
-            connections: heapless::Vec::new(),
-            profiles: heapless::Vec::new(),
+            connections: Vec::new(),
+            profiles: Vec::new(),
         }
     }
 
@@ -903,7 +913,7 @@ impl<
             return Err(DoipTesterError::DuplicateConnection);
         }
 
-        if self.connections.is_full() {
+        if self.connections.len() >= MAX_CONNECTIONS {
             return Err(DoipTesterError::TooManyConnections);
         }
 
@@ -1045,7 +1055,7 @@ impl<
 
     pub fn drain_outbox(
         &mut self,
-        out: &mut heapless::Vec<(NodeAddress, heapless::Vec<u8, TCP_MAX_FRAME>), TCP_MAX_OUTBOX>,
+        out: &mut Vec<(NodeAddress, Vec<u8, TCP_MAX_FRAME>), TCP_MAX_OUTBOX>,
     ) -> usize {
         let mut total = 0;
 
@@ -1097,10 +1107,10 @@ impl<
     pub fn drain_events(
         &mut self,
     ) -> impl Iterator<Item = (ConnectionId, TargetId, DoipTesterEvent<MAX_DATA>)> + '_ {
-        let mut all: heapless::Vec<
+        let mut all: Vec<
             (ConnectionId, TargetId, DoipTesterEvent<MAX_DATA>),
             MAX_CONNECTION_EVENTS,
-        > = heapless::Vec::new();
+        > = Vec::new();
 
         for conn in self.connections.iter_mut() {
             for ev in conn.drain_events() {

@@ -13,6 +13,7 @@ use crate::{
     node::SimNodeErased,
     tcp_bus::{TcpEvent, TcpSimBus},
 };
+use ace_core::Vec;
 
 // endregion: Imports
 
@@ -20,8 +21,8 @@ use crate::{
 
 /// Optional trait for nodes that need to observe TCP connection events.
 ///
-/// Nodes on TCP bus may implement this to react to connection establishent, reset, and closure.
-/// The `TcpSimRunner` calls this after deliverying messages on each tick.
+/// Nodes on TCP bus may implement this to react to connection establishment, reset, and closure.
+/// The `TcpSimRunner` calls this after delivering messages on each tick.
 ///
 /// Not all nodes need TCP event awareness - only the `DoipTester` and gateway face nodes need it.
 /// Nodes that do not implement this trait simply ignore connection events.
@@ -93,7 +94,7 @@ impl<
             }
         }
 
-        let tcp_events: heapless::Vec<TcpEvent, TCP_MAX_EVENTS> = self.bus.drain_events().collect();
+        let tcp_events: Vec<TcpEvent, TCP_MAX_EVENTS> = self.bus.drain_events().collect();
         for event in &tcp_events {
             for handler in tcp_event_nodes.iter_mut() {
                 handler.on_tcp_event(event, now);
@@ -104,8 +105,7 @@ impl<
             node.tick(now);
         }
 
-        let mut outbox: heapless::Vec<(NodeAddress, heapless::Vec<u8, MAX_DATA>), MAX_OUTBOX> =
-            heapless::Vec::new();
+        let mut outbox: Vec<(NodeAddress, Vec<u8, MAX_DATA>), MAX_OUTBOX> = Vec::new();
         for node in nodes.iter_mut() {
             outbox.clear();
             node.drain_outbox(&mut outbox);

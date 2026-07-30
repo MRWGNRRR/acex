@@ -12,8 +12,6 @@
 
 // region: Imports
 
-use heapless::Vec;
-
 use crate::{
     bus::{Envelope, SimBus},
     clock::{Duration, Instant},
@@ -21,6 +19,7 @@ use crate::{
     io::NodeAddress,
     rng::{Rng, Xorshift64},
 };
+use ace_core::Vec;
 
 // endregion: Imports
 
@@ -152,7 +151,7 @@ impl<const MAX_DATA: usize, const MAX_QUEUED: usize> CanSimBus<MAX_DATA, MAX_QUE
             inner: SimBus::new(seed, faults.message.clone()),
             can_faults: faults,
             bus_state: CanBusState::Active,
-            events: heapless::Vec::new(),
+            events: Vec::new(),
             rng: Xorshift64::new(seed.wrapping_add(2)),
         }
     }
@@ -216,7 +215,7 @@ impl<const MAX_DATA: usize, const MAX_QUEUED: usize> CanSimBus<MAX_DATA, MAX_QUE
     // region: Tick
 
     /// Advances simulation time, delivers due frames, and checks bus-off fault injection.
-    pub fn tick(&mut self, duration: Duration) -> heapless::Vec<Envelope<MAX_DATA>, MAX_QUEUED> {
+    pub fn tick(&mut self, duration: Duration) -> Vec<Envelope<MAX_DATA>, MAX_QUEUED> {
         if self.bus_state.is_operational() {
             if self
                 .rng
@@ -232,7 +231,7 @@ impl<const MAX_DATA: usize, const MAX_QUEUED: usize> CanSimBus<MAX_DATA, MAX_QUE
 
         if !self.bus_state.is_operational() {
             let _ = self.inner.tick(duration);
-            return heapless::Vec::new();
+            return Vec::new();
         }
 
         self.inner.tick(duration)
