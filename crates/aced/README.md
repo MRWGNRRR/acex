@@ -1,8 +1,8 @@
-# ace
+# aced
 
 **Batteries-included entry point for the ACE diagnostics stack.**
 
-`ace` re-exports the full `ace-*` crate family - core codec traits, UDS, DoIP,
+`aced` re-exports the full `ace-*` crate family - core codec traits, UDS, DoIP,
 CAN/ISO-TP, simulation, client, server, and gateway - behind a single
 dependency, with heap-backed (`alloc`) storage enabled **by default**.
 
@@ -16,7 +16,7 @@ crate and depend on the individual `ace-*` crates directly instead (see
 
 ```toml
 [dependencies]
-ace = "0.4"
+aced = "0.4"
 ```
 
 That's it - no `[features]` section required. `alloc` is on by default, so
@@ -26,8 +26,8 @@ stack-overflow issues that come from oversized `const` capacity generics on
 inline storage.
 
 ```rust
-use ace::uds::UdsClient;
-use ace::doip::DoipGateway;
+use aced::uds::UdsClient;
+use aced::doip::DoipGateway;
 
 // ace::core, ace::macros, ace::proto, ace::can, ace::sim,
 // ace::client, ace::server, and ace::gateway are all available the same way.
@@ -37,7 +37,7 @@ use ace::doip::DoipGateway;
 
 The individual `ace-*` crates default to `alloc` **off**, because they're
 designed to also serve genuinely `no_std`, no-allocator embedded targets -
-that guarantee only holds if nothing forces allocation on them. `ace` exists
+that guarantee only holds if nothing forces allocation on them. `aced` exists
 specifically to be the opposite: a single, opinionated dependency for
 `std` consumers who don't want to think about feature forwarding across ten
 crates just to get sensible defaults. The decision to default to `alloc`
@@ -55,12 +55,12 @@ targeting a constrained environment):
 
 ```toml
 [dependencies]
-ace = { version = "0.4", default-features = false }
+aced = { version = "0.4", default-features = false }
 ```
 
 ## Crates in this workspace
 
-`ace` re-exports each of the following under a matching module name
+`aced` re-exports each of the following under a matching module name
 (`ace::core`, `ace::uds`, etc.):
 
 | Module | Crate | Description |
@@ -81,7 +81,7 @@ directly.
 
 ## No\_std / embedded use
 
-`ace` is not the right dependency for `no_std` or allocator-free targets.
+`aced` is not the right dependency for `no_std` or allocator-free targets.
 Depend on the individual crates you need instead, with `default-features =
 false`:
 

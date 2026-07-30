@@ -1,6 +1,5 @@
-# crates/ace/Cargo.toml
 [package]
-name = "ace"
+name = "aced"
 version = "0.4.0"
 edition = "2024"
 authors = ["Samuel Preston <samp.reston@outlook.com>"]

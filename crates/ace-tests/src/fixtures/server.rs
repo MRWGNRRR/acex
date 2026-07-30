@@ -1,14 +1,14 @@
 // region: Imports
 
-use ace::core::Vec;
-use ace::server::{
+use aced::core::Vec;
+use aced::server::{
     config::{DidConfig, SecurityLevelConfig, ServerConfig, ServiceConfig, SessionConfig},
     handler::ServerHandler,
     security_provider::{SecurityError, SecurityProvider},
     server::UdsServer,
     BuiltinNrc,
 };
-use ace::sim::{clock::Duration, io::NodeAddress};
+use aced::sim::{clock::Duration, io::NodeAddress};
 
 use crate::harness::MyUdsServer;
 
@@ -96,7 +96,7 @@ impl SecurityProvider for TestSecurityProvider {
         &mut self,
         level: u8,
         buf: &mut [u8],
-    ) -> Result<usize, ace::server::security_provider::SecurityError> {
+    ) -> Result<usize, aced::server::security_provider::SecurityError> {
         if buf.is_empty() {
             return Err(SecurityError::InvalidKey);
         }

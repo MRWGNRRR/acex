@@ -2,8 +2,8 @@
 
 use crate::dst::{MAX_TICKS, TICK_MS};
 use crate::harness::{assert_session, expect_nrc, expect_positive, DstScenario, SEEDS_BASELINE};
-use ace::sim::clock::Duration;
-use ace::sim::fault::FaultConfig;
+use aced::sim::clock::Duration;
+use aced::sim::fault::FaultConfig;
 
 // endregion: Imports
 

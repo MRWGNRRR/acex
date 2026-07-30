@@ -11,9 +11,9 @@
 
 // region: Imports
 
-use ace::client::event::ClientEvent;
-use ace::gateway::tester::{DoipConnectionPhase, DoipTesterEvent};
-use ace::sim::{clock::Duration, io::NodeAddress, tcp_bus::TcpEvent};
+use aced::client::event::ClientEvent;
+use aced::gateway::tester::{DoipConnectionPhase, DoipTesterEvent};
+use aced::sim::{clock::Duration, io::NodeAddress, tcp_bus::TcpEvent};
 
 use crate::{
     fixtures::{
@@ -225,7 +225,7 @@ fn p4_activation_line_drop_produces_connection_reset() {
 
     s.tcp_bus
         .inner_mut()
-        .set_faults(ace::sim::fault::FaultConfig {
+        .set_faults(aced::sim::fault::FaultConfig {
             message_loss: (0, 1),
             message_reorder: (0, 1),
             message_delay: (0, 1),

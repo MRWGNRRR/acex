@@ -1,9 +1,9 @@
 [package]
 name = "ace-tests"
-version = "0.4.0"
+version = "0.5.0"
 edition = "2024"
 publish = false
 
 [dependencies]
-ace = { workspace = true }
+aced = { workspace = true }
 heapless = { workspace = true }
