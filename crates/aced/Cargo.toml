@@ -24,6 +24,8 @@ alloc = [
 	"ace-server/alloc",
 	"ace-gateway/alloc",
 ]
+serde = ["ace-doip/serde", "ace-uds/serde"]
+tokio = ["ace-doip/tokio", "alloc"]
 
 [dependencies]
 ace-core = { workspace = true }
