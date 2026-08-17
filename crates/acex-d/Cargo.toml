@@ -1,0 +1,40 @@
+[package]
+name = "acex-d"
+version = "0.5.3"
+edition = "2024"
+authors = ["Samuel Preston <samp.reston@outlook.com>", "MRW <171420035+MRWGNRRR@users.noreply.github.com>"]
+description = "Batteries-included entry point for the ACE diagnostics stack, alloc-enabled by default. For no_std/embedded use, depend on the individual acex-* crates directly."
+readme = "README.md"
+repository = "https://github.com/MRWGNRRR/acex"
+license = "MIT or Apache-2.0"
+keywords = ["diagnostics", "vehicle", "standards"]
+categories = ["development-tools", "network-programming", "automotive"]
+
+[features]
+default = ["alloc"]
+alloc = [
+	"acex-core/alloc",
+	"acex-macros/alloc",
+	"acex-proto/alloc",
+	"acex-can/alloc",
+	"acex-sim/alloc",
+	"acex-uds/alloc",
+	"acex-doip/alloc",
+	"acex-client/alloc",
+	"acex-server/alloc",
+	"acex-gateway/alloc",
+]
+serde = ["acex-doip/serde", "acex-uds/serde"]
+tokio = ["acex-doip/tokio", "alloc"]
+
+[dependencies]
+acex-core = { workspace = true }
+acex-macros = { workspace = true }
+acex-proto = { workspace = true }
+acex-can = { workspace = true }
+acex-sim = { workspace = true }
+acex-uds = { workspace = true }
+acex-doip = { workspace = true }
+acex-client = { workspace = true }
+acex-server = { workspace = true }
+acex-gateway = { workspace = true }

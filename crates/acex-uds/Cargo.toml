@@ -1,0 +1,30 @@
+[package]
+name = "acex-uds"
+version = "0.5.3"
+edition = "2024"
+authors = ["Samuel Preston <samp.reston@outlook.com>", "MRW <171420035+MRWGNRRR@users.noreply.github.com>"]
+description = "UDS typed message layer implementing ISO 14229-1."
+readme = "README.md"
+repository = "https://github.com/MRWGNRRR/acex"
+license = "MIT or Apache-2.0"
+keywords = ["diagnostics", "vehicle", "standards"]
+categories = ["development-tools", "network-programming", "automotive"]
+
+[features]
+default = []
+serde = ["dep:serde"]
+alloc = ["acex-core/alloc", "acex-proto/alloc", "dep:bytes", "acex-macros/alloc"]
+std = ["alloc", "acex-core/std", "acex-proto/std"]
+
+[dependencies]
+acex-macros = { workspace = true }
+acex-core = { workspace = true }
+acex-proto = { workspace = true }
+heapless = { workspace = true }
+bytes = { workspace = true, optional = true }
+serde = { workspace = true, optional = true, features = ["derive"] }
+
+[dev-dependencies]
+bytes = { workspace = true }
+acex-core = { workspace = true }
+proptest = { workspace = true }

@@ -1,0 +1,74 @@
+use crate::error::DoipError;
+use acex_macros::FrameCodec;
+use acex_proto::doip::constants::{
+    DOIP_ROUTING_ACTIVATION_REQ_ISO_LEN, DOIP_ROUTING_ACTIVATION_REQ_OEM_LEN,
+    DOIP_ROUTING_ACTIVATION_REQ_SRC_LEN, DOIP_ROUTING_ACTIVATION_RES_ENTITY_LEN,
+    DOIP_ROUTING_ACTIVATION_RES_ISO_LEN, DOIP_ROUTING_ACTIVATION_RES_TESTER_LEN,
+};
+
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
+#[frame(error = DoipError)]
+pub struct RoutingActivationRequest {
+    pub source_address: [u8; DOIP_ROUTING_ACTIVATION_REQ_SRC_LEN],
+    pub activation_type: ActivationType,
+    pub reserved: [u8; DOIP_ROUTING_ACTIVATION_REQ_ISO_LEN],
+    pub reserved_for_oem: [u8; DOIP_ROUTING_ACTIVATION_REQ_OEM_LEN],
+}
+
+#[repr(u8)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
+#[frame(error = DoipError)]
+pub enum ActivationType {
+    #[frame(id = 0x00)]
+    Default,
+    #[frame(id = 0x01)]
+    WwhObd,
+    #[frame(id_pat = "0x02..=0xDF")]
+    Reserved(u8),
+    #[frame(id = 0xE0)]
+    CentralSecurity,
+    #[frame(id_pat = "0xE1..=0xFF")]
+    ReservedForOem(u8),
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
+#[frame(error = DoipError)]
+pub struct RoutingActivationResponse {
+    pub logical_address: [u8; DOIP_ROUTING_ACTIVATION_RES_TESTER_LEN],
+    pub source_address: [u8; DOIP_ROUTING_ACTIVATION_RES_ENTITY_LEN],
+    pub activation_code: ActivationCode,
+    pub reserved: [u8; DOIP_ROUTING_ACTIVATION_RES_ISO_LEN],
+    pub reserved_for_oem: Option<[u8; DOIP_ROUTING_ACTIVATION_REQ_OEM_LEN]>,
+}
+
+#[repr(u8)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
+#[frame(error = DoipError)]
+pub enum ActivationCode {
+    #[frame(id = 0x00)]
+    DeniedUnknownSourceAddress,
+    #[frame(id = 0x01)]
+    DeniedTcpSocketsFull,
+    #[frame(id = 0x02)]
+    DeniedTcpSocketAlreadyConnected,
+    #[frame(id = 0x03)]
+    DeniedSourceIsAlreadyActive,
+    #[frame(id = 0x04)]
+    DeniedMissingAuthentication,
+    #[frame(id = 0x05)]
+    DeniedRejectedConfirmation,
+    #[frame(id = 0x06)]
+    DeniedUnsupportedRoutingActivationType,
+    #[frame(id = 0x07)]
+    DeniedRequestEncryptedTlsConnection,
+    #[frame(id = 0x08)]
+    DeniedVehicleInCriticalState,
+    #[frame(id_pat = "0x09..=0x0F | 0x12..=0xDF | 0xFF")]
+    Reserved(u8),
+    #[frame(id = 0x10)]
+    SuccessfullyActivated,
+    #[frame(id = 0x11)]
+    ActivatedConfirmationRequired,
+    #[frame(id_pat = "0xE0..=0xFE")]
+    ReservedForOem(u8),
+}

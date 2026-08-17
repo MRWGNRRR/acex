@@ -1,0 +1,9 @@
+[package]
+name = "acex-tests"
+version = "0.5.3"
+edition = "2024"
+publish = false
+
+[dependencies]
+acex-d = { workspace = true }
+heapless = { workspace = true }

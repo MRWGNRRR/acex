@@ -1,4 +1,4 @@
-# ace - Automotive Communication Engine
+# acex - Automotive Communication Engine X
 
 A `no_std`-first Rust workspace for automotive diagnostic communication. Implements ISO 14229-1 (UDS), ISO 13400-2 (DoIP), and ISO 15765-2 (ISO-TP) with a deterministic simulation layer for property-based testing.
 
@@ -19,26 +19,26 @@ A `no_std`-first Rust workspace for automotive diagnostic communication. Impleme
 ## Workspace layout
 
 ```
-ace/
-├── ace-can         - ISO-TP reassembler and segmenter (ISO 15765-2)
-├── ace-client      - UDS tester client state machine
-├── ace-core        - Codec traits, error types, primitive impls
-├── ace-doip        - DoIP typed message and session layer (ISO 13400-2)
-├── ace-gateway     - DoIP gateway, ISO-TP bridge, DoIP tester
-├── ace-macros      - Proc-macro derives: FrameRead, FrameWrite, FrameCodec
-├── ace-proto       - Raw frame types: UdsFrame, DoipFrame, CAN frames
-├── ace-server      - UDS ECU server state machine
-├── ace-sim         - Deterministic simulation infrastructure
-└── ace-tests       - DST property tests for the full stack
-├── ace-transport   - Production OS transport (std, TCP/UDP)
-├── ace-uds         - UDS typed message layer (ISO 14229-1)
+acex/
+├── acex-can         - ISO-TP reassembler and segmenter (ISO 15765-2)
+├── acex-client      - UDS tester client state machine
+├── acex-core        - Codec traits, error types, primitive impls
+├── acex-doip        - DoIP typed message and session layer (ISO 13400-2)
+├── acex-gateway     - DoIP gateway, ISO-TP bridge, DoIP tester
+├── acex-macros      - Proc-macro derives: FrameRead, FrameWrite, FrameCodec
+├── acex-proto       - Raw frame types: UdsFrame, DoipFrame, CAN frames
+├── acex-server      - UDS ECU server state machine
+├── acex-sim         - Deterministic simulation infrastructure
+└── acex-tests       - DST property tests for the full stack
+├── acex-transport   - Production OS transport (std, TCP/UDP)
+├── acex-uds         - UDS typed message layer (ISO 14229-1)
 ```
 
 ---
 
 ## Crate reference
 
-### `ace-core`
+### `acex-core`
 
 Foundation layer. Defines the three codec traits that everything else builds on:
 
@@ -50,12 +50,12 @@ Also provides `DiagError`, `AddressMode`, `DiagnosticAddress`, and the `FrameIte
 
 ```toml
 [dependencies]
-ace-core = { path = "../ace-core", default-features = false }
+acex-core = { path = "../acex-core", default-features = false }
 ```
 
 ---
 
-### `ace-macros`
+### `acex-macros`
 
 Proc-macro crate. Provides `#[derive(FrameCodec)]` which generates `FrameRead` and `FrameWrite` impls for structs and enums.
 
@@ -88,15 +88,15 @@ Field attributes:
 
 ---
 
-### `ace-proto`
+### `acex-proto`
 
 Raw frame wrappers with no protocol knowledge. Provides `UdsFrame<'a>`, `UdsFrameMut<'a>`, `DoipFrame<'a>`, `DoipFrameMut<'a>`, and CAN frame types (`CanFrame`, `CanFrameMut`, `CanFdFrame`, `CanFdFrameMut`).
 
-These types wrap byte slices and provide structural access - length, index, iteration. Protocol semantics are added by extension traits in `ace-uds` and `ace-doip`.
+These types wrap byte slices and provide structural access - length, index, iteration. Protocol semantics are added by extension traits in `acex-uds` and `acex-doip`.
 
 ---
 
-### `ace-uds`
+### `acex-uds`
 
 UDS typed message layer implementing ISO 14229-1.
 
@@ -106,8 +106,8 @@ Provides all service request and response types as structs and enums deriving `F
 - `ServiceIdentifier` enum - all ISO 14229-1 SIDs with `has_sub_function()` helper
 
 ```rust
-use ace_uds::ext::UdsFrameExt;
-use ace_proto::uds::UdsFrame;
+use acex_uds::ext::UdsFrameExt;
+use acex_proto::uds::UdsFrame;
 
 let frame = UdsFrame::from_slice(data);
 let sid = frame.service_identifier();          // Option<ServiceIdentifier>
@@ -117,7 +117,7 @@ let payload = frame.payload();                 // &[u8] after SID byte
 
 ---
 
-### `ace-doip`
+### `acex-doip`
 
 DoIP typed message and session layer implementing ISO 13400-2.
 
@@ -152,9 +152,9 @@ frame.payload_length_declared();   // length from header bytes 4-7
 
 ---
 
-### `ace-can`
+### `acex-can`
 
-ISO-TP implementation (ISO 15765-2). Provides the reassembler and segmenter used by `ace-gateway`'s `IsoTpNode` to bridge DoIP UDS payloads to CAN frames.
+ISO-TP implementation (ISO 15765-2). Provides the reassembler and segmenter used by `acex-gateway`'s `IsoTpNode` to bridge DoIP UDS payloads to CAN frames.
 
 **Design:** addressing mode (Normal / Extended / Mixed) is a caller concern. The reassembler and segmenter operate on pure PCI bytes - callers strip/prepend the address byte at the transport boundary.
 
@@ -188,7 +188,7 @@ match rsm.feed(&can_frame_bytes)? {
 
 ---
 
-### `ace-server`
+### `acex-server`
 
 UDS ECU server state machine (ISO 14229-1 ECU side).
 
@@ -254,7 +254,7 @@ server.drain_outbox(&mut out);                     // collect responses
 
 ---
 
-### `ace-client`
+### `acex-client`
 
 UDS tester client state machine (ISO 14229-1 tester side).
 
@@ -288,7 +288,7 @@ client.unsubscribe_periodic(0x90);
 
 ---
 
-### `ace-sim`
+### `acex-sim`
 
 Deterministic simulation infrastructure. Everything needed to test protocol state machines reproducibly.
 
@@ -322,7 +322,7 @@ pub trait SimNode<const N: usize, const Q: usize> {
 
 ---
 
-### `ace-gateway`
+### `acex-gateway`
 
 DoIP gateway, ISO-TP bridge node, and DoIP tester.
 
@@ -374,7 +374,7 @@ let config = GatewayConfig::new(0x0E80)
 
 ---
 
-### `ace-transport`
+### `acex-transport`
 
 Production OS transport layer. The only `std`-required crate in the workspace.
 
@@ -404,27 +404,27 @@ loop {
 
 ---
 
-### `ace-tests`
+### `acex-tests`
 
-Workspace-level DST property test crate. Uses `ace-sim` to run the full stack deterministically across hundreds of seeds and three fault regimes.
+Workspacex-level DST property test crate. Uses `acex-sim` to run the full stack deterministically across hundreds of seeds and three fault regimes.
 
 Run all tests:
 ```
-cargo test -p ace-tests
+cargo test -p acex-tests
 ```
 
 Run a specific service group:
 ```
-cargo test -p ace-tests dst::session
-cargo test -p ace-tests dst::security
-cargo test -p ace-tests dst::data
-cargo test -p ace-tests dst::periodic
-cargo test -p ace-tests dst::doip
+cargo test -p acex-tests dst::session
+cargo test -p acex-tests dst::security
+cargo test -p acex-tests dst::data
+cargo test -p acex-tests dst::periodic
+cargo test -p acex-tests dst::doip
 ```
 
 Run with output visible (shows which seed failed):
 ```
-cargo test -p ace-tests -- --nocapture --test-threads=1
+cargo test -p acex-tests -- --nocapture --test-threads=1
 ```
 
 Reproduce a specific failing seed - find the seed in the test output then hardcode it temporarily:
@@ -444,12 +444,12 @@ fn p1_session_control_extended_no_faults() {
 ### Scenario 1 - UDS ECU in simulation (no transport)
 
 ```rust
-use ace_server::{ServerConfig, SessionConfig, ServiceConfig, DidConfig,
+use acex_server::{ServerConfig, SessionConfig, ServiceConfig, DidConfig,
                   SecurityLevelConfig, UdsServer, BuiltinNrc};
-use ace_server::handler::ServerHandler;
-use ace_server::security_provider::{SecurityError, SecurityProvider};
-use ace_sim::clock::{Duration, Instant};
-use ace_sim::io::NodeAddress;
+use acex_server::handler::ServerHandler;
+use acex_server::security_provider::{SecurityError, SecurityProvider};
+use acex_sim::clock::{Duration, Instant};
+use acex_sim::io::NodeAddress;
 
 // 1. Define your application handler
 struct MyHandler { vin: [u8; 17] }
@@ -520,7 +520,7 @@ server.drain_outbox(&mut outbox);
 ### Scenario 2 - Full UDS round-trip in simulation
 
 ```rust
-use ace_tests::fixtures::doip::DoipDstScenario;
+use acex_tests::fixtures::doip::DoipDstScenario;
 
 let mut s = DoipDstScenario::baseline(0); // seed 0, no faults
 s.connect();
@@ -540,7 +540,7 @@ let events = s.drain_events();
 ### Scenario 3 - Multi-ECU multi-gateway simulation
 
 ```rust
-use ace_tests::fixtures::doip::{
+use acex_tests::fixtures::doip::{
     DoipDstScenarioBuilder, GatewayNodeConfig, EcuNodeConfig,
 };
 
@@ -576,9 +576,9 @@ s.tick_n(500);
 ### Scenario 4 - Real vehicle connection
 
 ```rust
-use ace_transport::doip_vehicle_driver::{DoipVehicleDriver, VehicleDriverConfig};
-use ace_gateway::tester::{DoipConnectionConfig, DoipTesterEvent};
-use ace_client::event::ClientEvent;
+use acex_transport::doip_vehicle_driver::{DoipVehicleDriver, VehicleDriverConfig};
+use acex_gateway::tester::{DoipConnectionConfig, DoipTesterEvent};
+use acex_client::event::ClientEvent;
 
 let mut driver = DoipVehicleDriver::new(VehicleDriverConfig::default());
 
@@ -615,10 +615,10 @@ loop {
 ### Scenario 5 - Running DST under fault injection
 
 ```rust
-use ace_sim::fault::FaultConfig;
-use ace_sim::tcp::TcpFaultConfig;
-use ace_sim::can_bus::CanFaultConfig;
-use ace_tests::fixtures::doip::{DoipDstScenarioBuilder, GatewayNodeConfig, EcuNodeConfig};
+use acex_sim::fault::FaultConfig;
+use acex_sim::tcp::TcpFaultConfig;
+use acex_sim::can_bus::CanFaultConfig;
+use acex_tests::fixtures::doip::{DoipDstScenarioBuilder, GatewayNodeConfig, EcuNodeConfig};
 
 // Run the same property under 100 seeds at chaos fault level
 for seed in 0..100u64 {
@@ -646,42 +646,42 @@ for seed in 0..100u64 {
 
 | Crate | `alloc` | `std` |
 |---|---|---|
-| `ace-core` | `bytes::BytesMut` Writer impl | - |
-| `ace-macros` | - | — |
-| `ace-proto` | - | — |
-| `ace-uds` | inherits from `ace-core` | - |
-| `ace-doip` | inherits | - |
-| `ace-can` | inherits | - |
-| `ace-server` | inherits | - |
-| `ace-client` | inherits | - |
-| `ace-sim` | - | — |
-| `ace-gateway` | inherits | - |
-| `ace-transport` | required | required |
+| `acex-core` | `bytes::BytesMut` Writer impl | - |
+| `acex-macros` | - | — |
+| `acex-proto` | - | — |
+| `acex-uds` | inherits from `acex-core` | - |
+| `acex-doip` | inherits | - |
+| `acex-can` | inherits | - |
+| `acex-server` | inherits | - |
+| `acex-client` | inherits | - |
+| `acex-sim` | - | — |
+| `acex-gateway` | inherits | - |
+| `acex-transport` | required | required |
 
-For embedded targets use `default-features = false` on all crates except `ace-transport`.
+For embedded targets use `default-features = false` on all crates except `acex-transport`.
 
 ---
 
 ## Crate dependency graph
 
 ```
-ace-transport
-    └── ace-gateway
-            ├── ace-doip
-            │       └── ace-core, ace-proto, ace-macros
-            ├── ace-can
-            │       └── ace-core
-            ├── ace-client
-            │       └── ace-core, ace-uds, ace-sim
-            └── ace-sim
+acex-transport
+    └── acex-gateway
+            ├── acex-doip
+            │       └── acex-core, acex-proto, acex-macros
+            ├── acex-can
+            │       └── acex-core
+            ├── acex-client
+            │       └── acex-core, acex-uds, acex-sim
+            └── acex-sim
                     └── (no ace dependencies)
 
-ace-server
-    └── ace-core, ace-uds, ace-sim
+acex-server
+    └── acex-core, acex-uds, acex-sim
 
-ace-tests (dev)
-    └── ace-server, ace-client, ace-gateway, ace-sim, ace-can, ace-doip
+acex-tests (dev)
+    └── acex-server, acex-client, acex-gateway, acex-sim, acex-can, acex-doip
 
-ace-sim
-    └── ace-core
+acex-sim
+    └── acex-core
 ```

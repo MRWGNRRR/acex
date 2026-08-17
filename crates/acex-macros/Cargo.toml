@@ -1,0 +1,30 @@
+[package]
+name = "acex-macros"
+version = "0.5.3"
+edition = "2024"
+authors = ["Samuel Preston <samp.reston@outlook.com>", "MRW <171420035+MRWGNRRR@users.noreply.github.com>"]
+description = "Proc-macro crate. Provides FrameCodec which generates FrameRead and FrameWrite impls for structs and enums."
+readme = "README.md"
+repository = "https://github.com/MRWGNRRR/acex"
+license = "MIT or Apache-2.0"
+keywords = ["diagnostics", "vehicle", "standards"]
+categories = ["development-tools", "network-programming", "automotive"]
+
+[lib]
+proc-macro = true
+
+[features]
+alloc = []
+
+[dependencies]
+darling = { workspace = true }
+proc-macro2 = { workspace = true }
+quote = { workspace = true }
+syn = { workspace = true }
+
+
+[dev-dependencies]
+trybuild = { workspace = true }
+acex-core = { workspace = true }
+heapless = { workspace = true }
+bytes = { workspace = true }

@@ -1,0 +1,14 @@
+[package]
+name = "acex-transport"
+version = "0.5.3"
+edition = "2024"
+publish = false
+
+[dependencies]
+acex-d = { workspace = true }
+
+[dev-dependencies]
+acex-d = { workspace = true }
+
+[[example]]
+name = "connect_to_vehicle"

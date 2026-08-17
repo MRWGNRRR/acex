@@ -1,0 +1,24 @@
+[package]
+name = "acex-can"
+version = "0.5.3"
+edition = "2024"
+authors = ["Samuel Preston <samp.reston@outlook.com>", "MRW <171420035+MRWGNRRR@users.noreply.github.com>"]
+description = "ISO-TP implementation. Provides the reassembler and segmenter used by an IsoTpNode to bridge DoIP UDS payloads to CAN frames."
+readme = "README.md"
+repository = "https://github.com/MRWGNRRR/acex"
+license = "MIT or Apache-2.0"
+keywords = ["diagnostics", "vehicle", "standards"]
+categories = ["development-tools", "network-programming", "automotive"]
+
+[features]
+default = []
+alloc = ["acex-core/alloc", "acex-proto/alloc"]
+std = ["alloc", "acex-core/std", "acex-proto/std"]
+
+[dependencies]
+acex-core = { workspace = true }
+acex-proto = { workspace = true }
+heapless = { workspace = true }
+
+[dev-dependencies]
+proptest = { workspace = true }

@@ -1,0 +1,20 @@
+[package]
+name = "acex-proto"
+version = "0.5.3"
+edition = "2024"
+authors = ["Samuel Preston <samp.reston@outlook.com>", "MRW <171420035+MRWGNRRR@users.noreply.github.com>"]
+description = "Raw frame wrappers with no protocol knowledge. Provides UDS, DoIP, and CAN Frames with mutable variants."
+readme = "README.md"
+repository = "https://github.com/MRWGNRRR/acex"
+license = "MIT or Apache-2.0"
+keywords = ["diagnostics", "vehicle", "standards"]
+categories = ["development-tools", "network-programming", "automotive"]
+
+[features]
+default = []
+alloc = ["acex-core/alloc"]
+std = ["alloc", "heapless/defmt", "acex-core/std"]
+
+[dependencies]
+acex-core = { workspace = true }
+heapless = { workspace = true }

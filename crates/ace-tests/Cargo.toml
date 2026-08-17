@@ -1,9 +1,0 @@
-[package]
-name = "ace-tests"
-version = "0.5.3"
-edition = "2024"
-publish = false
-
-[dependencies]
-aced = { workspace = true }
-heapless = { workspace = true }
