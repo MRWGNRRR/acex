@@ -731,23 +731,25 @@ where
             self.security.pending_seed.clear();
             self.security.pending_level = level;
 
-            let mut payload: Vec<u8, MAX_SEED> = Vec::new();
+            let mut frame: Vec<u8, MAX_FRAME> = Vec::new();
 
             #[cfg(feature = "defmt")]
             {
                 defmt::unwrap!(self.security.pending_seed.extend_from_slice(&seed_buf[..seed_len]));
-                defmt::unwrap!(payload.push(level));
-                defmt::unwrap!(payload.extend_from_slice(&seed_buf[..seed_len]));
+                defmt::unwrap!(frame.push(0x27 | 0x40));
+                defmt::unwrap!(frame.push(level));
+                defmt::unwrap!(frame.extend_from_slice(&seed_buf[..seed_len]));
             }
 
             #[cfg(not(feature = "defmt"))]
             {
                 let _ = self.security.pending_seed.extend_from_slice(&seed_buf[..seed_len]);
-                let _ = payload.push(level);
-                let _ = payload.extend_from_slice(&seed_buf[..seed_len]);
+                let _ = frame.push(0x27 | 0x40);
+                let _ = frame.push(level);
+                let _ = frame.extend_from_slice(&seed_buf[..seed_len]);
             }
 
-            self.pos(src, 0x27, &payload, now)
+            self.enqueue(src.clone(), frame)
         } else {
             // SendKey - key bytes are the payload after the sub-function byte.
             let level = access_type - 1; // RequestSeed level
