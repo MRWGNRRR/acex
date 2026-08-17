@@ -3,6 +3,7 @@ use acex_macros::FrameCodec;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ControlDTCSettingRequest<'a> {
     pub dtc_setting_type: DtcSettingType,
     pub dtc_setting_control_option_record: &'a [u8],
@@ -11,6 +12,7 @@ pub struct ControlDTCSettingRequest<'a> {
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum DtcSettingType {
     #[frame(id_pat = "0x00 | 0x03..=0x3F | 0x7F")]
     IsoSaeReserved(u8),
@@ -26,6 +28,7 @@ pub enum DtcSettingType {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ControlDTCSettingResponse {
     pub dtc_setting_type: DtcSettingType,
 }

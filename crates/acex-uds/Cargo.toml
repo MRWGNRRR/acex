@@ -15,6 +15,7 @@ default = []
 serde = ["dep:serde"]
 alloc = ["acex-core/alloc", "acex-proto/alloc", "dep:bytes", "acex-macros/alloc"]
 std = ["alloc", "acex-core/std", "acex-proto/std"]
+defmt = ["dep:defmt", "acex-macros/defmt", "acex-core/defmt", "acex-proto/defmt", "heapless/defmt"]
 
 [dependencies]
 acex-macros = { workspace = true }
@@ -23,6 +24,7 @@ acex-proto = { workspace = true }
 heapless = { workspace = true }
 bytes = { workspace = true, optional = true }
 serde = { workspace = true, optional = true, features = ["derive"] }
+defmt = { workspace = true, optional = true }
 
 [dev-dependencies]
 bytes = { workspace = true }

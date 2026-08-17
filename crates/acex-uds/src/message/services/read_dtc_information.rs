@@ -4,6 +4,7 @@ use acex_macros::FrameCodec;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum ReadDtcInformationRequest {
     #[frame(id_pat = "0x00 | 0x1B..=0x41 | 0x43..=0x54 | 0x57..=0x7F")]
     IsoSaeReserved(u8),
@@ -64,6 +65,7 @@ pub enum ReadDtcInformationRequest {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct DtcStatusMask {
     pub test_failed: bool,
     pub test_failed_this_operational_cycle: bool,
@@ -77,22 +79,26 @@ pub struct DtcStatusMask {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportNumberOfDtcByStatusMaskRequest {
     pub dtc_status_mask: DtcStatusMask,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportDtcByStatusMaskRequest {
     pub dtc_status_mask: DtcStatusMask,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportDtcSnapshotIdentificationRequest {}
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportDtcSnapshotRecordByDtcNumberRequest {
     pub dtc_mask_record: [u8; 3],
     pub dtc_snapshot_record_number: DtcSnapshotRecordNumber,
@@ -100,12 +106,14 @@ pub struct ReportDtcSnapshotRecordByDtcNumberRequest {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportDtcStoredDataByRecordNumberRequest {
     pub dtc_stored_data_record_number: DtcStoredDataRecordNumber,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportDTCExtDataRecordByDTCNumberRequest {
     pub dtc_mask_record: [u8; 3],
     pub dtc_ext_data_record_number: DtcExtendedDataRecordNumber,
@@ -113,58 +121,70 @@ pub struct ReportDTCExtDataRecordByDTCNumberRequest {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportNumberOfDTCBySeverityMaskRecordRequest {
     pub dtc_severity_mask_record: [u8; 2],
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportDTCSeverityInformationRequest {
     pub dtc_severity_mask_record: [u8; 2],
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportSeverityInformationOfDTCRequest {
     pub dtc_mask_record: [u8; 3],
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportSupportedDTCRequest {}
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportFirstTestFailedDTCRequest {}
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportFirstConfirmedDTCRequest {}
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportMostRecentTestFailedDTCRequest {}
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportMostRecentConfirmedDTCRequest {}
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportDTCFaultDetectionCounterRequest {}
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportDTCWithPermanentStatusRequest {}
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportDTCExtDataRecordByRecordNumberRequest {
     pub dtc_ext_data_record_number: DtcExtendedDataRecordNumber,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportUserDefMemoryDTCByStatusMaskRequest {
     pub dtc_status_mask: DtcStatusMask,
     pub memory_selection: u8,
@@ -172,6 +192,7 @@ pub struct ReportUserDefMemoryDTCByStatusMaskRequest {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportUserDefMemoryDTCSnapshotRecordByDTCNumberRequest {
     pub dtc_mask_record: [u8; 3],
     pub user_def_dtc_snapshot_record_number: DtcSnapshotRecordNumber,
@@ -180,6 +201,7 @@ pub struct ReportUserDefMemoryDTCSnapshotRecordByDTCNumberRequest {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportUserDefMemoryDTCExtDataRecordByDTCNumberRequest {
     pub dtc_mask_record: [u8; 3],
     pub user_def_dtc_ext_data_record_number: DtcExtendedDataRecordNumber,
@@ -188,12 +210,14 @@ pub struct ReportUserDefMemoryDTCExtDataRecordByDTCNumberRequest {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportSupportedDTCExtDataRecordRequest {
     pub dtc_ext_data_record_number: DtcExtendedDataRecordNumber,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportWWHOBDDTCByMaskRecordRequest {
     pub functional_group_identifier: FunctionalGroup,
     pub dtc_severity_mask_record: [u8; 2],
@@ -201,12 +225,14 @@ pub struct ReportWWHOBDDTCByMaskRecordRequest {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportWWHOBDDTCWithPermanentStatusRequest {
     pub functional_group_identifier: FunctionalGroup,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportDTCInformationByDTCReadinessGroupIdentifierRequest {
     pub functional_group_identifier: FunctionalGroup,
     pub dtc_readiness_group_identifier: u8, //TODO: Check if parameterised into enum
@@ -214,6 +240,7 @@ pub struct ReportDTCInformationByDTCReadinessGroupIdentifierRequest {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum ReportType {
     #[frame(id_pat = "0x00 | 0x1B..=0x41 | 0x43..=0x54 | 0x57..=0x7F")]
     IsoSaeReserved(u8),
@@ -267,6 +294,7 @@ pub enum ReportType {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum ReadDTCInformationResponse<'a> {
     #[frame(id = 0x01)]
     ReportNumberOfDTCByStatusMaskResponse(ReportNumberOfDTCByStatusMaskResponse),
@@ -326,6 +354,7 @@ pub enum ReadDTCInformationResponse<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportNumberOfDTCByStatusMaskResponse {
     pub dtc_status_availability_mask: u8,
     pub dtc_format_identifier: u8,
@@ -333,6 +362,7 @@ pub struct ReportNumberOfDTCByStatusMaskResponse {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportNumberOfDTCBySeverityMaskRecordResponse {
     pub dtc_status_availability_mask: u8,
     pub dtc_format_identifier: u8,
@@ -341,6 +371,7 @@ pub struct ReportNumberOfDTCBySeverityMaskRecordResponse {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportDTCByStatusMaskResponse<'a> {
     pub dtc_status_availability_mask: u8,
     pub dtc_and_status_record: &'a [u8],
@@ -348,6 +379,7 @@ pub struct ReportDTCByStatusMaskResponse<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportSupportedDTCsResponse<'a> {
     pub dtc_status_availability_mask: u8,
     pub dtc_and_status_record: &'a [u8],
@@ -355,6 +387,7 @@ pub struct ReportSupportedDTCsResponse<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportFirstTestFailedDTCResponse<'a> {
     pub dtc_status_availability_mask: u8,
     pub dtc_and_status_record: &'a [u8],
@@ -362,6 +395,7 @@ pub struct ReportFirstTestFailedDTCResponse<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportFirstConfirmedDTCResponse<'a> {
     pub dtc_status_availability_mask: u8,
     pub dtc_and_status_record: &'a [u8],
@@ -369,6 +403,7 @@ pub struct ReportFirstConfirmedDTCResponse<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportMostRecentTestFailedDTCResponse<'a> {
     pub dtc_status_availability_mask: u8,
     pub dtc_and_status_record: &'a [u8],
@@ -376,6 +411,7 @@ pub struct ReportMostRecentTestFailedDTCResponse<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportMostRecentConfirmedDTCResponse<'a> {
     pub dtc_status_availability_mask: u8,
     pub dtc_and_status_record: &'a [u8],
@@ -383,6 +419,7 @@ pub struct ReportMostRecentConfirmedDTCResponse<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportDTCWithPermanentStatusResponse<'a> {
     pub dtc_status_availability_mask: u8,
     pub dtc_and_status_record: &'a [u8],
@@ -390,12 +427,14 @@ pub struct ReportDTCWithPermanentStatusResponse<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportSnapshotIdentificationResponse<'a> {
     pub dtc_records: FrameIter<'a, DTCRecord>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct DTCRecord {
     pub dtc_record: [u8; 3],
     pub dtc_snapshot_record_number: DtcSnapshotRecordNumber,
@@ -403,6 +442,7 @@ pub struct DTCRecord {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportDTCSnapshotRecordByDTCNumberResponse<'a> {
     pub dtc_and_status_record: [u8; 4],
     pub dtc_snapshot_records: FrameIter<'a, DTCSnapshotRecord<'a>>,
@@ -410,6 +450,7 @@ pub struct ReportDTCSnapshotRecordByDTCNumberResponse<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct DTCSnapshotRecord<'a> {
     pub dtc_snapshot_record_number: DtcSnapshotRecordNumber,
     pub dtc_snapshot_record_number_of_identifiers: u8,
@@ -418,12 +459,14 @@ pub struct DTCSnapshotRecord<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportDTCStoredDataByRecordNumberResponse<'a> {
     pub dtc_stored_data_records: FrameIter<'a, DTCStoredDataRecord<'a>>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct DTCStoredDataRecord<'a> {
     pub dtc_stored_data_record_number: DtcStoredDataRecordNumber,
     pub dtc_and_status_record: [u8; 4],
@@ -433,6 +476,7 @@ pub struct DTCStoredDataRecord<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportDTCExtDataRecordByDTCNumberResponse<'a> {
     pub dtc_and_status_record: [u8; 4],
     pub dtc_ext_data_records: FrameIter<'a, DTCExtDataRecord<'a>>,
@@ -440,6 +484,7 @@ pub struct ReportDTCExtDataRecordByDTCNumberResponse<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct DTCExtDataRecord<'a> {
     pub dtc_ext_data_record_number: DtcExtendedDataRecordNumber,
     pub dtc_ext_data_record: &'a [u8],
@@ -447,6 +492,7 @@ pub struct DTCExtDataRecord<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportDTCBySeverityMaskRecordResponse<'a> {
     pub dtc_status_availability_mask: u8,
     pub dtc_and_severity_record: &'a [u8],
@@ -454,6 +500,7 @@ pub struct ReportDTCBySeverityMaskRecordResponse<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportSeverityInformationOfDTCResponse<'a> {
     pub dtc_status_availability_mask: u8,
     pub dtc_and_severity_record: &'a [u8],
@@ -461,12 +508,14 @@ pub struct ReportSeverityInformationOfDTCResponse<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportDTCFaultDetectionCounterResponse<'a> {
     pub dtc_fault_detection_counter_record: &'a [u8],
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportDTCExtDataRecordByRecordNumberResponse<'a> {
     pub dtc_ext_data_record_number: DtcExtendedDataRecordNumber,
     pub dtc_and_status_records: FrameIter<'a, ExtDTCAndStatusRecord<'a>>,
@@ -474,6 +523,7 @@ pub struct ReportDTCExtDataRecordByRecordNumberResponse<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ExtDTCAndStatusRecord<'a> {
     pub dtc_and_status_record: [u8; 4],
     pub dtc_ext_data_record: &'a [u8],
@@ -481,6 +531,7 @@ pub struct ExtDTCAndStatusRecord<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportUserDefMemoryDTCByStatusMaskResponse<'a> {
     pub memory_selection: u8,
     pub dtc_status_availability_mask: u8,
@@ -489,6 +540,7 @@ pub struct ReportUserDefMemoryDTCByStatusMaskResponse<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportUserDefMemoryDTCSnapshotRecordByDTCNumberResponse<'a> {
     pub memory_selection: u8,
     pub dtc_and_status_record: [u8; 4],
@@ -497,6 +549,7 @@ pub struct ReportUserDefMemoryDTCSnapshotRecordByDTCNumberResponse<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct UserDefDTCSnapshotRecord<'a> {
     pub user_def_dtc_snapshot_record_number: DtcSnapshotRecordNumber,
     pub dtc_snapshot_record_number_of_identifiers: u8,
@@ -505,6 +558,7 @@ pub struct UserDefDTCSnapshotRecord<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportUserDefMemoryDTCExtDataRecordByDTCNumberResponse<'a> {
     pub memory_selection: u8,
     pub dtc_and_status_record: [u8; 4],
@@ -513,6 +567,7 @@ pub struct ReportUserDefMemoryDTCExtDataRecordByDTCNumberResponse<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportSupportedDTCExtDataRecordResponse<'a> {
     pub memory_selection: u8,
     pub dtc_ext_data_record_number: Option<u8>,
@@ -521,12 +576,14 @@ pub struct ReportSupportedDTCExtDataRecordResponse<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct DTCAndStatusRecord {
     pub dtc_and_status_record: [u8; 4],
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportWWHOBDDTCByMaskRecordResponse<'a> {
     pub functional_group_identifier: FunctionalGroup,
     pub dtc_status_availability_mask: u8,
@@ -537,6 +594,7 @@ pub struct ReportWWHOBDDTCByMaskRecordResponse<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportWWHOBDDTCWithPermanentStatusResponse<'a> {
     pub functional_group_identifier: FunctionalGroup,
     pub dtc_status_availability_mask: u8,
@@ -546,6 +604,7 @@ pub struct ReportWWHOBDDTCWithPermanentStatusResponse<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportDTCInformationByReadinessGroupIdentifierResponse<'a> {
     pub functional_group_identifier: FunctionalGroup,
     pub dtc_status_availability_mask: u8,
@@ -596,6 +655,7 @@ impl acex_core::codec::FrameWrite for DtcStatusMask {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum DtcSnapshotRecordNumber {
     #[frame(id_pat = "0x00 | 0xF0")]
     ReservedForLegislation(u8),
@@ -607,6 +667,7 @@ pub enum DtcSnapshotRecordNumber {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum UserDefDtcSnapshotRecordNumber {
     #[frame(id_pat = "0x00..=0xFE")]
     VehicleManufacturerSpecific(u8),
@@ -616,6 +677,7 @@ pub enum UserDefDtcSnapshotRecordNumber {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum DtcStoredDataRecordNumber {
     #[frame(id = 0x00)]
     ReservedForLegislation,
@@ -627,6 +689,7 @@ pub enum DtcStoredDataRecordNumber {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum DtcExtendedDataRecordNumber {
     #[frame(id_pat = "0x00 | 0xF0..=0xFD")]
     IsoSaeReserved(u8),
@@ -644,6 +707,7 @@ pub enum DtcExtendedDataRecordNumber {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum UserDefDtcExtendedDataRecordNumber {
     #[frame(id_pat = "0x00")]
     IsoSaeReserved(u8),

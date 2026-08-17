@@ -10,6 +10,7 @@ pub use services::*;
 use crate::{constants::MIN_FRAME_LEN, UdsError, ValidationError};
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct UdsMessage<'a> {
     pub sid: Option<ServiceIdentifier>,
     pub payload: UdsPayload<'a>,

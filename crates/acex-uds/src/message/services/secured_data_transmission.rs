@@ -5,6 +5,7 @@ use acex_macros::{FrameCodec, FrameWrite};
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameWrite)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct SecuredDataTransmissionRequest<'a> {
     pub administrative_parameter: [u8; 2],
     pub signature_encryption_calculation: u8,
@@ -56,6 +57,7 @@ impl<'a> FrameRead<'a> for SecuredDataTransmissionRequest<'a> {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum SecuredDataTransmissionResponse<'a> {
     PositiveInternalMessageResponse(PositiveInternalMessageResponse<'a>),
     NegativeInternalMessageResponse(NegativeInternalMessageResponse<'a>),
@@ -98,6 +100,7 @@ impl FrameWrite for SecuredDataTransmissionResponse<'_> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameWrite)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct PositiveInternalMessageResponse<'a> {
     pub administrative_parameter: [u8; 2],
     pub signature_encryption_calculation: u8,
@@ -150,6 +153,7 @@ impl<'a> FrameRead<'a> for PositiveInternalMessageResponse<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct NegativeInternalMessageResponse<'a> {
     pub administrative_parameter: [u8; 2],
     pub signature_encryption_calculation: u8,

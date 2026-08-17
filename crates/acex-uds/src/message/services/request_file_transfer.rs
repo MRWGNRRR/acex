@@ -4,6 +4,7 @@ use acex_macros::{FrameCodec, FrameWrite};
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum RequestFileTransferRequest<'a> {
     #[frame(id = 0x01)]
     AddFile(AddFileRequest<'a>),
@@ -19,6 +20,7 @@ pub enum RequestFileTransferRequest<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameWrite)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct AddFileRequest<'a> {
     pub file_path_and_name_length: [u8; 2],
     pub file_path_and_name: &'a [u8],
@@ -57,6 +59,7 @@ impl<'a> FrameRead<'a> for AddFileRequest<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameWrite)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct DeleteFileRequest<'a> {
     pub file_path_and_name_length: [u8; 2],
     pub file_path_and_name: &'a [u8],
@@ -80,6 +83,7 @@ impl<'a> FrameRead<'a> for DeleteFileRequest<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameWrite)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReplaceFileRequest<'a> {
     pub file_path_and_name_length: [u8; 2],
     pub file_path_and_name: &'a [u8],
@@ -118,6 +122,7 @@ impl<'a> FrameRead<'a> for ReplaceFileRequest<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameWrite)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReadFileRequest<'a> {
     pub file_path_and_name_length: [u8; 2],
     pub file_path_and_name: &'a [u8],
@@ -145,6 +150,7 @@ impl<'a> FrameRead<'a> for ReadFileRequest<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameWrite)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReadDirRequest<'a> {
     pub file_path_and_name_length: [u8; 2],
     pub file_path_and_name: &'a [u8],
@@ -168,6 +174,7 @@ impl<'a> FrameRead<'a> for ReadDirRequest<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum RequestFileTransferResponse<'a> {
     #[frame(id = 0x01)]
     AddFile(AddFileResponse<'a>),
@@ -183,6 +190,7 @@ pub enum RequestFileTransferResponse<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameWrite)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct AddFileResponse<'a> {
     pub length_format_identifier: u8,
     pub max_number_of_block_length: &'a [u8],
@@ -209,6 +217,7 @@ impl<'a> FrameRead<'a> for AddFileResponse<'a> {
 }
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct DeleteFileResponse {}
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameWrite)]
@@ -240,6 +249,7 @@ impl<'a> FrameRead<'a> for ReplaceFileResponse<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameWrite)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReadFileResponse<'a> {
     pub length_format_identifier: u8,         // TODO: Evaluate this
     pub max_number_of_block_length: &'a [u8], // TODO: Evaluate this
@@ -279,6 +289,7 @@ impl<'a> FrameRead<'a> for ReadFileResponse<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameWrite)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReadDirResponse<'a> {
     pub length_format_identifier: u8,
     pub max_number_of_block_length: &'a [u8],
@@ -314,6 +325,7 @@ impl<'a> FrameRead<'a> for ReadDirResponse<'a> {
 #[repr(u8)]
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum ModeOfOperation {
     #[frame(id = 0x01)]
     AddFile,

@@ -5,6 +5,7 @@ use acex_macros::FrameCodec;
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[frame(error = "UdsError")]
 #[repr(u8)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum ServiceIdentifier {
     #[frame(
         id_pat = "0x00 | 0x3F | 0x40 | 0x80..=0x83 | 0x89..=0xB9 | 0xBF..=0xC2 | 0xC9..=0xF9 | 0xFF"
@@ -43,6 +44,7 @@ pub enum ServiceIdentifier {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[frame(error = "UdsError")]
 #[repr(u8)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum UdsServiceResponse {
     #[frame(id = 0x50)]
     DiagnosticSessionControl = 0x50,
@@ -102,6 +104,7 @@ pub enum UdsServiceResponse {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[frame(error = "UdsError")]
 #[repr(u8)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum UdsServiceRequest {
     #[frame(id = 0x10)]
     DiagnosticSessionControl = 0x10,

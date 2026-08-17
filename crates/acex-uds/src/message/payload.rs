@@ -4,6 +4,7 @@ use crate::message::{
 };
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum UdsPayload<'a> {
     DiagnosticSessionControlRequest(DiagnosticSessionControlRequest),
     DiagnosticSessionControlResponse(DiagnosticSessionControlResponse),

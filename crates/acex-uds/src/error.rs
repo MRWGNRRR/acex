@@ -3,6 +3,7 @@
 use heapless::format;
 
 #[derive(Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum UdsError {
     Transport(acex_core::DiagError),
     NegativeResponse(u8),
@@ -68,6 +69,7 @@ impl From<UdsError> for acex_core::DiagError {
 // region: ValidationError
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum ValidationError {
     InvalidEventType(u8),
     UnsupportedService(u8),

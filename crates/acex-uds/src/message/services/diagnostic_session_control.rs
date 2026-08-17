@@ -3,6 +3,7 @@ use acex_macros::FrameCodec;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct DiagnosticSessionControlRequest {
     pub diagnostic_session_type: DiagnosticSessionType,
 }
@@ -10,6 +11,7 @@ pub struct DiagnosticSessionControlRequest {
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum DiagnosticSessionType {
     #[frame(id_pat = "0x00 | 0x05..=0x3F | 0x7F")]
     ISOSAEReserved(u8),
@@ -29,6 +31,7 @@ pub enum DiagnosticSessionType {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct DiagnosticSessionControlResponse {
     pub diagnostic_session_type: DiagnosticSessionType,
     pub session_parameter_record: SessionParameterRecord,
@@ -36,6 +39,7 @@ pub struct DiagnosticSessionControlResponse {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct SessionParameterRecord {
     pub p2_server_max: u16,
     pub p2_star_server_max: u16,

@@ -4,6 +4,7 @@ use acex_macros::{FrameCodec, FrameWrite};
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum DynamicallyDefineDataIdentifierRequest<'a> {
     #[frame(id_pat = "0x00 | 0x04..=0x7F")]
     IsoSaeReserved(u8),
@@ -17,6 +18,7 @@ pub enum DynamicallyDefineDataIdentifierRequest<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct DefineByIdentifierRequest<'a> {
     pub dynamically_defined_data_identifier: DataIdentifier,
     pub source_data: FrameIter<'a, SourceData>,
@@ -24,6 +26,7 @@ pub struct DefineByIdentifierRequest<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameWrite)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct DefineByMemoryAddressRequest<'a> {
     pub dynamically_defined_data_identifier: DataIdentifier,
     pub address_and_length_format_identifier: u8,
@@ -32,12 +35,14 @@ pub struct DefineByMemoryAddressRequest<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ClearDynamicallyDefinedDataIdentifier {
     pub dynamically_defined_data_identifier: DataIdentifier,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct MemoryData<'a> {
     pub memory_address: &'a [u8],
     pub memory_size: &'a [u8],
@@ -45,6 +50,7 @@ pub struct MemoryData<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum DefinitionType {
     #[frame(id = 0x01)]
     DefineByIdentifier,
@@ -56,6 +62,7 @@ pub enum DefinitionType {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct SourceData {
     pub source_data_identifier: DataIdentifier,
     pub position_in_source_data_record: u8,
@@ -64,6 +71,7 @@ pub struct SourceData {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct DynamicallyDefineDataIdentifierResponse {
     pub definition_type: DefinitionType,
     pub dynamically_defined_data_identifier: DataIdentifier,

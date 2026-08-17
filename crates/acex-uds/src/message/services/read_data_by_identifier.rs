@@ -4,18 +4,21 @@ use acex_macros::FrameCodec;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReadDataByIdentifierRequest<'a> {
     pub data_identifiers: FrameIter<'a, DataIdentifier>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReadDataByIdentifierResponse<'a> {
     pub data_identifier_responses: FrameIter<'a, DataIdentifierResponse<'a>>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct DataIdentifierResponse<'a> {
     pub data_identifier: DataIdentifier,
     pub data_record: &'a [u8],
@@ -24,6 +27,7 @@ pub struct DataIdentifierResponse<'a> {
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
 #[repr(u16)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum DataIdentifier {
     #[frame(id_pat = "0x0000..=0x00FF | 0xFF02..=0xFFFF")]
     IsoSaeReserved(u16),

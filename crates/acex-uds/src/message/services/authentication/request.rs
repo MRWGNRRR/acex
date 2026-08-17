@@ -3,6 +3,7 @@ use acex_macros::FrameCodec;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum AuthenticationRequest<'a> {
     #[frame(id = 0x00)]
     DeAuthenticateRequest(DeAuthenticateRequest),
@@ -28,10 +29,12 @@ pub enum AuthenticationRequest<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct DeAuthenticateRequest {}
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct VerifyCertificateUnidirectionalRequest<'a> {
     pub communication_configuration: u8,
     pub length_of_certificate_client: u16,
@@ -44,6 +47,7 @@ pub struct VerifyCertificateUnidirectionalRequest<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct VerifyCertificateBidirectionalRequest<'a> {
     pub communication_configuration: u8,
     pub length_of_certificate_client: u16,
@@ -56,6 +60,7 @@ pub struct VerifyCertificateBidirectionalRequest<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ProofOfOwnershipRequest<'a> {
     pub length_of_proof_of_ownership_client: u16,
     #[frame(length = "length_of_proof_of_ownership_client as usize")]
@@ -67,6 +72,7 @@ pub struct ProofOfOwnershipRequest<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct TransmitCertificateRequest<'a> {
     pub certificate_evaluation_id: u16,
     pub length_of_certificate_data: u16,
@@ -76,6 +82,7 @@ pub struct TransmitCertificateRequest<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct RequestChallengeForAuthenticationRequest {
     pub communication_configuration: u8,
     pub algorithm_indicator: [u8; 16],
@@ -83,6 +90,7 @@ pub struct RequestChallengeForAuthenticationRequest {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct VerifyProofOfOwnershipUnidirectionalRequest<'a> {
     pub algorithm_indicator: [u8; 16],
     pub length_of_proof_of_ownership_client: u16,
@@ -98,6 +106,7 @@ pub struct VerifyProofOfOwnershipUnidirectionalRequest<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct VerifyProofOfOwnershipBidirectionalRequest<'a> {
     pub algorithm_indicator: [u8; 16],
     pub length_of_proof_of_ownership_client: u16,
@@ -113,4 +122,5 @@ pub struct VerifyProofOfOwnershipBidirectionalRequest<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct AuthenticationConfigurationRequest {}

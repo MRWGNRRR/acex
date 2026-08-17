@@ -3,6 +3,7 @@ use acex_macros::FrameCodec;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct NegativeResponse {
     pub request_sid: ServiceIdentifier,
     pub response_code: NegativeResponseCode,
@@ -12,6 +13,7 @@ pub struct NegativeResponse {
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum NegativeResponseCode {
     #[frame(id = 0x00)]
     PositiveResponse,

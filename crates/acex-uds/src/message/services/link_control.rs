@@ -3,6 +3,7 @@ use acex_macros::FrameCodec;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum LinkControlRequest {
     #[frame(id = 0x01)]
     VerifyModeTransitionWithFixedParameterRequest(VerifyModeTransitionWithFixedParameterRequest),
@@ -16,24 +17,28 @@ pub enum LinkControlRequest {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct VerifyModeTransitionWithSpecificParameterRequest {
     pub link_record: [u8; 3],
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct VerifyModeTransitionWithFixedParameterRequest {
     pub link_control_mode_identifier: LinkControlModeIdentifier,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct TransitionModeRequest {
     pub link_control_type: LinkControlType,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum LinkControlType {
     #[frame(id_pat = "0x00 | 0x04..=0x3F")]
     IsoSaereserved(u8),
@@ -51,12 +56,14 @@ pub enum LinkControlType {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct LinkControlResponse {
     pub link_control_type: LinkControlType,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum LinkControlModeIdentifier {
     #[frame(id_pat = "0x00 | 0x06..=0x0F | 0x14..=0x1F | 0x21..=0xFF")]
     IsoSaeReserved(u8),

@@ -4,6 +4,7 @@ use acex_macros::FrameWrite;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameWrite)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct RequestDownloadRequest<'a> {
     pub data_format_identifier: u8,
     pub address_and_length_format_identifier: u8,
@@ -35,6 +36,7 @@ impl<'a> FrameRead<'a> for RequestDownloadRequest<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameWrite)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct RequestDownloadResponse<'a> {
     pub length_format_identifier: u8,
     pub max_number_of_block_length: &'a [u8],

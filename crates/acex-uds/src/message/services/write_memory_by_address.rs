@@ -3,6 +3,7 @@ use acex_macros::FrameCodec;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct WriteMemoryByAddressRequest<'a> {
     pub address_and_length_format_identifier: u8,
     #[frame(
@@ -18,6 +19,7 @@ pub struct WriteMemoryByAddressRequest<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct WriteMemoryByAddressResponse<'a> {
     pub address_and_length_format_identifier: u8,
     #[frame(

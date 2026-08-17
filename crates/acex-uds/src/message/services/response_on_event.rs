@@ -4,6 +4,7 @@ use acex_macros::FrameCodec;
 use crate::{UdsError, ValidationError};
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ResponseOnEventRequest<'a> {
     pub storage_state: StorageState,
     pub event_type: EventType<'a>,
@@ -11,6 +12,7 @@ pub struct ResponseOnEventRequest<'a> {
 
 #[repr(u8)]
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[frame(error = UdsError)]
 pub enum StorageState {
     #[frame(id = 0x00)]
@@ -21,6 +23,7 @@ pub enum StorageState {
 
 #[repr(u8)]
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[frame(error = UdsError)]
 pub enum EventType<'a> {
     #[frame(id = 0x00)]
@@ -47,12 +50,14 @@ pub enum EventType<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct StopResponseOnEvent {
     pub event_window_time: EventWindowTime,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct OnDtcStatusChange<'a> {
     pub event_window_time: EventWindowTime,
     pub dtc_status_mask: u8,
@@ -61,6 +66,7 @@ pub struct OnDtcStatusChange<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct OnChangeOfDataIdentifier<'a> {
     pub event_window_time: EventWindowTime,
     pub data_identifier: u16,
@@ -69,24 +75,28 @@ pub struct OnChangeOfDataIdentifier<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportActivatedEvents {
     pub event_window_time: EventWindowTime,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct StartResponseOnEvent {
     pub event_window_time: EventWindowTime,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ClearResponseOnEvent {
     pub event_window_time: EventWindowTime,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct OnComparisonOfValues<'a> {
     pub event_window_time: EventWindowTime,
     pub event_type_record: [u8; 10],
@@ -95,6 +105,7 @@ pub struct OnComparisonOfValues<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportMostRecentDtcOnStatusChange {
     pub event_window_time: EventWindowTime,
     pub dtc_status_mask: u8,
@@ -102,6 +113,7 @@ pub struct ReportMostRecentDtcOnStatusChange {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportDtcRecordInformationOnDtcStatusChange<'a> {
     pub event_window_time: EventWindowTime,
     pub dtc_status_mask: u8,
@@ -192,6 +204,7 @@ impl acex_core::codec::FrameWrite for ResponseOnEventRequest<'_> {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum ResponseOnEventResponse<'a> {
     ReportActivatedEventsResponse(ReportActivatedEventsResponse<'a>),
     AllButReportActivatedEvents(AllButReportActivatedEvents<'a>),
@@ -235,6 +248,7 @@ impl FrameWrite for ResponseOnEventResponse<'_> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum EventTypeValue {
     #[frame(id = 0x00)]
     StopResponseOnEvent,
@@ -260,6 +274,7 @@ pub enum EventTypeValue {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct AllButReportActivatedEvents<'a> {
     pub event_type: EventTypeValue,
     pub number_of_identified_events: u8,
@@ -269,6 +284,7 @@ pub struct AllButReportActivatedEvents<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReportActivatedEventsResponse<'a> {
     pub event_type: EventTypeValue,
     pub number_of_activated_events: u8,
@@ -277,6 +293,7 @@ pub struct ReportActivatedEventsResponse<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct Event<'a> {
     pub event_window_time: EventWindowTime,
     pub remaining: &'a [u8],
@@ -284,6 +301,7 @@ pub struct Event<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum EventWindowTime {
     #[frame(id_pat = "0x00..=0x01 | 0x09..=0xFF")]
     IsoSaeReserved(u8),

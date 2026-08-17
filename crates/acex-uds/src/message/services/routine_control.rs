@@ -3,6 +3,7 @@ use acex_macros::FrameCodec;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct RoutineControlRequest<'a> {
     pub routine_control_type: RoutineControlType,
     pub routine_identifier: [u8; 2],
@@ -11,6 +12,7 @@ pub struct RoutineControlRequest<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct RoutineControlResponse<'a> {
     pub routine_control_type: RoutineControlType,
     pub routine_identifier: [u8; 2],
@@ -21,6 +23,7 @@ pub struct RoutineControlResponse<'a> {
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum RoutineControlType {
     #[frame(id = 0x01)]
     StartRoutine,

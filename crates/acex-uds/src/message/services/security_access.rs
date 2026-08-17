@@ -3,6 +3,7 @@ use acex_core::{DiagError, FrameWrite};
 use acex_macros::{FrameCodec, FrameRead, FrameWrite};
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum SecurityAccessRequest<'a> {
     RequestSeed(RequestSeed<'a>),
     SendKey(SendKey<'a>),
@@ -17,6 +18,7 @@ pub enum SecurityAccessRequest<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameRead, FrameWrite)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct RequestSeed<'a> {
     pub request_seed: u8,
     pub security_access_data_record: &'a [u8],
@@ -24,18 +26,21 @@ pub struct RequestSeed<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameRead, FrameWrite)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct SendKey<'a> {
     pub send_key: u8,
     pub security_key: &'a [u8],
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum SecurityAccessResponse<'a> {
     KeyResponse(u8),
     SeedResponse(SeedResponse<'a>),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[frame(error = UdsError)]
 pub struct SeedResponse<'a> {
     pub security_access_type: u8,

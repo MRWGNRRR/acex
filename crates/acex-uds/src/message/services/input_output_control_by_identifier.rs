@@ -3,6 +3,7 @@ use acex_macros::FrameCodec;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct InputOutputControlByIdentifierRequest<'a> {
     pub data_identifier: [u8; 2],
     pub control_option_record: &'a [u8],
@@ -11,6 +12,7 @@ pub struct InputOutputControlByIdentifierRequest<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct InputOutputControlByIdentifierResponse<'a> {
     data_identifier: [u8; 2],
     control_status_record: &'a [u8],

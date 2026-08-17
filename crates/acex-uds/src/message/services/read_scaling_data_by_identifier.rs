@@ -4,18 +4,21 @@ use acex_macros::FrameCodec;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReadScalingDataByIdentifierRequest<'a> {
     pub data_identifiers: FrameIter<'a, DataIdentifier>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReadScalingDataByIdentifierResponse<'a> {
     pub data_identifier: DataIdentifier,
     pub scaling_bytes: FrameIter<'a, ScalingByte<'a>>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ScalingByte<'a> {
     pub high_nibble: ScalingByteHighNibble,
     pub low_nibble: ScalingByteLowNibble,
@@ -114,6 +117,7 @@ impl acex_core::codec::FrameWrite for ScalingByte<'_> {
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
 #[repr(u8)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum ScalingByteHighNibble {
     #[frame(id = 0x0)]
     UnsignedNumeric,
@@ -146,12 +150,14 @@ pub enum ScalingByteHighNibble {
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
 #[repr(u8)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum ScalingByteLowNibble {
     #[frame(id_pat = "0x0..=0xF")]
     NumberOfBytes(u8),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum ScalingByteExtension<'a> {
     BitMappedReportedWithoutMask(BitMappedReportedWithoutMask<'a>),
     Formula(Formula<'a>),
@@ -161,6 +167,7 @@ pub enum ScalingByteExtension<'a> {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct BitMappedReportedWithoutMask<'a> {
     pub mask_byte: u8,
     pub remaining: &'a [u8],
@@ -199,6 +206,7 @@ impl acex_core::codec::FrameWrite for BitMappedReportedWithoutMask<'_> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct Formula<'a> {
     pub formula_identifier: FormulaIdentifier,
     pub c0_high_byte: u8,
@@ -208,6 +216,7 @@ pub struct Formula<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum FormulaIdentifier {
     #[frame(id = 0x00)]
     LinearFormula,
@@ -238,6 +247,7 @@ pub enum FormulaIdentifier {
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
 #[repr(u8)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum UnitFormat {
     #[frame(id = 0x00)]
     NoUnit,
@@ -424,6 +434,7 @@ pub enum UnitFormat {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct StateAndConnectionType {
     pub activity: StateAndConnectionTypeActivity,
     pub signal: StateAndConnectionTypeSignal,
@@ -520,6 +531,7 @@ impl acex_core::codec::FrameWrite for StateAndConnectionType {
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
 #[repr(u8)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum StateAndConnectionTypeActivity {
     #[frame(id = 0x00)]
     NotActive,
@@ -538,6 +550,7 @@ pub enum StateAndConnectionTypeActivity {
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
 #[repr(u8)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum StateAndConnectionTypeSignal {
     #[frame(id = 0x00)]
     SignalAtLowLevel,
@@ -552,6 +565,7 @@ pub enum StateAndConnectionTypeSignal {
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
 #[repr(u8)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum StateAndConnectionTypeInputSignal {
     #[frame(id = 0x00)]
     InputSignal,
@@ -562,6 +576,7 @@ pub enum StateAndConnectionTypeInputSignal {
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
 #[repr(u8)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum StateAndConnectionTypeResistor {
     #[frame(id = 0x00)]
     NotAvailableInEcuConnector,

@@ -3,6 +3,7 @@ use acex_macros::FrameCodec;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ClearDiagnosticInformationRequest {
     pub group_of_dtc: DtcGroup,
     pub memory_selection: Option<u8>,
@@ -10,9 +11,11 @@ pub struct ClearDiagnosticInformationRequest {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ClearDiagnosticInformationResponse {}
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum DtcGroup {
     Reserved([u8; 3]),
     VehicleManufacturerSpecific([u8; 3]),
@@ -63,6 +66,7 @@ impl acex_core::codec::FrameWrite for DtcGroup {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum FunctionalGroup {
     #[frame(id_pat = "0x00..=0x32 | 0x34..=0xCF | 0xE0..=0xFD | 0xFF")]
     IsoSaeReserved(u8),

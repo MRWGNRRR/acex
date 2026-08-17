@@ -3,6 +3,7 @@ use acex_macros::FrameCodec;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct EcuResetRequest {
     pub reset_type: ResetType,
 }
@@ -10,6 +11,7 @@ pub struct EcuResetRequest {
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum ResetType {
     #[frame(id_pat = "0x00 | 0x06..=0x3F | 0x7F")]
     IsoSaeReserved(u8),
@@ -38,6 +40,7 @@ pub enum ResetType {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum EcuResetResponse {
     #[frame(id_pat = "0x00 | 0x06..=0x3F | 0x7F")]
     IsoSaeReserved(u8),
@@ -59,12 +62,14 @@ pub enum EcuResetResponse {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct EnableRapidPowerShutDown {
     pub power_down_time: PowerDownTime,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum PowerDownTime {
     #[frame(id_pat = "0x00..=0xFE")]
     Valid(u8),

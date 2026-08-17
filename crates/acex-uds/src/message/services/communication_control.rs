@@ -4,6 +4,7 @@ use acex_macros::FrameCodec;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum CommunicationControlRequest {
     #[frame(id_pat = "0x00..=0x03", decode_inner)]
     WithoutEnhancedAddressInformation(WithoutEnhancedAddressInformation),
@@ -19,6 +20,7 @@ pub enum CommunicationControlRequest {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct WithoutEnhancedAddressInformation {
     pub control_type: ControlType,
     pub communication_type: u8,
@@ -26,6 +28,7 @@ pub struct WithoutEnhancedAddressInformation {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct WithEnhancedAddressInformation {
     pub control_type: ControlType,
     pub communication_type: CommunicationType,
@@ -35,6 +38,7 @@ pub struct WithEnhancedAddressInformation {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
 #[repr(u16)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum NodeIdentificationNumber {
     #[frame(id = 0x0000)]
     IsoSaeReserved,
@@ -45,6 +49,7 @@ pub enum NodeIdentificationNumber {
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum ControlType {
     #[frame(id = 0x00)]
     EnableRxAndTx,
@@ -67,6 +72,7 @@ pub enum ControlType {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct CommunicationType {
     pub communication_type: CommunicationTypeValue,
     pub subnet: Subnet,
@@ -74,6 +80,7 @@ pub struct CommunicationType {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum CommunicationTypeValue {
     IsoSaeReserved,
     NormalCommunicationMessages,
@@ -82,6 +89,7 @@ pub enum CommunicationTypeValue {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum Subnet {
     DisableEnableSpecifiedCommuncationType,
     DisableEnableSubnetNumber,
@@ -89,6 +97,7 @@ pub enum Subnet {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum CommunicationTypeReserved {
     IsoSaeReserved,
 }
@@ -167,6 +176,7 @@ impl acex_core::codec::FrameWrite for CommunicationType {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = UdsError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct CommunicationControlResponse {
     pub control_type: ControlType,
 }
