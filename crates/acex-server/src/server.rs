@@ -6,7 +6,7 @@ use acex_sim::clock::{Duration, Instant};
 use acex_sim::io::NodeAddress;
 use acex_uds::ext::UdsFrameExt;
 use acex_uds::message::service::UdsServiceRequest;
-use acex_uds::message::ServiceIdentifier;
+use acex_uds::message::{DiagnosticSessionType, ServiceIdentifier};
 
 use crate::config::{periodic, ServerConfig, SessionConfig};
 use crate::handler::ServerHandler;
@@ -38,13 +38,13 @@ struct SessionState {
 impl SessionState {
     fn new() -> Self {
         Self {
-            session_type: 0x01,
+            session_type: DiagnosticSessionType::DefaultSession.into(),
             last_rx: Instant::ZERO,
             security_level: 0,
         }
     }
 
-    fn is_default(&self) -> bool {
+    const fn is_default(&self) -> bool {
         self.session_type == 0x01
     }
 }
@@ -220,6 +220,9 @@ pub struct UdsServer<
     security: SecurityState<MAX_SEED>,
     periodic: PeriodicState<MAX_PERIODIC>,
     outbox: Vec<(NodeAddress, Vec<u8, MAX_FRAME>), MAX_OUTBOX>,
+
+    /// Diagnostic session to enter when the server is initialized or reset.
+    default_session_type: DiagnosticSessionType
 }
 
 impl<
@@ -275,10 +278,19 @@ where
             security: SecurityState::new(),
             periodic: PeriodicState::new(),
             outbox: Vec::new(),
+            default_session_type: DiagnosticSessionType::DefaultSession
         }
     }
 
     // region: SimNode surface
+
+    pub fn set_default_session_type(&mut self, session_type: DiagnosticSessionType) {
+        self.default_session_type = session_type;
+    }
+
+    pub fn get_default_session_type(&self) -> DiagnosticSessionType {
+        self.default_session_type
+    }
 
     pub fn address(&self) -> &NodeAddress {
         &self.address
@@ -423,7 +435,7 @@ where
             .unwrap_or(Duration::from_millis(DEFAULT_S3));
         if let Some(elapsed) = now.checked_duration_since(self.session.last_rx) {
             if elapsed > s3 {
-                self.session.session_type = 0x01;
+                self.session.session_type = self.default_session_type.into();
                 self.session.security_level = 0;
                 self.security.clear_pending();
             }
@@ -454,7 +466,7 @@ where
         frame: Vec<u8, MAX_FRAME>,
     ) -> Result<(), ServerError<H::Error>> {
         if self.outbox.len() >= MAX_OUTBOX {
-            return Err(ServerError::OutboxFull);
+            Err(ServerError::OutboxFull)
         } else {
             self.outbox.push((dst, frame));
 
