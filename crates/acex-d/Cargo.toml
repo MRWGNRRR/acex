@@ -26,6 +26,19 @@ alloc = [
 ]
 serde = ["acex-doip/serde", "acex-uds/serde"]
 tokio = ["acex-doip/tokio", "alloc"]
+defmt = [
+	"dep:defmt",
+	"acex-core/defmt",
+	"acex-macros/defmt",
+	"acex-proto/defmt",
+	"acex-can/defmt",
+	"acex-sim/defmt",
+	"acex-uds/defmt",
+	"acex-doip/defmt",
+	"acex-client/defmt",
+	"acex-server/defmt",
+	"acex-gateway/defmt"
+]
 
 [dependencies]
 acex-core = { workspace = true }
@@ -38,3 +51,4 @@ acex-doip = { workspace = true }
 acex-client = { workspace = true }
 acex-server = { workspace = true }
 acex-gateway = { workspace = true }
+defmt = { workspace = true, optional = true }
