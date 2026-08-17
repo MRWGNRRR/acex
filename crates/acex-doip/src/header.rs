@@ -13,6 +13,7 @@ use acex_proto::doip::constants::{
 use crate::error::DoipError;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[frame(error = DoipError)]
 pub struct DoipHeader {
     pub protocol_version: ProtocolVersion,
@@ -23,6 +24,7 @@ pub struct DoipHeader {
 
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[frame(error = DoipError)]
 pub enum ProtocolVersion {
     #[frame(id =  RESERVED_VER)]
@@ -41,6 +43,7 @@ pub enum ProtocolVersion {
 
 #[repr(u16)]
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[frame(error = DoipError)]
 pub enum PayloadType {
     #[frame(id =  DOIP_GENERIC_NACK)]

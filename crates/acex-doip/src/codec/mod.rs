@@ -16,6 +16,7 @@ use acex_proto::doip::DoipFrame;
 // region: FrameLimits
 
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct FrameLimits {
     pub max_payload_bytes: usize,
 }
@@ -63,6 +64,7 @@ pub fn decode_frame(buf: &[u8], limits: &FrameLimits) -> DecodeOutcome {
 // region: DecodeOutcome
 
 /// Result of attempting to decode one frame from a byte buffer.
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum DecodeOutcome {
     /// Not enough bytes yet for even a header. No bytes consumed.
     NeedMoreForHeader,

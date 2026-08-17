@@ -4,6 +4,7 @@ use acex_uds::message::UdsMessage;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = DoipError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct DiagnosticMessage<'a> {
     pub source_address: LogicalAddress,
     pub target_address: LogicalAddress,
@@ -14,6 +15,7 @@ pub struct DiagnosticMessage<'a> {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[frame(error = DoipError)]
 #[repr(u16)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum LogicalAddress {
     #[frame(id = 0x0000)]
     IsoSaeReserved,

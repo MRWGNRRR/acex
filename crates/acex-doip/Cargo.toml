@@ -22,6 +22,7 @@ alloc = [
 ]
 std = ["alloc", "acex-core/std", "acex-proto/std", "acex-sim/std"]
 tokio = ["dep:tokio-util", "alloc", "dep:bytes"]
+defmt = ["dep:defmt", "acex-macros/defmt", "acex-core/defmt", "acex-proto/defmt", "acex-uds/defmt", "acex-sim/defmt"]
 
 [dependencies]
 acex-macros = { workspace = true }
@@ -35,6 +36,7 @@ bytes = { workspace = true, optional = true }
 heapless = { workspace = true }
 serde = { workspace = true, optional = true, features = ["derive"] }
 tokio-util = { workspace = true, optional = true, features = ["codec"] }
+defmt = { workspace = true, optional = true }
 
 [dev-dependencies]
 proptest = { workspace = true }

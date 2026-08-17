@@ -29,6 +29,7 @@ use acex_core::Vec;
 ///
 /// Maps directly onto ActivationCode denial values
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum ActivationDenialReason {
     /// Source address not registered with this gateway.
     UnknownSourceAddress,
@@ -104,6 +105,7 @@ pub trait ActivationAuthProvider {
 
 /// An `ActivationAuthProvider` that always grants CentralSecurity activation. Suitable for testing
 /// and development environments only.
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct AlwaysAllow;
 
 impl ActivationAuthProvider for AlwaysAllow {
@@ -122,6 +124,7 @@ impl ActivationAuthProvider for AlwaysAllow {
 
 /// An `ActivationAuthProvider` that always denies CentralSecurity activation. Useful for testing
 /// denial paths.
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct AlwaysDeny {
     pub reason: ActivationDenialReason,
 }
@@ -147,6 +150,7 @@ impl ActivationAuthProvider for AlwaysDeny {
 /// In vehicle terms this maps to the hardware activation line state. The line must be in `Active`
 /// before `DiagnosticMessage` frames are forwarded to ECU nodes.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum ActivationLineState {
     /// No routing activation has been attempted on this connection.
     Idle,
@@ -193,6 +197,7 @@ impl ActivationLineState {
 /// `RoutingActivationRequest` frames and produces `RoutingActivationResponse` frames. It enforces
 /// the activation line state - only `Active` connections may carry `DiagnosticMessage` frames.
 #[derive(Debug)]
+#[cfg_attr(all(feature = "defmt", not(feature = "alloc")), derive(defmt::Format))]
 pub struct ActivationStateMachine<
     const MAX_TESTERS: usize,
     const MAX_ACTIVATION_TYPES: usize,

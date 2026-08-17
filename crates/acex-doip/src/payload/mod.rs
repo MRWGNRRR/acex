@@ -24,6 +24,7 @@ pub use vehicle_identification::*;
 use crate::{error::DoipError, header::PayloadType};
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum Payload<'a> {
     GenericNack(GenericNack),
     VehicleIdentificationRequest(VehicleIdentificationRequest),

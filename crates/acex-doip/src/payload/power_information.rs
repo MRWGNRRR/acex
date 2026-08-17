@@ -3,10 +3,12 @@ use acex_macros::FrameCodec;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = DoipError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct PowerInformationRequest {}
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = DoipError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct PowerInformationResponse {
     pub power_mode: PowerMode,
 }
@@ -14,6 +16,7 @@ pub struct PowerInformationResponse {
 #[repr(u8)]
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = DoipError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum PowerMode {
     #[frame(id = 0x00)]
     NotReady,

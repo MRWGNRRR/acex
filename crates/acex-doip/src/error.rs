@@ -7,6 +7,7 @@ use heapless::format;
 use crate::header::ProtocolVersion;
 
 #[derive(Debug, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum DoipValidationError {
     /// Protocol version byte did not match 0x02 (ISO 13400-2:2019) or 0x01 (ISO 13400-2:2012)
     UnsupportedProtocolVersion(u8),
@@ -44,6 +45,7 @@ pub enum DoipValidationError {
 }
 
 #[derive(Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum DoipError {
     /// Underlying transport or framing error
     Transport(DiagError),

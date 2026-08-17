@@ -20,6 +20,7 @@ use acex_sim::clock::{Duration, Instant};
 
 /// Per-connection timing configuration.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ConnectionConfig {
     /// How long to wait for an alive check response before considering the connection dead.
     pub alive_check_timeout: Duration,
@@ -43,6 +44,7 @@ impl Default for ConnectionConfig {
 
 /// The life-cycle phase of a TCP connection.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum ConnectionPhase {
     /// TCP connected, waiting for RoutingActivationRequest.
     Connected,
@@ -66,6 +68,7 @@ pub enum ConnectionPhase {
 /// The gateway collects these after each `handle` or `tick` call and acts on them - sending
 /// frames, routing messages, closing sockets.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum ConnectionEvent<const UDS_MAX_FRAME: usize> {
     /// Send this `RoutingActivationResponse` frame back to the tester.
     SendActivationResponse(RoutingActivationResponse),
@@ -109,6 +112,7 @@ pub enum ConnectionEvent<const UDS_MAX_FRAME: usize> {
 /// Owns the `ActivationStateMachine` for this connection and tracks idle/alive-check timing. The
 /// gateway drives this via `handle_frame` and `tick`.
 #[derive(Debug)]
+#[cfg_attr(all(feature = "defmt", not(feature = "alloc")), derive(defmt::Format))]
 pub struct ConnectionState<
     // region: ConnectionState Constants
     const UDS_MAX_FRAME: usize,

@@ -8,10 +8,12 @@ use crate::error::DoipError;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = DoipError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct EntityStatusRequest {}
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = DoipError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct EntityStatusResponse {
     pub node_type: NodeType,
     pub max_concurrent_sockets: [u8; DOIP_ENTITY_STATUS_RESPONSE_MCTS_LEN],
@@ -22,6 +24,7 @@ pub struct EntityStatusResponse {
 #[repr(u8)]
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = DoipError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum NodeType {
     #[frame(id = 0x00)]
     DoipGateway,

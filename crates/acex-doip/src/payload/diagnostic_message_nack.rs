@@ -4,6 +4,7 @@ use acex_proto::doip::constants::{DOIP_DIAG_COMMON_SOURCE_LEN, DOIP_DIAG_COMMON_
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = DoipError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct DiagnosticMessageNack {
     pub source_address: [u8; DOIP_DIAG_COMMON_SOURCE_LEN],
     pub target_address: [u8; DOIP_DIAG_COMMON_TARGET_LEN],
@@ -13,6 +14,7 @@ pub struct DiagnosticMessageNack {
 #[repr(u8)]
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = DoipError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum DiagnosticNackCode {
     #[frame(id_pat = "0x00..=0x01 | 0x0A..=0xFF")]
     Reserved(u8),

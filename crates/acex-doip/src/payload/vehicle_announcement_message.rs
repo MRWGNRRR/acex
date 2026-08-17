@@ -7,6 +7,7 @@ use acex_proto::doip::constants::{
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = DoipError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct VehicleAnnouncementMessage {
     pub vin: [u8; DOIP_COMMON_VIN_LEN],
     pub logical_address: [u8; DOIP_DIAG_COMMON_SOURCE_LEN],
@@ -19,6 +20,7 @@ pub struct VehicleAnnouncementMessage {
 #[repr(u8)]
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = DoipError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum ActionCode {
     #[frame(id = 0x00)]
     NoFurtherActionRequired,
@@ -43,6 +45,7 @@ impl From<&ActionCode> for u8 {
 
 #[repr(u8)]
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[frame(error = DoipError)]
 pub enum SyncStatus {
     #[frame(id = 0x00)]

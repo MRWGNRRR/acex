@@ -8,6 +8,7 @@ use crate::{
 };
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct DoipMessage<'a> {
     pub header: DoipHeader,
     pub payload: Payload<'a>,

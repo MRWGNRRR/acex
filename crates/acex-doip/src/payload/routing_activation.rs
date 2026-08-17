@@ -8,6 +8,7 @@ use acex_proto::doip::constants::{
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = DoipError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct RoutingActivationRequest {
     pub source_address: [u8; DOIP_ROUTING_ACTIVATION_REQ_SRC_LEN],
     pub activation_type: ActivationType,
@@ -18,6 +19,7 @@ pub struct RoutingActivationRequest {
 #[repr(u8)]
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = DoipError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum ActivationType {
     #[frame(id = 0x00)]
     Default,
@@ -33,6 +35,7 @@ pub enum ActivationType {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = DoipError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct RoutingActivationResponse {
     pub logical_address: [u8; DOIP_ROUTING_ACTIVATION_RES_TESTER_LEN],
     pub source_address: [u8; DOIP_ROUTING_ACTIVATION_RES_ENTITY_LEN],
@@ -44,6 +47,7 @@ pub struct RoutingActivationResponse {
 #[repr(u8)]
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, FrameCodec)]
 #[frame(error = DoipError)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum ActivationCode {
     #[frame(id = 0x00)]
     DeniedUnknownSourceAddress,
