@@ -21,12 +21,14 @@ std = [
 	"acex-proto/std",
 	"acex-sim/std",
 ]
+defmt = ["dep:defmt", "acex-core/defmt", "acex-sim/defmt", "acex-proto/defmt", "acex-uds/defmt"]
 
 [dependencies]
 acex-core = { workspace = true }
 acex-proto = { workspace = true }
 acex-uds = { workspace = true }
 acex-sim = { workspace = true }
+defmt = { workspace = true, optional = true }
 
 [dev-dependencies]
 acex-server = { workspace = true }

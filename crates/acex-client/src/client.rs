@@ -20,6 +20,7 @@ use crate::{config::ClientConfig, event::ClientEvent, pending::PendingRequest, C
 /// `N` - maximum number of concurrent pending requests. Defaults to 1. UDS is strictly sequential
 /// in most implementations - use `UdsClient<1>` unless you have a specific need for pipelining.
 #[derive(Debug)]
+#[cfg_attr(all(feature = "defmt", not(feature = "alloc")), derive(defmt::Format))]
 pub struct UdsClient<
     const PENDING: usize,
     const SIM_MAX_FRAME: usize,

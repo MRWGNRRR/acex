@@ -15,6 +15,7 @@ use acex_core::Vec;
 /// corrective action autonomously.
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(all(feature = "defmt", not(feature = "alloc")), derive(defmt::Format))]
 pub enum ClientEvent<const MAX_DATA: usize> {
     /// A positive response was received for the given service.
     ///

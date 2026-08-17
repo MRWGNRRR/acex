@@ -5,6 +5,7 @@
 // region: Client Error
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum ClientError {
     /// Request queue is full - cannot enqueue another request. With N=1 this means a request is
     /// already pending.

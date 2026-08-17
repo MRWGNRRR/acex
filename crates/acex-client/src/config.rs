@@ -11,6 +11,7 @@ use acex_sim::clock::Duration;
 /// Controls timing behaviour only - the client tracks no session or security state. All session
 /// and security management is the responsibility of the caller.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ClientConfig {
     /// P2 client - time to wait for a response before declaring timeout. Should match or slightly
     /// exceed the server's P2 server timing.

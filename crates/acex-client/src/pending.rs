@@ -8,6 +8,7 @@ use acex_sim::clock::{Duration, Instant};
 
 /// Tracks which timeout phase a pending request is in.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum P2State {
     /// Waiting for initial response within P2 timeout.
     Waiting,
@@ -21,6 +22,7 @@ pub enum P2State {
 
 /// A request that has been sent and is waiting a response.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct PendingRequest {
     /// The request SID byte - used to match incoming responses.
     pub sid: u8,
