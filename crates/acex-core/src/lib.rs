@@ -30,7 +30,7 @@ pub enum AddressMode {
 // region: Errors
 
 #[derive(Debug)]
-#[cfg_attr(all(feature = "defmt", not(feature = "alloc")), derive(defmt::Format))]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum DiagError {
     Timeout,
     InvalidFrame(heapless::String<64>),
