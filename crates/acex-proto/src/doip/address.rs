@@ -1,6 +1,7 @@
 // region: LogicalAddress
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct LogicalAddress(u16);
 
 impl LogicalAddress {
@@ -20,6 +21,7 @@ impl LogicalAddress {
 // region: DoipAddress
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct DoipAddress {
     pub logical: LogicalAddress,
     pub mode: acex_core::AddressMode,

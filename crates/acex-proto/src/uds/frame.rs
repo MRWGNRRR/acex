@@ -11,6 +11,7 @@ use crate::common::{AsImmutableFrame, RawFrame, RawFrameMut};
 /// This design allows `UdsFrame` to be used in `no_std` environments without
 /// any protocol knowledge at the proto layer.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct UdsFrame<'a> {
     payload: &'a [u8],
 }
@@ -70,6 +71,7 @@ impl RawFrame for UdsFrame<'_> {
 /// via `AsImmutableFrame`. Semantic methods are provided by `UdsFrameMut`
 /// extension traits in `ace-uds`.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct UdsFrameMut<'a> {
     payload: &'a mut [u8],
 }

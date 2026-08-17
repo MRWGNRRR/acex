@@ -3,6 +3,7 @@ use crate::CanId;
 // region: CanAddress
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct CanAddress {
     pub id: CanId,
     pub mode: acex_core::AddressMode,

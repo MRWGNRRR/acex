@@ -1,6 +1,7 @@
 // region: CanId
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum CanId {
     Standard(StandardCanId),
     Extended(ExtendedCanId),
@@ -51,6 +52,7 @@ impl From<ExtendedCanId> for CanId {
 /// by [`StandardCanId::new`]. Use [`StandardCanId::new_unchecked`] only when
 /// the value is a compile-time known constant within the valid range.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct StandardCanId(u16);
 
 impl StandardCanId {
@@ -103,6 +105,7 @@ impl StandardCanId {
 /// rejected by [`ExtendedCanId::new`]. Use [`ExtendedCanId::new_unchecked`]
 /// only when the value is a compile-time known constant within the valid range.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ExtendedCanId(u32);
 
 impl ExtendedCanId {

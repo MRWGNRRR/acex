@@ -13,8 +13,10 @@ categories = ["development-tools", "network-programming", "automotive"]
 [features]
 default = []
 alloc = ["acex-core/alloc"]
-std = ["alloc", "heapless/defmt", "acex-core/std"]
+std = ["alloc", "acex-core/std"]
+defmt = ["dep:defmt", "heapless/defmt", "acex-core/defmt"]
 
 [dependencies]
 acex-core = { workspace = true }
 heapless = { workspace = true }
+defmt = { workspace = true, optional = true }

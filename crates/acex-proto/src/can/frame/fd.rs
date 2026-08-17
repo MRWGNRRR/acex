@@ -14,6 +14,7 @@ use crate::common::{AsImmutableFrame, RawFrame, RawFrameMut};
 /// deliberately not enforced here - the caller working at this layer
 /// accepts responsibility for the buffer they provide.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct CanFdFrame<'a> {
     payload: &'a [u8],
 }
@@ -73,6 +74,7 @@ impl RawFrame for CanFdFrame<'_> {
 /// via `AsImmutableFrame`. Semantic methods including BRS and ESI flag
 /// manipulation are provided by `CanFdFrameMutExt` in `ace-can`.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct CanFdFrameMut<'a> {
     payload: &'a mut [u8],
 }

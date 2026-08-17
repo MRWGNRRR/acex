@@ -19,6 +19,7 @@ use crate::{
 /// derived from the fixed `DOIP_HEADER_LEN` constant, carrying no protocol
 /// semantic knowledge.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct DoipFrame<'a> {
     payload: &'a [u8],
 }
@@ -110,6 +111,7 @@ impl RawFrame for DoipFrame<'_> {
 /// Semantic mutation - setting protocol version, payload type, updating length
 /// fields - is provided by extension traits in `ace-doip`.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct DoipFrameMut<'a> {
     payload: &'a mut [u8],
 }

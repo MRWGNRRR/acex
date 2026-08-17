@@ -4,6 +4,7 @@ use crate::DoipAddress;
 // region: AnyAddress
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum AnyAddress {
     Can(CanAddress),
     Doip(DoipAddress),
