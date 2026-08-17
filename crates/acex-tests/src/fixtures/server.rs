@@ -186,8 +186,8 @@ pub fn default_server<
         .with_did(DidConfig::read_write(0xF120, &[0x02, 0x03], &[0x03]).secured(1))
         .with_security_level(SecurityLevelConfig {
             level: 0x01,
-            max_attempts: 3,
-            lockout_duration: Duration::from_millis(10_000),
+            max_attempts: Some(3),
+            lockout_duration: Some(Duration::from_millis(10_000)),
             seed_length: 1,
             key_length: 1,
         });
