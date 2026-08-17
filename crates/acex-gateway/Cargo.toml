@@ -22,6 +22,17 @@ alloc = [
 	"acex-server/alloc",
 	"acex-sim/alloc",
 ]
+defmt = [
+	"dep:defmt",
+	"acex-sim/defmt",
+	"acex-doip/defmt",
+	"acex-can/defmt",
+	"acex-proto/defmt",
+	"acex-core/defmt",
+	"acex-macros/defmt",
+	"acex-client/defmt",
+	"acex-server/defmt"
+]
 
 [dependencies]
 acex-sim = { workspace = true }
@@ -32,3 +43,4 @@ acex-core = { workspace = true }
 acex-macros = { workspace = true }
 acex-client = { workspace = true }
 acex-server = { workspace = true }
+defmt = { workspace = true, optional = true }

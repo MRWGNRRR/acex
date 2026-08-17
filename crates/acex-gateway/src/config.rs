@@ -13,6 +13,7 @@ use acex_doip::{header::ProtocolVersion, payload::ActivationType, session::Conne
 /// The gateway uses this table to route `DiagnosticMessage` frames from a tester to the correct
 /// CAN node and back.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct CanNodeEntry {
     /// DoIP logical address of the ECU - used by the tester to address it.
     pub logical_address: u16,
@@ -36,6 +37,7 @@ pub struct CanNodeEntry {
 /// Defines the gateway's own logical address, the set of ECU nodes it routes to, the registered
 /// tester addresses it accepts activations from, and the activation types it supports.
 #[derive(Debug, Clone)]
+#[cfg_attr(all(feature = "defmt", not(feature = "alloc")), derive(defmt::Format))]
 pub struct GatewayConfig<
     const MAX_NODES: usize,
     const MAX_TESTERS: usize,

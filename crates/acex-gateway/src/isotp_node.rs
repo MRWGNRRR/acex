@@ -32,6 +32,7 @@ use acex_sim::{clock::Instant, io::NodeAddress};
 // region: IsoTpError
 
 #[derive(Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum IsoTpNodeError {
     Reassembler(IsoTpError),
     Segmenter(IsoTpError),
@@ -54,6 +55,7 @@ pub enum IsoTpNodeError {
 ///     ECU UdsServer puts raw UDS bytes in its outbox addressed to IsoTpNode. IsoTpNode segments
 ///     and puts CAN frames on the bus addressed to `response_can_id` so the gateway can route them
 ///     back to the tester.
+#[cfg_attr(all(feature = "defmt", not(feature = "alloc")), derive(defmt::Format))]
 pub struct IsoTpNode<
     const UDS_MAX_FRAME: usize,
     const ISOTP_MAX_FRAME: usize,

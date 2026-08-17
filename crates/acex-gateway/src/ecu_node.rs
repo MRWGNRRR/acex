@@ -31,6 +31,7 @@ use acex_sim::{clock::Instant, io::NodeAddress};
 // region: EcuNodeError
 
 #[derive(Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum EcuNodeError<SE: NrcError> {
     IsoTp(acex_can::IsoTpError),
     CanOutboxFull,
@@ -47,6 +48,7 @@ pub enum EcuNodeError<SE: NrcError> {
 /// gateway, reassembles them into UDS requests, processes them with
 /// `UdsServer`, then segments the responses back into ISO-TP CAN frames
 /// for the gateway to pick up and wrap in DoIP.
+#[cfg_attr(all(feature = "defmt", not(feature = "alloc")), derive(defmt::Format))]
 pub struct EcuNode<
     const UDS_MAX_FRAME: usize,
     const UDS_MAX_OUTBOX: usize,

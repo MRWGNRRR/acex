@@ -47,6 +47,7 @@ use acex_sim::{
 
 /// Identifies a specific TCP connection within a `DoipTester`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ConnectionId(pub u16);
 
 // region: ConnectionId
@@ -55,6 +56,7 @@ pub struct ConnectionId(pub u16);
 
 /// Identifies a specific ECU target within a `DoipConnection`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct TargetId(pub u16);
 
 // endregion: TargetId
@@ -67,6 +69,7 @@ pub struct TargetId(pub u16);
 /// Provides a full metadata profile of the gateway without requiring explicit requests in normal
 /// operation - vehicle announcements arrive automatically on network join.
 #[derive(Debug, Clone, Default)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct DoipNodeProfile {
     pub vin: Option<[u8; DOIP_COMMON_VIN_LEN]>,
     pub logical_address: Option<u16>,
@@ -102,6 +105,7 @@ impl DoipNodeProfile {
 ///
 /// Does not include P2/P2* - those are learned from the server.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct DoipConnectionConfig {
     /// Logical address  of the gateway to connect to.
     pub gateway_address: u16,
@@ -150,6 +154,7 @@ impl DoipConnectionConfig {
 // region: DoipConnectionPhase
 
 #[derive(Debug, Clone, PartialEq, Eq, Copy)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum DoipConnectionPhase {
     Disconnected,
     ActivationPending,
@@ -166,6 +171,7 @@ pub enum DoipConnectionPhase {
 /// Each target has its own UdsClient tracking P2/P2* independently. P2/P2* are updated when a
 /// DiagnosticSessionControlResponse arrives from this target.
 #[derive(Debug)]
+#[cfg_attr(all(feature = "defmt", not(feature = "alloc")), derive(defmt::Format))]
 pub struct TargetState<
     const PENDING: usize,
     const SIM_MAX_FRAME: usize,
@@ -251,6 +257,7 @@ impl<
 ///
 /// `MAX_TARGETS` - max concurrent ECU targets on this connection.
 #[derive(Debug)]
+#[cfg_attr(all(feature = "defmt", not(feature = "defmt")), derive(defmt::Format))]
 pub struct DoipConnection<
     // region: DoipConnection Constants
     const MAX_TARGETS: usize,
@@ -811,6 +818,7 @@ impl<
 /// For the exact byte count of a given configuration (padding/alignment
 /// included), use [`UdsClient::FOOTPRINT_BYTES`] rather than computing the
 /// formula above by hand.
+#[cfg_attr(all(feature = "defmt", not(feature = "alloc")), derive(defmt::Format))]
 pub struct DoipTester<
     // region: DoipTester Constants
     const MAX_CONNECTIONS: usize,
@@ -1173,6 +1181,7 @@ impl<
 // region: DoipTesterEvent
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(all(feature = "defmt", not(feature = "alloc")), derive(defmt::Format))]
 pub enum DoipTesterEvent<const MAX_DATA: usize> {
     ActivationSucceeded,
     ActivationDenied { code: u8 },
@@ -1187,6 +1196,7 @@ pub enum DoipTesterEvent<const MAX_DATA: usize> {
 // region: DoipTesterError
 
 #[derive(Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum DoipTesterError {
     NotReady,
     Codec,

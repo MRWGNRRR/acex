@@ -11,6 +11,7 @@ use acex_core::Vec;
 /// When the gateway forwards UDS bytes onto the CAN bus it records the originating tester address
 /// and DoIP source/target addresses. When the ISO-TP node delivers a response, the gateway looks
 /// up the pending route to know where to send the DoIP response.
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[derive(Debug, Clone)]
 pub struct PendingRoute {
     /// DoIP logical address of the tester that sent the request.
@@ -34,6 +35,7 @@ pub struct PendingRoute {
 ///
 /// `N` - max concurrent pending routes (matches max tester connections).
 #[derive(Debug)]
+#[cfg_attr(all(feature = "defmt", not(feature = "alloc")), derive(defmt::Format))]
 pub struct PendingRouteTable<const MAX_PENDING: usize> {
     entries: Vec<PendingRoute, MAX_PENDING>,
 }

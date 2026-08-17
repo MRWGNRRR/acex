@@ -62,6 +62,7 @@ use crate::{
 // region: GatewayError
 
 #[derive(Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum GatewayError {
     /// DoIP header validation failed.
     InvalidDoipHeader,
@@ -93,6 +94,7 @@ pub enum GatewayError {
 ///
 /// The gateway owns one of these per registered ECU. All CAN framing for that ECU goes through
 /// here. The scenario never touches ISO-TP directly - it only calls gateway methods.
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 struct EcuIsoTpNode<const ISOTP_MAX_FRAME: usize> {
     request_can_id: u32,
     response_can_id: u32,
@@ -119,6 +121,7 @@ impl<const ISOTP_MAX_FRAME: usize> EcuIsoTpNode<ISOTP_MAX_FRAME> {
 // region: ConnectionSlot
 
 /// A slot for one tester TCP connection.
+#[cfg_attr(all(feature = "defmt", not(feature = "alloc")), derive(defmt::Format))]
 struct ConnectionSlot<
     // region: ConnectionState Constants
     const UDS_MAX_FRAME: usize,
@@ -138,6 +141,7 @@ struct ConnectionSlot<
 
 // region: DoipGateway
 
+#[cfg_attr(all(feature = "defmt", not(feature = "alloc")), derive(defmt::Format))]
 pub struct DoipGateway<
     const CAN_MAX_FRAME: usize,
     const ISOTP_MAX_NODES: usize,
