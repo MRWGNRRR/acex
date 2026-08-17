@@ -24,7 +24,7 @@ pub struct NodeAddress(pub u32);
 ///
 /// Used by low-level runtime implementers working directly with frames.
 #[derive(Debug, Clone, PartialEq, Eq)]
-#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+#[cfg_attr(all(feature = "defmt", not(feature = "alloc")), derive(defmt::Format))]
 pub struct RawMessage<const MAX_DATA: usize> {
     pub src: NodeAddress,
     pub dst: NodeAddress,
