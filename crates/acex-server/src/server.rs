@@ -100,7 +100,11 @@ impl<
         if let Some(e) = self.failed_attempts.iter_mut().find(|(l, _)| *l == level) {
             e.1 = e.1.saturating_add(1);
         } else {
-            let _ = self.failed_attempts.push((level, 1));
+            #[cfg(all(feature = "defmt", not(feature = "alloc")))]
+            defmt::unwrap!(self.failed_attempts.push((level, 1))); // unlikely
+
+            #[cfg(feature = "alloc")]
+            self.failed_attempts.push((level, 1));
         }
     }
 
@@ -114,7 +118,11 @@ impl<
         if let Some(e) = self.lockout_until.iter_mut().find(|(l, _)| *l == level) {
             e.1 = until;
         } else {
-            let _ = self.lockout_until.push((level, until));
+            #[cfg(all(feature = "defmt", not(feature = "alloc")))]
+            defmt::unwrap!(self.lockout_until.push((level, until))); // unlikely
+
+            #[cfg(feature = "alloc")]
+            self.lockout_until.push((level, until));
         }
     }
 
@@ -160,6 +168,16 @@ impl<const MAX_PERIODIC: usize> PeriodicState<MAX_PERIODIC> {
             e.next_tx = now + interval;
             return;
         }
+
+        #[cfg(feature = "defmt")]
+        defmt::unwrap!(self.entries.push(PeriodicEntry {
+            did,
+            interval,
+            next_tx: now + interval,
+            client,
+        }));
+
+        #[cfg(not(feature = "defmt"))]
         let _ = self.entries.push(PeriodicEntry {
             did,
             interval,
@@ -175,6 +193,10 @@ impl<const MAX_PERIODIC: usize> PeriodicState<MAX_PERIODIC> {
 
     fn collect_due(&self, now: Instant, out: &mut Vec<(u16, NodeAddress), MAX_PERIODIC>) {
         for e in self.entries.iter().filter(|e| now >= e.next_tx) {
+            #[cfg(feature = "defmt")]
+            defmt::unwrap!(out.push((e.did, e.client.clone())));
+
+            #[cfg(not(feature = "defmt"))]
             let _ = out.push((e.did, e.client.clone()));
         }
     }
@@ -424,6 +446,10 @@ where
     ) -> usize {
         let n = self.outbox.len();
         for item in self.outbox.drain(..) {
+            #[cfg(feature = "defmt")]
+            defmt::unwrap!(out.push(item)); // unlikely
+
+            #[cfg(not(feature = "defmt"))]
             let _ = out.push(item);
         }
         n
@@ -480,7 +506,11 @@ where
         if self.outbox.len() >= MAX_OUTBOX {
             Err(ServerError::OutboxFull)
         } else {
-            let _ = self.outbox.push((dst, frame));
+            #[cfg(feature = "defmt")]
+            defmt::unwrap!(self.outbox.push((dst, frame))); // unlikely
+
+            #[cfg(not(feature = "defmt"))]
+            self.outbox.push((dst, frame));
 
             Ok(())
         }
@@ -495,8 +525,18 @@ where
     ) -> Result<(), ServerError<H::Error>> {
         let mut frame: Vec<u8, MAX_FRAME> = Vec::new();
 
-        let _ = frame.push(request_sid | 0x40);
-        let _ = frame.extend_from_slice(payload);
+        #[cfg(feature = "defmt")]
+        {
+            defmt::unwrap!(frame.push(request_sid | 0x40));
+            defmt::unwrap!(frame.extend_from_slice(payload));
+        }
+
+        #[cfg(not(feature = "defmt"))]
+        {
+            let _ = frame.push(request_sid | 0x40);
+            let _ = frame.extend_from_slice(payload);
+        }
+
 
         self.enqueue(dst.clone(), frame)
     }
@@ -520,9 +560,21 @@ where
         _now: Instant,
     ) -> Result<(), ServerError<H::Error>> {
         let mut frame: Vec<u8, MAX_FRAME> = Vec::new();
-        let _ = frame.push(0x7F);
-        let _ = frame.push(request_sid);
-        let _ = frame.push(nrc_byte);
+
+        #[cfg(feature = "defmt")]
+        {
+            defmt::unwrap!(frame.push(0x7F));
+            defmt::unwrap!(frame.push(request_sid));
+            defmt::unwrap!(frame.push(nrc_byte));
+        }
+
+        #[cfg(not(feature = "defmt"))]
+        {
+            let _ = frame.push(0x7F);
+            let _ = frame.push(request_sid);
+            let _ = frame.push(nrc_byte);
+        }
+
         self.enqueue(dst.clone(), frame)
     }
 
@@ -677,12 +729,24 @@ where
                 .map_err(|_| ServerError::Handler(H::Error::conditions_not_correct()))?;
 
             self.security.pending_seed.clear();
-            let _ = self.security.pending_seed.extend_from_slice(&seed_buf[..seed_len]);
             self.security.pending_level = level;
 
             let mut payload: Vec<u8, MAX_SEED> = Vec::new();
-            let _ = payload.push(level);
-            let _ = payload.extend_from_slice(&seed_buf[..seed_len]);
+
+            #[cfg(feature = "defmt")]
+            {
+                defmt::unwrap!(self.security.pending_seed.extend_from_slice(&seed_buf[..seed_len]));
+                defmt::unwrap!(payload.push(level));
+                defmt::unwrap!(payload.extend_from_slice(&seed_buf[..seed_len]));
+            }
+
+            #[cfg(not(feature = "defmt"))]
+            {
+                let _ = self.security.pending_seed.extend_from_slice(&seed_buf[..seed_len]);
+                let _ = payload.push(level);
+                let _ = payload.extend_from_slice(&seed_buf[..seed_len]);
+            }
+
             self.pos(src, 0x27, &payload, now)
         } else {
             // SendKey - key bytes are the payload after the sub-function byte.
@@ -765,14 +829,28 @@ where
                 return self.nrc_raw(src, 0x22, nrc, now);
             }
 
-            let _ = resp.push(chunk[0]);
-            let _ = resp.push(chunk[1]);
+            #[cfg(feature = "defmt")]
+            {
+                defmt::unwrap!(resp.push(chunk[0]));
+                defmt::unwrap!(resp.push(chunk[1]));
+            }
+
+            #[cfg(not(feature = "defmt"))]
+            {
+                let _ = resp.push(chunk[0]);
+                let _ = resp.push(chunk[1]);
+            }
 
             let mut data_buf = [0u8; MAX_FRAME];
             let len = self
                 .handler
                 .read_did(did, &mut data_buf)
                 .map_err(ServerError::Handler)?;
+
+            #[cfg(feature = "defmt")]
+            defmt::unwrap!(resp.extend_from_slice(&data_buf[..len]));
+
+            #[cfg(not(feature = "defmt"))]
             let _ = resp.extend_from_slice(&data_buf[..len]);
         }
 
@@ -910,10 +988,23 @@ where
         }
 
         let mut resp: Vec<u8, MAX_FRAME> = Vec::new();
-        let _ = resp.push(sub_function);
-        let _ = resp.push(payload[1]);
-        let _ = resp.push(payload[2]);
-        let _ = resp.extend_from_slice(&buf[..len]);
+
+        #[cfg(feature = "defmt")]
+        {
+            defmt::unwrap!(resp.push(sub_function));
+            defmt::unwrap!(resp.push(payload[1]));
+            defmt::unwrap!(resp.push(payload[2]));
+            defmt::unwrap!(resp.extend_from_slice(&buf[..len]));
+        }
+
+        #[cfg(not(feature = "defmt"))]
+        {
+            let _ = resp.push(sub_function);
+            let _ = resp.push(payload[1]);
+            let _ = resp.push(payload[2]);
+            let _ = resp.extend_from_slice(&buf[..len]);
+        }
+
         self.pos(src, 0x31, &resp, now)
     }
 
@@ -976,9 +1067,21 @@ where
             .map_err(ServerError::Handler)?;
 
         let mut resp: Vec<u8, MAX_FRAME> = Vec::new();
-        let _ = resp.push(payload[0]);
-        let _ = resp.push(payload[1]);
-        let _ = resp.extend_from_slice(&buf[..len]);
+
+        #[cfg(feature = "defmt")]
+        {
+            defmt::unwrap!(resp.push(payload[0]));
+            defmt::unwrap!(resp.push(payload[1]));
+            defmt::unwrap!(resp.extend_from_slice(&buf[..len]));
+        }
+
+        #[cfg(not(feature = "defmt"))]
+        {
+            let _ = resp.push(payload[0]);
+            let _ = resp.push(payload[1]);
+            let _ = resp.extend_from_slice(&buf[..len]);
+        }
+
         self.pos(src, 0x2F, &resp, now)
     }
 
@@ -1054,8 +1157,19 @@ where
             .map_err(ServerError::Handler)?;
 
         let mut resp: Vec<u8, MAX_FRAME> = Vec::new();
-        let _ = resp.push(block_seq);
-        let _ = resp.extend_from_slice(&buf[..len]);
+
+        #[cfg(feature = "defmt")]
+        {
+            defmt::unwrap!(resp.push(block_seq));
+            defmt::unwrap!(resp.extend_from_slice(&buf[..len]));
+        }
+
+        #[cfg(not(feature = "defmt"))]
+        {
+            let _ = resp.push(block_seq);
+            let _ = resp.extend_from_slice(&buf[..len]);
+        }
+
         self.pos(src, 0x36, &resp, now)
     }
 
@@ -1126,8 +1240,19 @@ where
             // [periodic_data_identifier (1 byte), data_record (n bytes)]
             let did_low = (*did & 0xFF) as u8;
             let mut frame = Vec::new();
-            let _ = frame.push(did_low);
-            let _ = frame.extend_from_slice(&data_buf[..len]);
+
+            #[cfg(feature = "defmt")]
+            {
+                defmt::unwrap!(frame.push(did_low));
+                defmt::unwrap!(frame.extend_from_slice(&data_buf[..len]));
+            }
+
+            #[cfg(not(feature = "defmt"))]
+            {
+                let _ = frame.push(did_low);
+                let _ = frame.extend_from_slice(&data_buf[..len]);
+            }
+
 
             self.enqueue(client.clone(), frame)?;
             self.periodic.advance(*did, client, now);

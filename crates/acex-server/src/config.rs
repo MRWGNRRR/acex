@@ -261,22 +261,42 @@ impl<
     // region: Builder methods
 
     pub fn with_session(mut self, s: SessionConfig) -> Self {
+        #[cfg(feature = "defmt")]
+        defmt::unwrap!(self.sessions.push(s));
+
+        #[cfg(not(feature = "defmt"))]
         let _ = self.sessions.push(s);
+
         self
     }
 
     pub fn with_service(mut self, s: ServiceConfig) -> Self {
+        #[cfg(feature = "defmt")]
+        defmt::unwrap!(self.services.push(s));
+
+        #[cfg(not(feature = "defmt"))]
         let _ = self.services.push(s);
+
         self
     }
 
     pub fn with_did(mut self, d: DidConfig) -> Self {
+        #[cfg(feature = "defmt")]
+        defmt::unwrap!(self.data_identifiers.push(d));
+
+        #[cfg(not(feature = "defmt"))]
         let _ = self.data_identifiers.push(d);
+
         self
     }
 
     pub fn with_security_level(mut self, l: SecurityLevelConfig) -> Self {
+        #[cfg(feature = "defmt")]
+        defmt::unwrap!(self.security_levels.push(l));
+
+        #[cfg(not(feature = "defmt"))]
         let _ = self.security_levels.push(l);
+
         self
     }
 
