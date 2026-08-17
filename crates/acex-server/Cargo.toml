@@ -14,9 +14,11 @@ categories = ["development-tools", "network-programming", "automotive"]
 default = []
 alloc = ["acex-core/alloc", "acex-uds/alloc", "acex-sim/alloc"]
 std = ["alloc", "acex-core/std", "acex-uds/std", "acex-sim/std"]
+defmt = ["dep:defmt", "acex-sim/defmt", "acex-core/defmt", "acex-uds/defmt", "acex-proto/defmt"]
 
 [dependencies]
 acex-core = { workspace = true }
 acex-uds = { workspace = true }
 acex-sim = { workspace = true }
 acex-proto = { workspace = true }
+defmt = { workspace = true, optional = true }

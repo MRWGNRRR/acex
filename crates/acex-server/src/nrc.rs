@@ -56,6 +56,7 @@ pub trait NrcError: Into<u8> + core::fmt::Debug {
 /// Applications that do not need a custom error type may use this directly as `type Error =
 /// BuiltinNrc` in the `ServerHandler` impl.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[repr(u8)]
 pub enum BuiltinNrc {
     ServiceNotSupported = 0x11,

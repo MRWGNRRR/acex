@@ -2,6 +2,7 @@
 
 /// Errors the server state machine may produce during SecurityAccess handling.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum SecurityError {
     /// The supplied key does not match the generated seed.
     InvalidKey,

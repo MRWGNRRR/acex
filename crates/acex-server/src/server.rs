@@ -18,6 +18,7 @@ use crate::security_provider::SecurityProvider;
 // region: ServerError
 
 #[derive(Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum ServerError<E: NrcError> {
     Handler(E),
     Codec(acex_uds::error::UdsError),
@@ -29,6 +30,7 @@ pub enum ServerError<E: NrcError> {
 // region: SessionState
 
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 struct SessionState {
     session_type: u8,
     last_rx: Instant,
@@ -54,6 +56,7 @@ impl SessionState {
 // region: SecurityState
 
 #[derive(Debug, Clone)]
+#[cfg_attr(all(feature = "defmt", not(feature = "alloc")), derive(defmt::Format))]
 struct SecurityState<const MAX_SEED: usize> {
     pending_seed: Vec<u8, MAX_SEED>,
     pending_level: u8,
@@ -120,6 +123,7 @@ impl<const MAX_SEED: usize> SecurityState<MAX_SEED> {
 // region: PeriodicEntry / PeriodicState
 
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 struct PeriodicEntry {
     did: u16,
     interval: Duration,
@@ -128,6 +132,7 @@ struct PeriodicEntry {
 }
 
 #[derive(Debug)]
+#[cfg_attr(all(feature = "defmt", not(feature = "alloc")), derive(defmt::Format))]
 struct PeriodicState<const MAX_PERIODIC: usize> {
     entries: Vec<PeriodicEntry, MAX_PERIODIC>,
 }
@@ -192,6 +197,7 @@ impl<const MAX_PERIODIC: usize> PeriodicState<MAX_PERIODIC> {
 /// All timing is driven by [`tick`] - no blocking, no hardware timers,
 /// no OS calls. Suitable for direct use as a `SimNode` in `ace-sim`.
 #[derive(Debug)]
+#[cfg_attr(all(feature = "defmt", not(feature = "alloc")), derive(defmt::Format))]
 pub struct UdsServer<
     const MAX_FRAME: usize,
     const MAX_OUTBOX: usize,
@@ -468,7 +474,7 @@ where
         if self.outbox.len() >= MAX_OUTBOX {
             Err(ServerError::OutboxFull)
         } else {
-            self.outbox.push((dst, frame));
+            let _ = self.outbox.push((dst, frame));
 
             Ok(())
         }
@@ -482,6 +488,7 @@ where
         _now: Instant,
     ) -> Result<(), ServerError<H::Error>> {
         let mut frame: Vec<u8, MAX_FRAME> = Vec::new();
+
         let _ = frame.push(request_sid | 0x40);
         let _ = frame.extend_from_slice(payload);
 
@@ -664,10 +671,7 @@ where
                 .map_err(|_| ServerError::Handler(H::Error::conditions_not_correct()))?;
 
             self.security.pending_seed.clear();
-            let _ = self
-                .security
-                .pending_seed
-                .extend_from_slice(&seed_buf[..seed_len]);
+            let _ = self.security.pending_seed.extend_from_slice(&seed_buf[..seed_len]);
             self.security.pending_level = level;
 
             let mut payload: Vec<u8, MAX_SEED> = Vec::new();

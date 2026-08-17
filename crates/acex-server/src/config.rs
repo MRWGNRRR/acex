@@ -30,6 +30,7 @@ pub mod periodic {
 ///
 /// Mirrors the session configuration in an ODX ECU-DESC container.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct SessionConfig {
     /// UDS session type byte.
     /// 0x01 Default Session, 0x02 Programming Session, 0x03 ExtendedSession.
@@ -84,6 +85,7 @@ impl SessionConfig {
 ///
 /// Mirrors a DiagService entry in an ODX file.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ServiceConfig {
     /// UDS service ID byte (e.g 0x22 for ReadDataByIdentifier).
     pub service_id: u8,
@@ -122,6 +124,7 @@ impl ServiceConfig {
 ///
 /// Mirrors a DataObject entry in an ODX file.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct DidConfig {
     /// 2-byte DID value.
     pub identifier: u16,
@@ -190,16 +193,17 @@ impl DidConfig {
 ///
 /// Mirrors a Security entry in an ODX file.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct SecurityLevelConfig {
     /// Request Seed byte for this level (always odd: 0x01, 0x03, 0x05 ...).
     pub level: u8,
-    
+
     /// Max failed key attempts before lockout is applied.
     pub max_attempts: Option<u8>,
-    
+
     /// Duration of the lockout after exceeding max attempts.
     pub lockout_duration: Option<Duration>,
-    
+
     /// Expected seed length in bytes.
     pub seed_length: usize,
 
@@ -217,6 +221,7 @@ pub struct SecurityLevelConfig {
 /// All look-ups are O(n) over the small, fixed-size `heapless::Vec` collections - appropriate for
 /// the sizes involved.
 #[derive(Debug, Clone)]
+#[cfg_attr(all(feature = "defmt", not(feature = "alloc")), derive(defmt::Format))]
 pub struct ServerConfig<
     const MAX_SESSIONS: usize,
     const MAX_SERVICES: usize,
