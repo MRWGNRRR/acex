@@ -8,3 +8,5 @@ pub mod server;
 pub mod sim_node;
 
 pub use nrc::{BuiltinNrc, NrcError};
+
+pub use acex_sim::clock;
