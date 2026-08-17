@@ -38,6 +38,7 @@ pub trait TcpEventHandler {
 ///
 /// `N` - max message payload bytes
 /// `Q` - max messages in-flight on the bus
+#[cfg_attr(all(feature = "defmt", not(feature = "alloc")), derive(defmt::Format))]
 pub struct TcpSimRunner<
     const MAX_DATA: usize,
     const MAX_QUEUED: usize,

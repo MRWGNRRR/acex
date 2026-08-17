@@ -11,6 +11,7 @@ use crate::clock::Duration;
 /// All probabilities are expressed as `(numerator, denominator)` pairs. For example `(1, 100)`
 /// means a 1% chance per eligible event.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct FaultConfig {
     /// Probability a message is silently dropped.
     pub message_loss: (u32, u32),

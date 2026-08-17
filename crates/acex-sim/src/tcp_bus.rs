@@ -25,6 +25,7 @@ use acex_core::Vec;
 /// reliable TCP connection with unreliable message delivery, or a flaky TCP connection that resets
 /// mid-session.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct TcpFaultConfig {
     /// Underlying message-level fault config.
     pub message: FaultConfig,
@@ -76,6 +77,7 @@ impl TcpFaultConfig {
 
 /// The state of a TCP connection between two nodes on the bus.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum TcpConnectionState {
     /// No connection exists - messages are rejected.
     Disconnected,
@@ -111,6 +113,7 @@ impl TcpConnectionState {
 ///
 /// Nodes train these via `TcpSimBus::drain_events()` after each tick.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum TcpEvent {
     /// A connection request from `from` to `to` was accepted.
     ConnectionEstablished { from: NodeAddress, to: NodeAddress },
@@ -142,6 +145,7 @@ pub enum TcpEvent {
 /// `N` - max message payload bytes
 /// `Q` - max messages in-flight simultaneously
 #[derive(Debug)]
+#[cfg_attr(all(feature = "defmt", not(feature = "alloc")), derive(defmt::Format))]
 pub struct TcpSimBus<const MAX_DATA: usize, const MAX_QUEUED: usize, const TCP_MAX_EVENTS: usize> {
     /// Underlying message bus - handles delivery, delays, and message faults.
     inner: SimBus<MAX_DATA, MAX_QUEUED>,

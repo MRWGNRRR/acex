@@ -97,6 +97,7 @@ where
 /// `N` - max message payload bytes
 /// `Q` - max messages in-flight on the bus
 /// `S` - max nodes in the simulation
+#[cfg_attr(all(feature = "defmt", not(feature = "alloc")), derive(defmt::Format))]
 pub struct SimRunner<const N: usize, const Q: usize> {
     bus: SimBus<N, Q>,
 }

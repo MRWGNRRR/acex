@@ -27,6 +27,7 @@ use acex_core::Vec;
 
 // CAN-level fault configuration.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct CanFaultConfig {
     /// Underlying message-level fault config.
     pub message: FaultConfig,
@@ -77,6 +78,7 @@ impl CanFaultConfig {
 
 // The operational state of the simulated CAN bus.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum CanBusState {
     /// Bus is operational - frames are delivered normally.
     Active,
@@ -101,6 +103,7 @@ impl CanBusState {
 
 /// Events the `CanSimBus` delivers to nodes alongside messages.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum CanEvent {
     /// Bus transitioned to bus-off state.
     BusOff,
@@ -124,6 +127,7 @@ pub enum CanEvent {
 /// `N` - max frame payload bytes (8 for classic CAN, 64 for CAN FD)
 /// `Q` - max frames in-flight simultaneously
 #[derive(Debug)]
+#[cfg_attr(all(feature = "defmt", not(feature = "alloc")), derive(defmt::Format))]
 pub struct CanSimBus<const MAX_DATA: usize, const MAX_QUEUED: usize> {
     /// Underlying message bus.
     inner: SimBus<MAX_DATA, MAX_QUEUED>,

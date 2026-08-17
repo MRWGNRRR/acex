@@ -45,6 +45,7 @@ pub trait Rng {
 /// Not cryptographically secure - suitable for simulation only. Produces a full cycle of 2^64-1
 /// values before repeating
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct Xorshift64 {
     state: u64,
 }

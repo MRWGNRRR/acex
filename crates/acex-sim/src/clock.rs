@@ -10,6 +10,7 @@
 /// are meaningful. On simulation targets the epoch is the start of the
 /// simulation. On real targets it is typically system boot.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct Instant(u64);
 
 impl Instant {
@@ -37,6 +38,7 @@ impl Instant {
 
 /// A span of time in microseconds.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct Duration(u64);
 
 impl Duration {
@@ -106,6 +108,7 @@ pub trait Clock {
 // region: SimClock
 
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct SimClock {
     now: Instant,
 }

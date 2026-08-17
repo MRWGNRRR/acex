@@ -12,6 +12,7 @@ use acex_core::Vec;
 
 /// A message in-flight on the simulation bus.
 #[derive(Debug, Clone)]
+#[cfg_attr(all(feature = "defmt", not(feature = "alloc")), derive(defmt::Format))]
 pub struct Envelope<const MAX_DATA: usize> {
     pub src: NodeAddress,
     pub dst: NodeAddress,
@@ -32,6 +33,7 @@ pub struct Envelope<const MAX_DATA: usize> {
 /// `N` - max message payload bytes
 /// `Q` - max messages in-flight simultaneously
 #[derive(Debug)]
+#[cfg_attr(all(feature = "defmt", not(feature = "alloc")), derive(defmt::Format))]
 pub struct SimBus<const MAX_DATA: usize, const MAX_QUEUED: usize> {
     clock: SimClock,
     rng: Xorshift64,

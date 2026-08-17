@@ -13,6 +13,7 @@ use acex_core::Vec;
 /// protocol layer in use.
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct NodeAddress(pub u32);
 
 // endregion: Address
@@ -23,6 +24,7 @@ pub struct NodeAddress(pub u32);
 ///
 /// Used by low-level runtime implementers working directly with frames.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct RawMessage<const MAX_DATA: usize> {
     pub src: NodeAddress,
     pub dst: NodeAddress,

@@ -35,6 +35,7 @@ pub trait CanEventHandler {
 ///
 /// `N` - max CAN frame payload bytes (8 classic, 64 FD)
 /// `Q` - max frames in-flight on the bus
+#[cfg_attr(all(feature = "defmt", not(feature = "alloc")), derive(defmt::Format))]
 pub struct CanSimRunner<const N: usize, const Q: usize> {
     bus: CanSimBus<N, Q>,
 }
