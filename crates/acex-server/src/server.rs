@@ -57,14 +57,20 @@ impl SessionState {
 
 #[derive(Debug, Clone)]
 #[cfg_attr(all(feature = "defmt", not(feature = "alloc")), derive(defmt::Format))]
-struct SecurityState<const MAX_SEED: usize> {
+struct SecurityState<const MAX_SEED: usize, const MAX_SECURITY_LEVELS: usize> {
     pending_seed: Vec<u8, MAX_SEED>,
     pending_level: u8,
-    failed_attempts: Vec<(u8, u8), 8>,
-    lockout_until: Vec<(u8, Instant), 8>,
+    failed_attempts: Vec<(u8, u8), MAX_SECURITY_LEVELS>,
+    lockout_until: Vec<(u8, Instant), MAX_SECURITY_LEVELS>,
 }
 
-impl<const MAX_SEED: usize> SecurityState<MAX_SEED> {
+impl<
+    const MAX_SEED: usize,
+    const MAX_SECURITY_LEVELS: usize
+> SecurityState<
+    MAX_SEED,
+    MAX_SECURITY_LEVELS
+> {
     fn new() -> Self {
         Self {
             pending_seed: Vec::new(),
@@ -223,7 +229,7 @@ pub struct UdsServer<
     security_provider: S,
     address: NodeAddress,
     session: SessionState,
-    security: SecurityState<MAX_SEED>,
+    security: SecurityState<MAX_SEED, MAX_SECURITY_LEVELS>,
     periodic: PeriodicState<MAX_PERIODIC>,
     outbox: Vec<(NodeAddress, Vec<u8, MAX_FRAME>), MAX_OUTBOX>,
 
