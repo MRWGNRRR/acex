@@ -6,6 +6,7 @@ use crate::isotp::pci::{FlowStatus, PciFrame};
 
 /// Configuration for an ISO-TP segmenter session.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct SegmenterConfig {
     pub addressing_mode: IsoTpAddressingMode,
 
@@ -34,6 +35,7 @@ impl SegmenterConfig {
 // region: SegmenterState
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 enum SegmenterState {
     Idle,
 
@@ -57,6 +59,7 @@ enum SegmenterState {
 
 /// Outcome of calling [`Segmenter::next_frame`].
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum SegmentResult {
     /// Raw PCI bytes written into `out_buf` - `len` bytes are valid.
     ///
@@ -86,6 +89,7 @@ pub enum SegmentResult {
 ///
 /// `st_min` from received FC frames is stored but not enforced - the caller
 /// is responsible for honouring the inter-frame delay on bare metal targets.
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct Segmenter<const ISOTP_MAX_FRAME: usize> {
     config: SegmenterConfig,
     payload: heapless::Vec<u8, ISOTP_MAX_FRAME>,

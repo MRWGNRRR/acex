@@ -14,11 +14,13 @@ categories = ["development-tools", "network-programming", "automotive"]
 default = []
 alloc = ["acex-core/alloc", "acex-proto/alloc"]
 std = ["alloc", "acex-core/std", "acex-proto/std"]
+defmt = ["dep:defmt", "acex-core/defmt", "heapless/defmt", "acex-proto/defmt"]
 
 [dependencies]
 acex-core = { workspace = true }
 acex-proto = { workspace = true }
 heapless = { workspace = true }
+defmt = { workspace = true, optional = true }
 
 [dev-dependencies]
 proptest = { workspace = true }

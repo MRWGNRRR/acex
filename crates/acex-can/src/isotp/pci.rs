@@ -6,6 +6,7 @@ use crate::error::IsoTpError;
 // region: FlowStatus
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum FlowStatus {
     /// Receiver is ready - sender may continue transmitting.
     ContinueToSend,
@@ -44,6 +45,7 @@ impl TryFrom<u8> for FlowStatus {
 /// This keeps both state machines free of addressing concerns and makes
 /// the API contract explicit at the transport boundary.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum PciFrame<'a> {
     /// Complete message fits in a single CAN frame.
     SingleFrame {

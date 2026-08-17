@@ -1,6 +1,7 @@
 // region: CanError
 
 #[derive(Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum CanError {
     /// The CAN ID value exceeds the valid range for its type.
     /// Standard: 0x000–0x7FF, Extended: 0x00000000–0x1FFFFFFF.
@@ -28,6 +29,7 @@ impl From<acex_core::DiagError> for CanError {
 // region: IsoTpError
 
 #[derive(Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum IsoTpError {
     /// A consecutive frame arrived with an unexpected sequence number.
     /// Indicates a lost or reordered frame.

@@ -7,6 +7,7 @@ use crate::isotp::pci::{FlowStatus, PciFrame};
 
 /// Configuration for an ISO-TP reassembler session.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ReassemblerConfig {
     pub addressing_mode: IsoTpAddressingMode,
     /// Block size to advertise in flow control frames.
@@ -31,6 +32,7 @@ impl ReassemblerConfig {
 // region: ReassemblerState
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 enum ReassemblerState {
     Idle,
     Active {
@@ -46,6 +48,7 @@ enum ReassemblerState {
 
 /// Outcome of feeding PCI bytes to the reassembler.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum ReassembleResult {
     /// Frame consumed, message not yet complete.
     InProgress,
@@ -78,6 +81,7 @@ pub enum ReassembleResult {
 ///
 /// Buffer size `N` must be large enough to hold the complete reassembled
 /// message. For classic CAN ISO-TP the maximum is 4095 bytes.
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct Reassembler<const MAX_FRAME: usize> {
     config: ReassemblerConfig,
     buf: [u8; MAX_FRAME],

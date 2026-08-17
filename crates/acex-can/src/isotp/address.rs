@@ -1,4 +1,5 @@
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum IsoTpAddressingMode {
     /// Full 8 bytes available for PCI + payload.
     /// CAN ID alone identifies source and target.

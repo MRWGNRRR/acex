@@ -5,17 +5,9 @@ extern crate alloc;
 
 pub mod error;
 
-pub mod ext {
-    pub mod classic;
-    pub mod fd;
-}
+pub mod ext;
 
-pub mod isotp {
-    pub mod address;
-    pub mod pci;
-    pub mod reassembler;
-    pub mod segmenter;
-}
+pub mod isotp;
 
 pub mod constants;
 
