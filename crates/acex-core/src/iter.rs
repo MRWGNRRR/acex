@@ -58,6 +58,7 @@ use crate::{
 /// }
 /// ```
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct FrameIter<'a, T> {
     buf: &'a [u8],
     _marker: PhantomData<T>,

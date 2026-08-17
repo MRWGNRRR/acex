@@ -13,8 +13,10 @@ categories = ["development-tools", "network-programming", "automotive"]
 [features]
 default = []
 alloc = ["bytes"]
-std = ["alloc", "heapless/defmt"]
+std = ["alloc"]
+defmt = ["dep:defmt", "heapless/defmt"]
 
 [dependencies]
 heapless = { workspace = true }
 bytes = { workspace = true, optional = true }
+defmt = { workspace = true, optional = true }
