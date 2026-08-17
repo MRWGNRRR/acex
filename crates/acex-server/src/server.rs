@@ -692,9 +692,11 @@ where
             let level_cfg = self.config.find_security_level(level);
             let max_attempts = level_cfg
                 .map(|l| l.max_attempts)
+                .flatten()
                 .unwrap_or(DEFAULT_MAX_SECURITY_ATTEMPTS);
             let lockout_dur = level_cfg
                 .map(|l| l.lockout_duration)
+                .flatten()
                 .unwrap_or(Duration::from_millis(DEFAULT_LOCKOUT));
 
             let seed = self.security.pending_seed.clone();

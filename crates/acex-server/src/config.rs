@@ -193,13 +193,13 @@ impl DidConfig {
 pub struct SecurityLevelConfig {
     /// Request Seed byte for this level (always odd: 0x01, 0x03, 0x05 ...).
     pub level: u8,
-
+    
     /// Max failed key attempts before lockout is applied.
-    pub max_attempts: u8,
-
+    pub max_attempts: Option<u8>,
+    
     /// Duration of the lockout after exceeding max attempts.
-    pub lockout_duration: Duration,
-
+    pub lockout_duration: Option<Duration>,
+    
     /// Expected seed length in bytes.
     pub seed_length: usize,
 
