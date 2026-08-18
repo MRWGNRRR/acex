@@ -31,7 +31,7 @@ pub enum ServerError<E: NrcError> {
 
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
-struct SessionState {
+pub struct SessionState {
     session_type: u8,
     last_rx: Instant,
     security_level: u8,
