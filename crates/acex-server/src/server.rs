@@ -53,16 +53,20 @@ impl SessionState {
         }
     }
 
-    const fn is_default(&self) -> bool {
+    pub const fn is_default(&self) -> bool {
         self.session_type == 0x01
     }
-    
-    const fn is_programming(&self) -> bool {
+
+    pub const fn is_programming(&self) -> bool {
         self.session_type == 0x02
     }
-    
-    const fn is_extended(&self) -> bool {
+
+    pub const fn is_extended(&self) -> bool {
         self.session_type == 0x03
+    }
+
+    pub const fn get_session_type(&self) -> u8 {
+        self.session_type
     }
 }
 
@@ -1429,7 +1433,7 @@ where
 
                     #[cfg(feature = "defmt")]
                     defmt::error!("periodic error: {=u8}", nrc);
-                    
+
                     self.periodic.cancel(*did, client);
                     continue;
                 }
