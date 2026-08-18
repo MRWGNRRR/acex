@@ -56,6 +56,14 @@ impl SessionState {
     const fn is_default(&self) -> bool {
         self.session_type == 0x01
     }
+    
+    const fn is_programming(&self) -> bool {
+        self.session_type == 0x02
+    }
+    
+    const fn is_extended(&self) -> bool {
+        self.session_type == 0x03
+    }
 }
 
 // endregion: SessionState
