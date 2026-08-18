@@ -15,6 +15,7 @@ proptest = { version = "1.10.0" }
 serde = { version = "1.0.228" }
 tokio-util = { version = "0.7.18" }
 derive_more = { version = "2.1.1" }
+defmt = { version = "1.1.1" }
 
 acex-d = { path = "crates/acex-d", version = "0.5.3" }
 acex-core = { path = "crates/acex-core", version = "0.5.3" }
