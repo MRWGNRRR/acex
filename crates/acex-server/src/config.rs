@@ -45,6 +45,9 @@ pub struct SessionConfig {
 
     /// S3 server - max time between Tester Present messages before the server drops back to
     /// Default Session (ms)
+    ///
+    /// If [`Duration::ZERO`] is specified, the session will never transition to
+    /// Default due to a timeout.
     pub s3_timeout: Duration,
 }
 
