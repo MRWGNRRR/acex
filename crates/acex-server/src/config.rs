@@ -2,7 +2,7 @@
 
 use acex_core::Vec;
 use acex_sim::clock::Duration;
-
+use acex_uds::message::DiagnosticSessionType;
 // endregion: Imports
 
 // region: Periodic Rate Presets
@@ -241,6 +241,12 @@ pub struct ServerConfig<
     pub services: Vec<ServiceConfig, MAX_SERVICES>,
     pub data_identifiers: Vec<DidConfig, MAX_DIDS>,
     pub security_levels: Vec<SecurityLevelConfig, MAX_SECURITY_LEVELS>,
+
+    /// Diagnostic session to enter when the server is initialized or reset.
+    pub default_session_type: DiagnosticSessionType,
+
+    /// Whether reading multiple DIDs at once is allowed.
+    pub allow_read_many_dids: bool
 }
 
 impl<
@@ -258,6 +264,8 @@ impl<
             services: Vec::new(),
             data_identifiers: Vec::new(),
             security_levels: Vec::new(),
+            default_session_type: DiagnosticSessionType::DefaultSession,
+            allow_read_many_dids: false
         }
     }
 
@@ -300,6 +308,16 @@ impl<
         #[cfg(not(feature = "defmt"))]
         let _ = self.security_levels.push(l);
 
+        self
+    }
+
+    pub fn with_default_session_type(mut self, session_type: DiagnosticSessionType) -> Self {
+        self.default_session_type = session_type;
+        self
+    }
+
+    pub fn with_allow_read_many_dids(mut self, status: bool) -> Self {
+        self.allow_read_many_dids = status;
         self
     }
 

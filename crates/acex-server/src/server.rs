@@ -37,6 +37,13 @@ struct SessionState {
     security_level: u8,
 }
 
+impl PartialEq for SessionState {
+    fn eq(&self, other: &Self) -> bool {
+        self.session_type == other.session_type
+            && self.security_level == other.security_level
+    }
+}
+
 impl SessionState {
     fn new() -> Self {
         Self {
@@ -129,6 +136,13 @@ impl<
     fn clear_pending(&mut self) {
         self.pending_seed.clear();
         self.pending_level = 0;
+    }
+
+    fn reset(&mut self) {
+        self.lockout_until.clear();
+        self.pending_seed.clear();
+        self.failed_attempts.clear();
+        self.pending_level = 0 ;
     }
 }
 
@@ -255,8 +269,8 @@ pub struct UdsServer<
     periodic: PeriodicState<MAX_PERIODIC>,
     outbox: Vec<(NodeAddress, Vec<u8, MAX_FRAME>), MAX_OUTBOX>,
 
-    /// Diagnostic session to enter when the server is initialized or reset.
-    default_session_type: DiagnosticSessionType
+    /// Whether pending requests should be dropped.
+    drop_requests: bool,
 }
 
 impl<
@@ -312,28 +326,42 @@ where
             security: SecurityState::new(),
             periodic: PeriodicState::new(),
             outbox: Vec::new(),
-            default_session_type: DiagnosticSessionType::DefaultSession
+            drop_requests: false,
         }
     }
 
     // region: SimNode surface
 
-    pub fn set_default_session_type(&mut self, session_type: DiagnosticSessionType) {
-        self.default_session_type = session_type;
+    pub fn set_drop_requests(&mut self, status: bool) {
+        self.drop_requests = status;
     }
 
-    pub fn get_default_session_type(&self) -> DiagnosticSessionType {
-        self.default_session_type
+    pub fn drop_requests(&self) -> bool {
+        self.drop_requests
     }
 
     pub fn address(&self) -> &NodeAddress {
         &self.address
     }
+
+    pub fn set_session_type(&mut self, session_type: u8) {
+        self.session.session_type = session_type;
+    }
+
     pub fn session_type(&self) -> u8 {
         self.session.session_type
     }
+
+    pub fn set_security_level(&mut self, level: u8) {
+        self.session.security_level = level;
+    }
+
     pub fn security_level(&self) -> u8 {
         self.session.security_level
+    }
+
+    pub fn reset_security_state(&mut self) {
+        self.security.reset();
     }
 
     /// Receives a raw UDS frame from `src`.
@@ -348,6 +376,13 @@ where
         data: &[u8],
         now: Instant,
     ) -> Result<(), ServerError<H::Error>> {
+        if self.drop_requests {
+            #[cfg(feature = "defmt")]
+            defmt::info!("uds request dropped: {=[u8]}", data);
+
+            return Ok(());
+        }
+
         self.session.last_rx = now;
 
         let frame = UdsFrame::from_slice(data);
@@ -467,13 +502,15 @@ where
         if self.session.is_default() {
             return;
         }
+
         let s3 = self
             .current_session()
             .map(|s| s.s3_timeout)
             .unwrap_or(Duration::from_millis(DEFAULT_S3));
-        if let Some(elapsed) = now.checked_duration_since(self.session.last_rx) {
+
+        if let Some(elapsed) = now.checked_duration_since(self.session.last_rx) && s3.as_micros() > 0 {
             if elapsed > s3 {
-                self.session.session_type = self.default_session_type.into();
+                self.session.session_type = self.config.default_session_type.into();
                 self.session.security_level = 0;
                 self.security.clear_pending();
             }
@@ -631,6 +668,14 @@ where
             return self.nrc(src, 0x10, H::Error::sub_function_not_supported(), now);
         }
 
+        let mut ctx = self.create_request_context();
+        let result = self.handler.session_control(&mut ctx, session_type);
+        self.handle_request_context(ctx);
+
+        if let Err(err) = result {
+            return self.nrc(src, 0x10, err, now);
+        }
+
         self.session.session_type = session_type;
         self.session.security_level = 0;
         self.session.last_rx = now;
@@ -681,13 +726,22 @@ where
             }
         };
 
+        let mut ctx = self.create_request_context();
+
+        let result = self.handler
+            .ecu_reset(&mut ctx, reset_type);
+
+        self.handle_request_context(ctx);
+
+        if let Err(err) = result {
+            return self.nrc(src, 0x11, err, now);
+        }
+
         if !suppressed {
             self.pos(src, 0x11, &[reset_type], now)?;
         }
 
-        self.handler
-            .ecu_reset(reset_type)
-            .map_err(ServerError::Handler)
+        Ok(())
     }
 
     fn on_security_access(
@@ -722,11 +776,26 @@ where
                 return self.nrc(src, 0x27, H::Error::sub_function_not_supported(), now);
             }
 
+            let mut ctx = self.create_request_context();
+            let result = self.handler.security_access(&mut ctx, level, &[]);
+            self.handle_request_context(ctx);
+
+            if let Err(err) = result {
+                return self.nrc_raw(src, 0x27, err.into(), now);
+            }
+
             let mut seed_buf = [0u8; MAX_SEED];
-            let seed_len = self
+            let result = self
                 .security_provider
                 .generate_seed(level, &mut seed_buf)
-                .map_err(|_| ServerError::Handler(H::Error::conditions_not_correct()))?;
+                .map_err(|_| H::Error::conditions_not_correct());
+
+            let seed_len = match result {
+                Ok(v) => v,
+                Err(err) => {
+                    return self.nrc_raw(src, 0x27, err.into(), now);
+                }
+            };
 
             self.security.pending_seed.clear();
             self.security.pending_level = level;
@@ -764,6 +833,14 @@ where
             // Key bytes are the payload after the access_type byte.
             // frame.payload() is everything after SID - key starts at payload[1].
             let key = frame.payload().get(1..).unwrap_or(&[]);
+
+            let mut ctx = self.create_request_context();
+            let result = self.handler.security_access(&mut ctx, level, key);
+            self.handle_request_context(ctx);
+
+            if let Err(err) = result {
+                return self.nrc_raw(src, 0x27, err.into(), now);
+            }
 
             let level_cfg = self.config.find_security_level(level);
             let max_attempts = level_cfg
@@ -805,7 +882,10 @@ where
     ) -> Result<(), ServerError<H::Error>> {
         // Payload is pairs of DID bytes: [DID_high, DID_low, DID_high, DID_low, ...]
         let payload = frame.payload();
-        if payload.len() < 2 || payload.len() % 2 != 0 {
+        if payload.len() < 2
+            || (!self.config.allow_read_many_dids && payload.len() != 2)
+            || payload.len() % 2 != 0
+        {
             return self.nrc(
                 src,
                 0x22,
@@ -843,11 +923,21 @@ where
                 let _ = resp.push(chunk[1]);
             }
 
+            let mut ctx = self.create_request_context();
+
             let mut data_buf = [0u8; MAX_FRAME];
-            let len = self
+            let result = self
                 .handler
-                .read_did(did, &mut data_buf)
-                .map_err(ServerError::Handler)?;
+                .read_did(&mut ctx, did, &mut data_buf);
+
+            self.handle_request_context(ctx);
+
+            let len = match result {
+                Ok(v) => v,
+                Err(err) => {
+                    return self.nrc_raw(src, 0x22, err.into(), now);
+                }
+            };
 
             #[cfg(feature = "defmt")]
             defmt::unwrap!(resp.extend_from_slice(&data_buf[..len]));
@@ -891,9 +981,16 @@ where
             return self.nrc_raw(src, 0x2E, nrc, now);
         }
 
-        self.handler
-            .write_did(did, data_rec)
-            .map_err(ServerError::Handler)?;
+        let mut ctx = self.create_request_context();
+
+        let result = self.handler
+            .write_did(&mut ctx, did, data_rec);
+
+        self.handle_request_context(ctx);
+
+        if let Err(err) = result {
+            return self.nrc_raw(src, 0x2E, err.into(), now);
+        }
 
         self.pos(src, 0x2E, &payload[..2], now)
     }
@@ -918,6 +1015,14 @@ where
         // Byte 0 is transmission mode, remaining bytes are periodic DID identifiers.
         let mode = payload[0];
         let periodic_ids = payload.get(1..).unwrap_or(&[]);
+
+        let mut ctx = self.create_request_context();
+        let result = self.handler.periodic_did(&mut ctx, mode, periodic_ids);
+        self.handle_request_context(ctx);
+
+        if let Err(err) = result {
+            return self.nrc_raw(src, 0x2A, err.into(), now);
+        }
 
         match mode {
             // stopSending
@@ -979,11 +1084,21 @@ where
         let routine_id = u16::from_be_bytes([payload[1], payload[2]]);
         let option_record = payload.get(3..).unwrap_or(&[]);
 
+        let mut ctx = self.create_request_context();
+
         let mut buf = [0u8; MAX_FRAME];
-        let len = self
+        let result = self
             .handler
-            .routine_control(routine_id, sub_function, option_record, &mut buf)
-            .map_err(ServerError::Handler)?;
+            .routine_control(&mut ctx, routine_id, sub_function, option_record, &mut buf);
+
+        self.handle_request_context(ctx);
+
+        let len = match result {
+            Ok(v) => v,
+            Err(err) => {
+                return self.nrc_raw(src, 0x31, err.into(), now);
+            }
+        };
 
         if suppressed {
             return Ok(());
@@ -1030,9 +1145,16 @@ where
         let control_type = frame.sub_function_value().unwrap_or(0);
         let comm_type = payload[1];
 
-        self.handler
-            .communication_control(control_type, comm_type)
-            .map_err(ServerError::Handler)?;
+        let mut ctx = self.create_request_context();
+
+        let result = self.handler
+            .communication_control(&mut ctx, control_type, comm_type);
+
+        self.handle_request_context(ctx);
+
+        if let Err(err) = result {
+            return self.nrc_raw(src, 0x28, err.into(), now);
+        }
 
         if suppressed {
             return Ok(());
@@ -1062,11 +1184,21 @@ where
         let control_param = payload[2];
         let control_state = payload.get(3..).unwrap_or(&[]);
 
+        let mut ctx = self.create_request_context();
+
         let mut buf = [0u8; MAX_FRAME];
-        let len = self
+        let result = self
             .handler
-            .io_control(did, control_param, control_state, &mut buf)
-            .map_err(ServerError::Handler)?;
+            .io_control(&mut ctx, did, control_param, control_state, &mut buf);
+
+        self.handle_request_context(ctx);
+
+        let len = match result {
+            Ok(v) => v,
+            Err(err) => {
+                return self.nrc_raw(src, 0x2F, err.into(), now);
+            }
+        };
 
         let mut resp: Vec<u8, MAX_FRAME> = Vec::new();
 
@@ -1123,11 +1255,21 @@ where
         let memory_address = &payload[2..2 + addr_len];
         let memory_size = &payload[2 + addr_len..2 + addr_len + size_len];
 
+        let mut ctx = self.create_request_context();
+
         let mut buf = [0u8; 64];
-        let len = self
+        let result = self
             .handler
-            .request_download(memory_address, memory_size, data_format, 0, &mut buf)
-            .map_err(ServerError::Handler)?;
+            .request_download(&mut ctx, memory_address, memory_size, data_format, 0, &mut buf);
+
+        self.handle_request_context(ctx);
+
+        let len = match result {
+            Ok(v) => v,
+            Err(err) => {
+                return self.nrc_raw(src, 0x34, err.into(), now);
+            }
+        };
 
         self.pos(src, 0x34, &buf[..len], now)
     }
@@ -1152,11 +1294,21 @@ where
         let block_seq = payload[0];
         let data = payload.get(1..).unwrap_or(&[]);
 
+        let mut ctx = self.create_request_context();
+
         let mut buf = [0u8; MAX_FRAME];
-        let len = self
+        let result = self
             .handler
-            .transfer_data(block_seq, data, &mut buf)
-            .map_err(ServerError::Handler)?;
+            .transfer_data(&mut ctx, block_seq, data, &mut buf);
+
+        self.handle_request_context(ctx);
+
+        let len = match result {
+            Ok(v) => v,
+            Err(err) => {
+                return self.nrc_raw(src, 0x36, err.into(), now);
+            }
+        };
 
         let mut resp: Vec<u8, MAX_FRAME> = Vec::new();
 
@@ -1184,11 +1336,21 @@ where
     ) -> Result<(), ServerError<H::Error>> {
         let parameter_record = frame.payload();
 
+        let mut ctx = self.create_request_context();
+
         let mut buf = [0u8; MAX_FRAME];
-        let len = self
+        let result = self
             .handler
-            .request_transfer_exit(parameter_record, &mut buf)
-            .map_err(ServerError::Handler)?;
+            .request_transfer_exit(&mut ctx, parameter_record, &mut buf);
+
+        self.handle_request_context(ctx);
+
+        let len = match result {
+            Ok(v) => v,
+            Err(err) => {
+                return self.nrc_raw(src, 0x37, err.into(), now);
+            }
+        };
 
         self.pos(src, 0x37, &buf[..len], now)
     }
@@ -1215,11 +1377,21 @@ where
         let path_len = u16::from_be_bytes([payload[1], payload[2]]) as usize;
         let path = payload.get(3..3 + path_len).unwrap_or(&[]);
 
+        let mut ctx = self.create_request_context();
+
         let mut buf = [0u8; MAX_FRAME];
-        let len = self
+        let result = self
             .handler
-            .request_file_transfer(operation, path, &mut buf)
-            .map_err(ServerError::Handler)?;
+            .request_file_transfer(&mut ctx, operation, path, &mut buf);
+
+        self.handle_request_context(ctx);
+
+        let len = match result {
+            Ok(v) => v,
+            Err(err) => {
+                return self.nrc_raw(src, 0x38, err.into(), now);
+            }
+        };
 
         self.pos(src, 0x38, &buf[..len], now)
     }
@@ -1233,11 +1405,27 @@ where
         self.periodic.collect_due(now, &mut due);
 
         for (did, client) in &due {
+            let mut ctx = self.create_request_context();
+
             let mut data_buf = [0u8; MAX_FRAME];
-            let len = self
+            let result = self
                 .handler
-                .read_did(*did, &mut data_buf)
-                .map_err(ServerError::Handler)?;
+                .read_did(&mut ctx, *did, &mut data_buf);
+
+            self.handle_request_context(ctx);
+
+            let len = match result {
+                Ok(v) => v,
+                Err(err) => {
+                    let nrc = err.into();
+
+                    #[cfg(feature = "defmt")]
+                    defmt::error!("periodic error: {=u8}", nrc);
+                    
+                    self.periodic.cancel(*did, client);
+                    continue;
+                }
+            };
 
             // [periodic_data_identifier (1 byte), data_record (n bytes)]
             let did_low = (*did & 0xFF) as u8;
@@ -1263,7 +1451,54 @@ where
         Ok(())
     }
 
+    fn create_request_context(&self) -> UdsRequestContext {
+        UdsRequestContext {
+            session: self.session.clone(),
+            drop_requests: false,
+            clear_outbox: false,
+            reset_security_state: false,
+        }
+    }
+
+    fn handle_request_context(&mut self, ctx: UdsRequestContext) {
+        if ctx.session != self.session {
+            self.session.session_type = ctx.session.session_type;
+            self.session.security_level = ctx.session.security_level;
+        }
+        if ctx.clear_outbox {
+            self.outbox.clear();
+        }
+        if ctx.reset_security_state {
+            self.security.reset();
+        }
+        if ctx.drop_requests {
+            self.drop_requests = true;
+        }
+    }
+
     // endregion: Periodic dispatch
 }
 
 // endregion: UdsServer
+
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+pub struct UdsRequestContext {
+    pub session: SessionState,
+    pub drop_requests: bool,
+    pub clear_outbox: bool,
+    pub reset_security_state: bool,
+}
+
+impl UdsRequestContext {
+    pub fn drop_requests(&mut self) {
+        self.drop_requests = true;
+    }
+
+    pub fn clear_outbox(&mut self) {
+        self.clear_outbox = true;
+    }
+
+    pub fn reset_security_state(&mut self) {
+        self.reset_security_state = true;
+    }
+}

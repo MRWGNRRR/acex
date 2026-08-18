@@ -1,18 +1,12 @@
 // region: SecurityError
 
-/// Errors the server state machine may produce during SecurityAccess handling.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
-pub enum SecurityError {
-    /// The supplied key does not match the generated seed.
-    InvalidKey,
+pub struct SeedGenerationError;
 
-    /// Max failed attempts reached - lockout now active.
-    ExceededAttempts,
-
-    /// Lockout imte has not yet expired.
-    DelayNotExpired,
-}
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+pub struct InvalidKeyError;
 
 // endregion: SecurityError
 
@@ -39,12 +33,12 @@ pub trait SecurityProvider {
     /// Writes seed bytes into `buf` and returns the number of bytes written. On real hardware the
     /// seed must be non-deterministic (hardware RNG). In simulation derive from the seeded
     /// `acex_sim::rng::Rng`.
-    fn generate_seed(&mut self, level: u8, buf: &mut [u8]) -> Result<usize, SecurityError>;
+    fn generate_seed(&mut self, level: u8, buf: &mut [u8]) -> Result<usize, SeedGenerationError>;
 
     /// Validates a key against the previously generated seed.
     ///
     /// Returns `Ok(())` if the key is correct.
-    fn validate_key(&self, level: u8, seed: &[u8], key: &[u8]) -> Result<(), SecurityError>;
+    fn validate_key(&self, level: u8, seed: &[u8], key: &[u8]) -> Result<(), InvalidKeyError>;
 }
 
 // endregion: SecurityProvider

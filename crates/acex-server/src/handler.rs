@@ -1,7 +1,7 @@
 // region: Imports
 
 use crate::nrc::NrcError;
-
+use crate::server::UdsRequestContext;
 // endregion: Imports
 
 // region: ServerHandler
@@ -37,18 +37,38 @@ pub trait ServerHandler {
     ///
     /// Called for `ReadDataByIdentifier` (0x22) and periodic scheduling (0x2A). Returns the number
     /// of bytes written into `buf`.
-    fn read_did(&self, did: u16, buf: &mut [u8]) -> Result<usize, Self::Error>;
+    fn read_did(
+        &self,
+        _ctx: &mut UdsRequestContext,
+        _did: u16,
+        _buf: &mut [u8]
+    ) -> Result<usize, Self::Error> {
+        Err(Self::Error::service_not_supported())
+    }
 
     /// Writes a value to a data identifier.
     ///
     /// Called for `WriteDataByIdentifier` (0x2E).
-    fn write_did(&mut self, did: u16, data: &[u8]) -> Result<(), Self::Error>;
+    fn write_did(
+        &mut self,
+        _ctx: &mut UdsRequestContext,
+        _did: u16,
+        _data: &[u8]
+    ) -> Result<(), Self::Error> {
+        Err(Self::Error::service_not_supported())
+    }
 
     /// Executes an ECU Reset.
     ///
     /// Called for `EcuReset` (0x11). Reset Types: 0x01 Hard Reset, 0x02 KeyOffOnReset, 0x03
     /// SoftReset. The positive response is sent before this hook is called.
-    fn ecu_reset(&mut self, reset_type: u8) -> Result<(), Self::Error>;
+    fn ecu_reset(
+        &mut self,
+        _ctx: &mut UdsRequestContext,
+        _reset_type: u8
+    ) -> Result<(), Self::Error> {
+        Err(Self::Error::service_not_supported())
+    }
 
     // endregion: Required Hooks
 
@@ -62,6 +82,7 @@ pub trait ServerHandler {
     /// Return the number of bytes written into `buf`.
     fn routine_control(
         &mut self,
+        _ctx: &mut UdsRequestContext,
         _routine_id: u16,
         _sub_function: u8,
         _data: &[u8],
@@ -75,6 +96,7 @@ pub trait ServerHandler {
     /// Called for `CommunicationControl` (0x28)
     fn communication_control(
         &mut self,
+        _ctx: &mut UdsRequestContext,
         _control_type: u8,
         _comm_type: u8,
     ) -> Result<usize, Self::Error> {
@@ -88,6 +110,7 @@ pub trait ServerHandler {
     /// Returns max block length encoded in `buf`.
     fn request_download(
         &mut self,
+        _ctx: &mut UdsRequestContext,
         _memory_address: &[u8],
         _memory_size: &[u8],
         _compression_method: u8,
@@ -104,6 +127,7 @@ pub trait ServerHandler {
     /// Returns the number of bytes written into `buf`.
     fn io_control(
         &mut self,
+        _ctx: &mut UdsRequestContext,
         _did: u16,
         _parameter: u8,
         _control_state: &[u8],
@@ -119,6 +143,7 @@ pub trait ServerHandler {
     /// Returns the number of bytes written into `buf`.
     fn transfer_data(
         &mut self,
+        _ctx: &mut UdsRequestContext,
         _block_sequence_counter: u8,
         _data: &[u8],
         _buf: &mut [u8],
@@ -133,6 +158,7 @@ pub trait ServerHandler {
     /// Returns the number of bytes written into `buf`.
     fn request_transfer_exit(
         &mut self,
+        _ctx: &mut UdsRequestContext,
         _parameter_record: &[u8],
         _buf: &mut [u8],
     ) -> Result<usize, Self::Error> {
@@ -146,11 +172,41 @@ pub trait ServerHandler {
     /// Returns the number of bytes written into `buf`.
     fn request_file_transfer(
         &mut self,
+        _ctx: &mut UdsRequestContext,
         _operation: u8,
         _path: &[u8],
         _buf: &mut [u8],
     ) -> Result<usize, Self::Error> {
         Err(Self::Error::service_not_supported())
+    }
+
+    /// Session Control middleware.
+    fn session_control(
+        &mut self,
+        _ctx: &mut UdsRequestContext,
+        _session_type: u8
+    ) -> Result<(), Self::Error> {
+        Ok(())
+    }
+
+    /// Security Access middleware.
+    fn security_access(
+        &mut self,
+        _ctx: &mut UdsRequestContext,
+        _level: u8,
+        _key: &[u8]
+    ) -> Result<(), Self::Error> {
+        Ok(())
+    }
+
+    /// Read Data By Periodic Identifier middleware.
+    fn periodic_did(
+        &mut self,
+        _ctx: &mut UdsRequestContext,
+        _mode: u8,
+        _dids: &[u8]
+    ) -> Result<(), Self::Error> {
+        Ok(())
     }
 
     // endregion: Optional Hooks
