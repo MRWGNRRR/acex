@@ -4,10 +4,12 @@ use acex_d::core::Vec;
 use acex_d::server::{
     config::{DidConfig, SecurityLevelConfig, ServerConfig, ServiceConfig, SessionConfig},
     handler::ServerHandler,
-    security_provider::{SecurityError, SecurityProvider},
+    security_provider::SecurityProvider,
     server::UdsServer,
     BuiltinNrc,
 };
+use acex_d::server::security_provider::{InvalidKeyError, SeedGenerationError};
+use acex_d::server::server::UdsRequestContext;
 use acex_d::sim::{clock::Duration, io::NodeAddress};
 
 use crate::harness::MyUdsServer;
@@ -52,7 +54,7 @@ impl Default for TestHandler {
 impl ServerHandler for TestHandler {
     type Error = BuiltinNrc;
 
-    fn read_did(&self, did: u16, buf: &mut [u8]) -> Result<usize, Self::Error> {
+    fn read_did(&self, _ctx: &mut UdsRequestContext, did: u16, buf: &mut [u8]) -> Result<usize, Self::Error> {
         match self.dids.iter().find(|(d, _)| *d == did) {
             Some((_, data)) => {
                 let len = data.len().min(buf.len());
@@ -64,7 +66,7 @@ impl ServerHandler for TestHandler {
         }
     }
 
-    fn write_did(&mut self, did: u16, data: &[u8]) -> Result<(), Self::Error> {
+    fn write_did(&mut self, _ctx: &mut UdsRequestContext, did: u16, data: &[u8]) -> Result<(), Self::Error> {
         if let Some(entry) = self.dids.iter_mut().find(|(d, _)| *d == did) {
             entry.1.clear();
             let _ = entry.1.extend_from_slice(&data[..data.len().min(64)]);
@@ -75,7 +77,7 @@ impl ServerHandler for TestHandler {
         }
     }
 
-    fn ecu_reset(&mut self, _reset_type: u8) -> Result<(), Self::Error> {
+    fn ecu_reset(&mut self, _ctx: &mut UdsRequestContext, _reset_type: u8) -> Result<(), Self::Error> {
         Ok(())
     }
 }
@@ -96,21 +98,21 @@ impl SecurityProvider for TestSecurityProvider {
         &mut self,
         level: u8,
         buf: &mut [u8],
-    ) -> Result<usize, acex_d::server::security_provider::SecurityError> {
+    ) -> Result<usize, SeedGenerationError> {
         if buf.is_empty() {
-            return Err(SecurityError::InvalidKey);
+            return Err(SeedGenerationError);
         }
 
         buf[0] = level;
         Ok(1)
     }
 
-    fn validate_key(&self, _level: u8, seed: &[u8], key: &[u8]) -> Result<(), SecurityError> {
+    fn validate_key(&self, _level: u8, seed: &[u8], key: &[u8]) -> Result<(), InvalidKeyError> {
         let expected_key = seed.first().copied().unwrap_or(0) ^ 0xFF;
 
         match key.first().copied() {
             Some(k) if k == expected_key => Ok(()),
-            _ => Err(SecurityError::InvalidKey),
+            _ => Err(InvalidKeyError),
         }
     }
 }
