@@ -1,6 +1,7 @@
 // region: Imports
 
 use crate::nrc::NrcError;
+use crate::security_provider::SecurityProvider;
 use crate::server::UdsRequestContext;
 // endregion: Imports
 
@@ -28,7 +29,10 @@ use crate::server::UdsRequestContext;
 ///
 /// `type Error` must implement [`NrcError`] + `Into<u8>`. The server converts handler errors
 /// directly to NRC bytes in the negative response.
-pub trait ServerHandler {
+pub trait ServerHandler<S>
+where
+    S: SecurityProvider
+{
     type Error: NrcError;
 
     // region: Required Hooks
@@ -39,7 +43,7 @@ pub trait ServerHandler {
     /// of bytes written into `buf`.
     fn read_did(
         &self,
-        _ctx: &mut UdsRequestContext,
+        _ctx: &mut UdsRequestContext<S>,
         _did: u16,
         _buf: &mut [u8]
     ) -> Result<usize, Self::Error> {
@@ -51,7 +55,7 @@ pub trait ServerHandler {
     /// Called for `WriteDataByIdentifier` (0x2E).
     fn write_did(
         &mut self,
-        _ctx: &mut UdsRequestContext,
+        _ctx: &mut UdsRequestContext<S>,
         _did: u16,
         _data: &[u8]
     ) -> Result<(), Self::Error> {
@@ -64,7 +68,7 @@ pub trait ServerHandler {
     /// SoftReset. The positive response is sent before this hook is called.
     fn ecu_reset(
         &mut self,
-        _ctx: &mut UdsRequestContext,
+        _ctx: &mut UdsRequestContext<S>,
         _reset_type: u8
     ) -> Result<(), Self::Error> {
         Err(Self::Error::service_not_supported())
@@ -82,7 +86,7 @@ pub trait ServerHandler {
     /// Return the number of bytes written into `buf`.
     fn routine_control(
         &mut self,
-        _ctx: &mut UdsRequestContext,
+        _ctx: &mut UdsRequestContext<S>,
         _routine_id: u16,
         _sub_function: u8,
         _data: &[u8],
@@ -96,7 +100,7 @@ pub trait ServerHandler {
     /// Called for `CommunicationControl` (0x28)
     fn communication_control(
         &mut self,
-        _ctx: &mut UdsRequestContext,
+        _ctx: &mut UdsRequestContext<S>,
         _control_type: u8,
         _comm_type: u8,
     ) -> Result<usize, Self::Error> {
@@ -110,7 +114,7 @@ pub trait ServerHandler {
     /// Returns max block length encoded in `buf`.
     fn request_download(
         &mut self,
-        _ctx: &mut UdsRequestContext,
+        _ctx: &mut UdsRequestContext<S>,
         _memory_address: &[u8],
         _memory_size: &[u8],
         _compression_method: u8,
@@ -127,7 +131,7 @@ pub trait ServerHandler {
     /// Returns the number of bytes written into `buf`.
     fn io_control(
         &mut self,
-        _ctx: &mut UdsRequestContext,
+        _ctx: &mut UdsRequestContext<S>,
         _did: u16,
         _parameter: u8,
         _control_state: &[u8],
@@ -143,7 +147,7 @@ pub trait ServerHandler {
     /// Returns the number of bytes written into `buf`.
     fn transfer_data(
         &mut self,
-        _ctx: &mut UdsRequestContext,
+        _ctx: &mut UdsRequestContext<S>,
         _block_sequence_counter: u8,
         _data: &[u8],
         _buf: &mut [u8],
@@ -158,7 +162,7 @@ pub trait ServerHandler {
     /// Returns the number of bytes written into `buf`.
     fn request_transfer_exit(
         &mut self,
-        _ctx: &mut UdsRequestContext,
+        _ctx: &mut UdsRequestContext<S>,
         _parameter_record: &[u8],
         _buf: &mut [u8],
     ) -> Result<usize, Self::Error> {
@@ -172,7 +176,7 @@ pub trait ServerHandler {
     /// Returns the number of bytes written into `buf`.
     fn request_file_transfer(
         &mut self,
-        _ctx: &mut UdsRequestContext,
+        _ctx: &mut UdsRequestContext<S>,
         _operation: u8,
         _path: &[u8],
         _buf: &mut [u8],
@@ -183,7 +187,7 @@ pub trait ServerHandler {
     /// Session Control middleware.
     fn session_control(
         &mut self,
-        _ctx: &mut UdsRequestContext,
+        _ctx: &mut UdsRequestContext<S>,
         _session_type: u8
     ) -> Result<(), Self::Error> {
         Ok(())
@@ -192,7 +196,7 @@ pub trait ServerHandler {
     /// Security Access middleware.
     fn security_access(
         &mut self,
-        _ctx: &mut UdsRequestContext,
+        _ctx: &mut UdsRequestContext<S>,
         _level: u8,
         _key: &[u8]
     ) -> Result<(), Self::Error> {
@@ -202,7 +206,7 @@ pub trait ServerHandler {
     /// Read Data By Periodic Identifier middleware.
     fn periodic_did(
         &mut self,
-        _ctx: &mut UdsRequestContext,
+        _ctx: &mut UdsRequestContext<S>,
         _mode: u8,
         _dids: &[u8]
     ) -> Result<(), Self::Error> {

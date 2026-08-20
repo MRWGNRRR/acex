@@ -45,9 +45,9 @@ impl PartialEq for SessionState {
 }
 
 impl SessionState {
-    fn new() -> Self {
+    fn new(session_type: u8) -> Self {
         Self {
-            session_type: DiagnosticSessionType::DefaultSession.into(),
+            session_type,
             last_rx: Instant::ZERO,
             security_level: 0,
         }
@@ -67,6 +67,14 @@ impl SessionState {
 
     pub const fn get_session_type(&self) -> u8 {
         self.session_type
+    }
+
+    pub const fn get_last_rx(&self) -> Instant {
+        self.last_rx
+    }
+
+    pub const fn get_security_level(&self) -> u8 {
+        self.security_level
     }
 }
 
@@ -269,7 +277,7 @@ pub struct UdsServer<
     H,
     S,
 > where
-    H: ServerHandler,
+    H: ServerHandler<S>,
     S: SecurityProvider,
 {
     config: ServerConfig<MAX_SESSIONS, MAX_SERVICES, MAX_DIDS, MAX_SECURITY_LEVELS>,
@@ -320,7 +328,7 @@ impl<
         S,
     >
 where
-    H: ServerHandler,
+    H: ServerHandler<S>,
     S: SecurityProvider,
 {
     pub fn new(
@@ -330,15 +338,15 @@ where
         address: NodeAddress,
     ) -> Self {
         Self {
+            session: SessionState::new(config.default_session_type.into()),
             config,
             handler,
             security_provider,
             address,
-            session: SessionState::new(),
             security: SecurityState::new(),
             periodic: PeriodicState::new(),
             outbox: Vec::new(),
-            drop_requests: false,
+            drop_requests: false
         }
     }
 
@@ -687,12 +695,12 @@ where
         if let Err(err) = result {
             return self.nrc(src, 0x10, err, now);
         }
-
+        
         self.session.session_type = session_type;
         self.session.security_level = 0;
         self.session.last_rx = now;
         self.security.clear_pending();
-
+        
         if suppressed {
             return Ok(());
         }
@@ -808,7 +816,7 @@ where
                     return self.nrc_raw(src, 0x27, err.into(), now);
                 }
             };
-
+            
             self.security.pending_seed.clear();
             self.security.pending_level = level;
 
@@ -1066,7 +1074,6 @@ where
 
                     self.periodic.register(did, effective, src.clone(), now);
                 }
-
                 self.pos(src, 0x2A, &[mode], now)
             }
             _ => self.nrc(src, 0x2A, H::Error::sub_function_not_supported(), now),
@@ -1463,16 +1470,17 @@ where
         Ok(())
     }
 
-    fn create_request_context(&self) -> UdsRequestContext {
+    fn create_request_context(&mut self) -> UdsRequestContext<S> {
         UdsRequestContext {
             session: self.session.clone(),
+            security_provider: self.security_provider.clone(),
             drop_requests: false,
             clear_outbox: false,
-            reset_security_state: false,
+            reset_security_state: false
         }
     }
 
-    fn handle_request_context(&mut self, ctx: UdsRequestContext) {
+    fn handle_request_context(&mut self, ctx: UdsRequestContext<S>) {
         if ctx.session != self.session {
             self.session.session_type = ctx.session.session_type;
             self.session.security_level = ctx.session.security_level;
@@ -1494,14 +1502,21 @@ where
 // endregion: UdsServer
 
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
-pub struct UdsRequestContext {
+pub struct UdsRequestContext<T>
+where
+    T: SecurityProvider
+{
     pub session: SessionState,
-    pub drop_requests: bool,
-    pub clear_outbox: bool,
-    pub reset_security_state: bool,
+    pub security_provider: T,
+    pub(crate) drop_requests: bool,
+    pub(crate) clear_outbox: bool,
+    pub(crate) reset_security_state: bool,
 }
 
-impl UdsRequestContext {
+impl<T> UdsRequestContext<T>
+where
+    T: SecurityProvider
+{
     pub fn drop_requests(&mut self) {
         self.drop_requests = true;
     }

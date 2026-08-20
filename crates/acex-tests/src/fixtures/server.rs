@@ -51,10 +51,13 @@ impl Default for TestHandler {
     }
 }
 
-impl ServerHandler for TestHandler {
+impl<S> ServerHandler<S> for TestHandler
+where
+    S: SecurityProvider
+{
     type Error = BuiltinNrc;
 
-    fn read_did(&self, _ctx: &mut UdsRequestContext, did: u16, buf: &mut [u8]) -> Result<usize, Self::Error> {
+    fn read_did(&self, _ctx: &mut UdsRequestContext<S>, did: u16, buf: &mut [u8]) -> Result<usize, Self::Error> {
         match self.dids.iter().find(|(d, _)| *d == did) {
             Some((_, data)) => {
                 let len = data.len().min(buf.len());
@@ -66,7 +69,7 @@ impl ServerHandler for TestHandler {
         }
     }
 
-    fn write_did(&mut self, _ctx: &mut UdsRequestContext, did: u16, data: &[u8]) -> Result<(), Self::Error> {
+    fn write_did(&mut self, _ctx: &mut UdsRequestContext<S>, did: u16, data: &[u8]) -> Result<(), Self::Error> {
         if let Some(entry) = self.dids.iter_mut().find(|(d, _)| *d == did) {
             entry.1.clear();
             let _ = entry.1.extend_from_slice(&data[..data.len().min(64)]);
@@ -77,7 +80,7 @@ impl ServerHandler for TestHandler {
         }
     }
 
-    fn ecu_reset(&mut self, _ctx: &mut UdsRequestContext, _reset_type: u8) -> Result<(), Self::Error> {
+    fn ecu_reset(&mut self, _ctx: &mut UdsRequestContext<S>, _reset_type: u8) -> Result<(), Self::Error> {
         Ok(())
     }
 }
@@ -90,7 +93,7 @@ impl ServerHandler for TestHandler {
 ///
 /// Seed is the level byte. Key = seed XOR 0xFF. Deterministic and trivially predictable - suitable
 /// only for testing.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TestSecurityProvider;
 
 impl SecurityProvider for TestSecurityProvider {
@@ -107,7 +110,7 @@ impl SecurityProvider for TestSecurityProvider {
         Ok(1)
     }
 
-    fn validate_key(&self, _level: u8, seed: &[u8], key: &[u8]) -> Result<(), InvalidKeyError> {
+    fn validate_key(&mut self, _level: u8, seed: &[u8], key: &[u8]) -> Result<(), InvalidKeyError> {
         let expected_key = seed.first().copied().unwrap_or(0) ^ 0xFF;
 
         match key.first().copied() {

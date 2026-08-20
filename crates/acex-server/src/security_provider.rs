@@ -27,7 +27,7 @@ pub struct InvalidKeyError;
 ///
 /// In DST the implementation should derive seeds from the injected RNG so that the full exchange
 /// is reproducible across simulation runs.
-pub trait SecurityProvider {
+pub trait SecurityProvider: Clone {
     /// Generates a seed for the given security level.
     ///
     /// Writes seed bytes into `buf` and returns the number of bytes written. On real hardware the
@@ -38,7 +38,7 @@ pub trait SecurityProvider {
     /// Validates a key against the previously generated seed.
     ///
     /// Returns `Ok(())` if the key is correct.
-    fn validate_key(&self, level: u8, seed: &[u8], key: &[u8]) -> Result<(), InvalidKeyError>;
+    fn validate_key(&mut self, level: u8, seed: &[u8], key: &[u8]) -> Result<(), InvalidKeyError>;
 }
 
 // endregion: SecurityProvider

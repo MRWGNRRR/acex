@@ -122,7 +122,7 @@ pub struct EcuEntry<
     H,
     S,
 > where
-    H: ServerHandler,
+    H: ServerHandler<S>,
     S: SecurityProvider,
 {
     /// ECU logical address (DoIP)
@@ -188,7 +188,7 @@ pub struct GatewayEntry<
     S,
 > where
     A: ActivationAuthProvider + Clone,
-    H: ServerHandler,
+    H: ServerHandler<S>,
     S: SecurityProvider,
 {
     /// Gateway logical address (DoIP).
@@ -280,7 +280,7 @@ pub struct DoipDstScenario<
     S,
 > where
     A: ActivationAuthProvider + Clone,
-    H: ServerHandler,
+    H: ServerHandler<S>,
     S: SecurityProvider,
 {
     pub config: DoipScenarioConfig,

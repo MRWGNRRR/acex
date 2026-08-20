@@ -68,7 +68,7 @@ pub struct EcuNode<
     H,
     S,
 > where
-    H: ServerHandler,
+    H: ServerHandler<S>,
     S: SecurityProvider,
 {
     /// DoIP logical address of this ECU.
@@ -148,7 +148,7 @@ impl<
         S,
     >
 where
-    H: ServerHandler,
+    H: ServerHandler<S>,
     S: SecurityProvider,
 {
     pub fn new(

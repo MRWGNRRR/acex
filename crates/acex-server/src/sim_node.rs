@@ -47,7 +47,7 @@ impl<
         S,
     >
 where
-    H: ServerHandler,
+    H: ServerHandler<S>,
     S: SecurityProvider,
 {
     type Error = ServerError<H::Error>;
