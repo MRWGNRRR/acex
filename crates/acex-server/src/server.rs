@@ -896,6 +896,7 @@ where
                     self.security.increment_failed(level);
                     if self.security.failed_count(level) >= max_attempts {
                         self.security.set_lockout(level, now + lockout_dur);
+                        self.security.clear_pending();
                         return self.nrc(src, 0x27, H::Error::exceeded_number_of_attempts(), now);
                     }
                     self.nrc(src, 0x27, H::Error::invalid_key(), now)
