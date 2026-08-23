@@ -792,8 +792,21 @@ where
             if self.security.is_locked(level, now) {
                 return self.nrc(src, 0x27, H::Error::required_time_delay_not_expired(), now);
             }
-            if self.config.find_security_level(level).is_none() {
+
+            let Some(config) = self.config.find_security_level(level) else {
                 return self.nrc(src, 0x27, H::Error::sub_function_not_supported(), now);
+            };
+
+            let mut frame: Vec<u8, MAX_FRAME> = Vec::new();
+
+            if self.security.pending_level == level
+                && !self.security.pending_seed.is_empty()
+                && self.security.pending_seed.len() == config.seed_length
+            {
+                frame.push(0x27 | 0x40).unwrap();
+                frame.push(level).unwrap();
+                frame.extend_from_slice(self.security.pending_seed.as_slice()).unwrap();
+                return self.enqueue(src.clone(), frame);
             }
 
             let mut ctx = self.create_request_context();
@@ -819,8 +832,6 @@ where
             
             self.security.pending_seed.clear();
             self.security.pending_level = level;
-
-            let mut frame: Vec<u8, MAX_FRAME> = Vec::new();
 
             #[cfg(feature = "defmt")]
             {
