@@ -4,7 +4,7 @@ version = 4
 
 [[package]]
 name = "acex-can"
-version = "0.5.3"
+version = "0.6.0"
 dependencies = [
  "acex-core",
  "acex-proto",
@@ -15,7 +15,7 @@ dependencies = [
 
 [[package]]
 name = "acex-client"
-version = "0.5.3"
+version = "0.6.0"
 dependencies = [
  "acex-core",
  "acex-proto",
@@ -27,7 +27,7 @@ dependencies = [
 
 [[package]]
 name = "acex-core"
-version = "0.5.3"
+version = "0.6.0"
 dependencies = [
  "bytes",
  "defmt",
@@ -36,7 +36,7 @@ dependencies = [
 
 [[package]]
 name = "acex-d"
-version = "0.5.3"
+version = "0.6.0"
 dependencies = [
  "acex-can",
  "acex-client",
@@ -53,7 +53,7 @@ dependencies = [
 
 [[package]]
 name = "acex-doip"
-version = "0.5.3"
+version = "0.6.0"
 dependencies = [
  "acex-core",
  "acex-macros",
@@ -71,7 +71,7 @@ dependencies = [
 
 [[package]]
 name = "acex-gateway"
-version = "0.5.3"
+version = "0.6.0"
 dependencies = [
  "acex-can",
  "acex-client",
@@ -86,7 +86,7 @@ dependencies = [
 
 [[package]]
 name = "acex-macros"
-version = "0.5.3"
+version = "0.6.0"
 dependencies = [
  "acex-core",
  "bytes",
@@ -101,7 +101,7 @@ dependencies = [
 
 [[package]]
 name = "acex-proto"
-version = "0.5.3"
+version = "0.6.0"
 dependencies = [
  "acex-core",
  "defmt",
@@ -110,7 +110,7 @@ dependencies = [
 
 [[package]]
 name = "acex-server"
-version = "0.5.3"
+version = "0.6.0"
 dependencies = [
  "acex-core",
  "acex-proto",
@@ -121,7 +121,7 @@ dependencies = [
 
 [[package]]
 name = "acex-sim"
-version = "0.5.3"
+version = "0.6.0"
 dependencies = [
  "acex-core",
  "defmt",
@@ -129,21 +129,21 @@ dependencies = [
 
 [[package]]
 name = "acex-tests"
-version = "0.5.3"
+version = "0.6.0"
 dependencies = [
  "acex-d",
 ]
 
 [[package]]
 name = "acex-transport"
-version = "0.5.3"
+version = "0.6.0"
 dependencies = [
  "acex-d",
 ]
 
 [[package]]
 name = "acex-uds"
-version = "0.5.3"
+version = "0.6.0"
 dependencies = [
  "acex-core",
  "acex-macros",

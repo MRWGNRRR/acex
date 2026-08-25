@@ -17,15 +17,15 @@ tokio-util = { version = "0.7.18" }
 derive_more = { version = "2.1.1" }
 defmt = { version = "1.1.1" }
 
-acex-d = { path = "crates/acex-d", version = "0.5.3" }
-acex-core = { path = "crates/acex-core", version = "0.5.3" }
-acex-macros = { path = "crates/acex-macros", version = "0.5.3" }
-acex-proto = { path = "crates/acex-proto", version = "0.5.3" }
-acex-can = { path = "crates/acex-can", version = "0.5.3" }
-acex-sim = { path = "crates/acex-sim", version = "0.5.3" }
-acex-uds = { path = "crates/acex-uds", version = "0.5.3" }
-acex-doip = { path = "crates/acex-doip", version = "0.5.3" }
-acex-server = { path = "crates/acex-server", version = "0.5.3" }
-acex-client = { path = "crates/acex-client", version = "0.5.3" }
-acex-gateway = { path = "crates/acex-gateway", version = "0.5.3" }
-acex-transport = { path = "crates/acex-transport", version = "0.5.3" }
+acex-d = { path = "crates/acex-d", version = "0.6.0" }
+acex-core = { path = "crates/acex-core", version = "0.6.0" }
+acex-macros = { path = "crates/acex-macros", version = "0.6.0" }
+acex-proto = { path = "crates/acex-proto", version = "0.6.0" }
+acex-can = { path = "crates/acex-can", version = "0.6.0" }
+acex-sim = { path = "crates/acex-sim", version = "0.6.0" }
+acex-uds = { path = "crates/acex-uds", version = "0.6.0" }
+acex-doip = { path = "crates/acex-doip", version = "0.6.0" }
+acex-server = { path = "crates/acex-server", version = "0.6.0" }
+acex-client = { path = "crates/acex-client", version = "0.6.0" }
+acex-gateway = { path = "crates/acex-gateway", version = "0.6.0" }
+acex-transport = { path = "crates/acex-transport", version = "0.6.0" }
