@@ -803,9 +803,18 @@ where
                 && !self.security.pending_seed.is_empty()
                 && self.security.pending_seed.len() == config.seed_length
             {
-                frame.push(0x27 | 0x40).unwrap();
-                frame.push(level).unwrap();
-                frame.extend_from_slice(self.security.pending_seed.as_slice()).unwrap();
+                #[cfg(feature = "defmt")]
+                {
+                    defmt::unwrap!(frame.push(0x27 | 0x40));
+                    defmt::unwrap!(frame.push(level));
+                    defmt::unwrap!(frame.extend_from_slice(self.security.pending_seed.as_slice()));
+                }
+                #[cfg(not(feature = "defmt"))]
+                {
+                    let _ = frame.push(0x27 | 0x40);
+                    let _ = frame.push(level);
+                    let _ = frame.extend_from_slice(self.security.pending_seed.as_slice());
+                }
                 return self.enqueue(src.clone(), frame);
             }
 
