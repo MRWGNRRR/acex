@@ -21,7 +21,7 @@ acex-d = { path = "crates/acex-d", version = "0.6.0" }
 acex-core = { path = "crates/acex-core", version = "0.6.0" }
 acex-macros = { path = "crates/acex-macros", version = "0.6.0" }
 acex-proto = { path = "crates/acex-proto", version = "0.6.0" }
-acex-can = { path = "crates/acex-can", version = "0.6.0" }
+acex-can = { path = "crates/acex-can", version = "0.6.1" }
 acex-sim = { path = "crates/acex-sim", version = "0.6.0" }
 acex-uds = { path = "crates/acex-uds", version = "0.6.0" }
 acex-doip = { path = "crates/acex-doip", version = "0.6.0" }
