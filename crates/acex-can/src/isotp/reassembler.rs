@@ -39,6 +39,7 @@ enum ReassemblerState {
         total_len: u32,
         received: usize,
         next_sequence: u8,
+        block_received: usize
     },
 }
 
@@ -154,6 +155,7 @@ impl<const MAX_FRAME: usize> Reassembler<MAX_FRAME> {
                     total_len,
                     received: copy_len,
                     next_sequence: 1,
+                    block_received: 0,
                 };
 
                 let fc_pci = PciFrame::FlowControl {
@@ -183,12 +185,13 @@ impl<const MAX_FRAME: usize> Reassembler<MAX_FRAME> {
                 sequence_number,
                 data,
             } => {
-                let (total_len, received, next_sequence) = match &self.state {
+                let (total_len, received, next_sequence, block_received) = match &self.state {
                     ReassemblerState::Active {
                         total_len,
                         received,
                         next_sequence,
-                    } => (*total_len, *received, *next_sequence),
+                        block_received,
+                    } => (*total_len, *received, *next_sequence, *block_received),
                     ReassemblerState::Idle => return Err(IsoTpError::UnexpectedConsecutiveFrame),
                 };
 
@@ -211,15 +214,42 @@ impl<const MAX_FRAME: usize> Reassembler<MAX_FRAME> {
 
                 if new_received >= total {
                     self.state = ReassemblerState::Idle;
-                    Ok(ReassembleResult::Complete { len: total })
-                } else {
+                    return Ok(ReassembleResult::Complete { len: total })
+                }
+
+                let new_block_received = block_received + 1;
+
+                if self.config.block_size > 0 && new_block_received >= self.config.block_size as usize {
                     self.state = ReassemblerState::Active {
                         total_len,
                         received: new_received,
                         next_sequence: new_sequence,
+                        block_received: 0,
                     };
-                    Ok(ReassembleResult::InProgress)
+
+                    let fc_pci = PciFrame::FlowControl {
+                        status: FlowStatus::ContinueToSend,
+                        block_size: self.config.block_size,
+                        st_min: self.config.st_min
+                    };
+
+                    let mut fc_buf = [0u8; 3];
+                    fc_pci.encode_header(&mut fc_buf)?;
+
+                    return Ok(ReassembleResult::FlowControl {
+                        frame: fc_buf,
+                        len: 3
+                    });
                 }
+
+                self.state = ReassemblerState::Active {
+                    total_len,
+                    received: new_received,
+                    next_sequence: new_sequence,
+                    block_received: new_block_received,
+                };
+
+                Ok(ReassembleResult::InProgress)
             }
             // endregion: Consecutive Frame
 
