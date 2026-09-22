@@ -541,6 +541,9 @@ where
         if !self.config.service_allowed(sid, self.session.session_type) {
             return Err(H::Error::service_not_supported_in_active_session().into());
         }
+        if !self.config.service_unlocked(sid, self.security_level()) {
+            return Err(H::Error::security_access_denied().into());
+        }
         Ok(())
     }
 

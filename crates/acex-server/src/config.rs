@@ -351,6 +351,12 @@ impl<
             .unwrap_or(false)
     }
 
+    pub fn service_unlocked(&self, service_id: u8, security_level: u8) -> bool {
+        self.find_service(service_id)
+            .map(|s| security_level >= s.security_level)
+            .unwrap_or(false)
+    }
+
     pub fn did_readable(&self, identifier: u16, session_type: u8) -> bool {
         self.find_did(identifier)
             .map(|s| s.readable_in.contains(&session_type))
